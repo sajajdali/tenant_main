@@ -1,0 +1,18 @@
+ M client/src/components/landing-auth-dialog.tsx
+ M client/src/components/login-modal.tsx
+ M client/src/components/pwa-engagement-prompt.tsx
+ M client/src/components/time-slot-grid.tsx
+ M client/src/nutrition/components/nutrition-start-dialog.tsx
+ M laravel-app/app/Http/Controllers/Tenant/GeneralSettingsController.php
+ M laravel-app/app/Services/Auth/OtpLoginService.php
+ M laravel-app/app/Services/TenantProvisioningService.php
+ M laravel-app/app/Support/SmsTemplateRegistry.php
+ D laravel-app/public/booking-app/assets/index-2np_1esi.css
+ D laravel-app/public/booking-app/assets/index-B3Fq5v3F.js
+ M laravel-app/public/booking-app/index.html
+ M laravel-app/resources/views/auth/admin-login.blade.php
+ M laravel-app/resources/views/tenant/booking-spa.blade.php
+ D nutrition-ai-queue-env-jobs.zip
+?? laravel-app/public/booking-app/assets/index-BUG-q71j.js
+?? laravel-app/public/booking-app/assets/index-Bcmems71.css
+?? laravel-app/public/js/

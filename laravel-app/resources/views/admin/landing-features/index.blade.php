@@ -1,0 +1,7 @@
+@extends('admin.layouts.app')
+@section('title', 'صفحات امکانات')
+@section('content')
+<div class="card"><div class="card-header d-flex justify-content-between align-items-center"><div><h5 class="mb-1">صفحات امکانات {{ $landingSite->name }}</h5><p class="text-muted mb-0">قبلی و بعدی به‌صورت خودکار از ترتیب نمایش محاسبه می‌شود.</p></div><a class="btn btn-primary" href="{{ route('admin.landing-sites.features.create', $landingSite) }}">ایجاد امکان</a></div><div class="table-responsive"><table class="table align-middle mb-0"><thead><tr><th>ترتیب</th><th>عنوان</th><th>مسیر</th><th>نوع</th><th>وضعیت</th><th></th></tr></thead><tbody>
+@forelse($features as $feature)<tr><td>{{ $feature->sort_order }}</td><td>{{ $feature->title }}</td><td dir="ltr">/features/{{ $feature->slug }}</td><td>{{ $feature->is_primary ? 'اصلی' : 'سایر' }}</td><td>{{ $feature->status === 'active' ? 'فعال' : 'غیرفعال' }}</td><td class="text-nowrap"><a class="btn btn-sm btn-light-primary" href="{{ route('admin.landing-sites.features.edit', [$landingSite,$feature]) }}">ویرایش صفحه</a><form class="d-inline" method="POST" action="{{ route('admin.landing-sites.features.destroy', [$landingSite,$feature]) }}" onsubmit="return confirm('حذف شود؟')">@csrf @method('DELETE')<button class="btn btn-sm btn-light-danger">حذف</button></form></td></tr>@empty<tr><td colspan="6" class="text-center py-5 text-muted">هنوز امکانی ساخته نشده است.</td></tr>@endforelse
+</tbody></table></div></div>
+@endsection

@@ -1,0 +1,3 @@
+پس از آپلود، فایل‌های زیر را از سرور حذف کنید:
+
+laravel-app/public/booking-app/assets/index-1ZmDOO9S.js

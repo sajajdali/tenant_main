@@ -1,0 +1,7 @@
+ M client/src/pages/panel-commission-report.tsx
+ M client/src/pages/panel-finance.tsx
+ M client/src/pages/panel.tsx
+ M laravel-app/app/Http/Controllers/Tenant/ManualFinanceController.php
+ D laravel-app/public/booking-app/assets/index-C9REFWlf.js
+ M laravel-app/public/booking-app/index.html
+?? laravel-app/public/booking-app/assets/index-Bx03adkR.js

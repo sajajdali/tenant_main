@@ -1,0 +1,29 @@
+# Project Initialization Rules
+
+## React Tenant Build (Required)
+
+- Whenever a task changes React code (including files under `client/src/`, React components/pages/hooks, React styles, or React i18n messages), always run `npm run build:tenant` from `/Applications/sajjad/for jobs/ui/Barber-Book 2` as the final verification step before reporting completion.
+- This requirement applies only when React-facing code was changed. Do not run `npm run build:tenant` for tasks that change only Laravel/PHP, documentation, configuration, database code, or other non-React files.
+- If the React tenant build fails, report the failure and its relevant error instead of claiming the task is complete.
+
+## Localization Scope
+
+- Multilingual behavior belongs only to tenant-facing products: each tenant website, booking/customer React app, tenant panel, tenant APIs, and tenant-originated validation, email, SMS, notifications, invoices, and exceptions.
+- The central Laravel administration panel under `/admin`, `App\Http\Controllers\Admin`, `resources/views/admin`, and `resources/views/auth/admin-login.blade.php` is Persian-only. It must always use `fa`, `rtl`, the current Iranian calendar/currency conventions, and Persian copy.
+- Never make central admin screens, central admin controllers, or central platform-management messages selectable by tenant locale.
+- Do not add new central-admin copy to `lang/en`, `lang/ar`, or `lang/de`. Persian text may remain directly in central-admin-only Blade/PHP because that surface is intentionally Persian-only.
+- Swagger/OpenAPI documentation is also Persian-only and outside localization scope. This includes `app/OpenApi`, L5 Swagger configuration/UI, generated API docs, schemas, summaries, descriptions, examples, and Swagger-only labels.
+- Do not translate Swagger/OpenAPI documentation into `en`, `ar`, or `de`. This exception applies only to documentation; the real tenant API responses, validation, errors, notifications, and customer-visible payloads remain localization targets.
+- Landing sites created by the central builder at `/admin/landing-sites` are also Persian-only for now. This includes the builder, stored landing pages/sections/SEO content, public landing domains, landing-specific React pages, landing auth/contact/order APIs, and landing services.
+- Do not add translation fields, locale switching, or `en/ar/de` copy for this landing-builder subsystem. This exception does not include normal tenant booking/store/nutrition websites.
+- A tenant locale may affect only the current tenant context. It must never leak into the central admin panel.
+- When ownership is unclear, identify whether the route and UI are central platform administration or tenant-facing before changing localization behavior.
+
+The detailed rules live in `AGENTS.md`, `docs/I18N_ARCHITECTURE.md`, and `docs/I18N_MIGRATION_CHECKLIST.md`.
+
+## Payment Gateway Context (Read Before Payment/SMS Work)
+
+- Before changing payment flows, SMS credit top-up, payment callbacks, Maliart configuration, or related deployment settings, read `docs/MALIART_PAYMENT_GATEWAY.md` completely.
+- `maliart.ir` is the central **payment** service. It currently handles payment for SMS credit top-ups (and landing orders when enabled); it is not the SMS delivery provider.
+- SMS delivery is currently implemented through Kavenegar. Do not describe or implement Maliart as an SMS provider unless a separate, documented SMS API is deliberately added.
+- Never commit the shared `MALIART_PAYMENT_SECRET`, Zarinpal Merchant ID, Kavenegar API key, database credentials, or production `.env` values.

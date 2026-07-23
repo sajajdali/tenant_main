@@ -1,0 +1,12 @@
+Deployment package created from all modified and untracked Git files on 2026-07-19.
+
+Extract the ZIP in the project root while preserving directory paths.
+
+Delete these obsolete generated assets from the server after extraction:
+laravel-app/public/booking-app/assets/ar-Cqijmf8F.js
+laravel-app/public/booking-app/assets/de-CfCbWJ8B.js
+laravel-app/public/booking-app/assets/en-Ccltc0BT.js
+laravel-app/public/booking-app/assets/index-BBnFBf_g.css
+laravel-app/public/booking-app/assets/index-BgkL-2DL.js
+
+The replacement generated assets and booking-app/index.html are included in the ZIP.

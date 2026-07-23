@@ -1,0 +1,36 @@
+<?php
+
+return [
+    'admin_login' => [
+        'brand_name' => 'Tenant',
+        'fallback_panel_title' => 'Panel sign in',
+        'fallback_side_title' => 'Admin panel sign in',
+        'fallback_panel_description' => 'Admins can manage barbershops, domains, settings, and appointments from this panel.',
+        'central_panel_title' => 'Panel sign in',
+        'central_panel_description' => 'Super admins, sales managers, and sales experts sign in to their panel with mobile number and password.',
+        'tenant_panel_title' => 'Barbershop admin sign in',
+        'tenant_panel_description' => 'Sign in to this barbershop panel with an admin account.',
+        'description_otp' => 'Sign in with your mobile number and one-time code.',
+        'description_password' => 'Sign in with your mobile number and password.',
+        'access_locked_title' => 'Access to this panel is locked.',
+        'access_locked_message' => 'Panel access is locked. Please contact support.',
+        'mobile_label' => 'Mobile number',
+        'code_label' => 'Login code',
+        'password_label' => 'Password',
+        'password_placeholder' => 'Password',
+        'test_code' => 'Current test code: :code',
+        'remember_me' => 'Remember me',
+        'send_otp' => 'Send login code',
+        'submit_panel' => 'Sign in to panel',
+        'submit_with_mobile' => 'Sign in with mobile number',
+        'invalid_credentials' => 'The mobile number or password is incorrect.',
+        'tenant_admin_not_found' => 'The admin user was not found for this tenant.',
+        'js' => [
+            'mobile_length' => 'Mobile number must be 11 digits.',
+            'send_failed' => 'Sending the code failed.',
+            'otp_sent' => 'Login code sent. The current test code is :code.',
+            'verify_required' => 'Enter both the mobile number and login code.',
+            'login_failed' => 'Sign in failed.',
+        ],
+    ],
+];

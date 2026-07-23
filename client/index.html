@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+
+    <meta property="og:title" content="BarberBook - سیستم نوبت دهی آرایشگاه" />
+    <meta property="og:description" content="مدیریت ساده و سریع نوبت های آرایشگاه" />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="./opengraph.jpg" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="BarberBook" />
+    <meta name="twitter:description" content="مدیریت ساده و سریع نوبت های آرایشگاه" />
+    <meta name="twitter:image" content="./opengraph.jpg" />
+    <meta name="theme-color" content="#0f172a" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="BarberBook" />
+
+    <script>
+      (function () {
+        var copy = {
+          fa: {
+            dir: "rtl",
+            htmlLang: "fa",
+            title: "BarberBook - سیستم نوبت دهی آرایشگاه",
+            description: "مدیریت ساده و سریع نوبت های آرایشگاه",
+            loaderTitle: "در حال آماده‌سازی سایت",
+            loaderText: "چند لحظه صبر کنید تا نوبت‌دهی آنلاین برای شما بارگذاری شود."
+          },
+          en: {
+            dir: "ltr",
+            htmlLang: "en",
+            title: "BarberBook - Online booking",
+            description: "Simple online booking and salon management",
+            loaderTitle: "Preparing the site",
+            loaderText: "Please wait while online booking loads."
+          },
+          ar: {
+            dir: "rtl",
+            htmlLang: "ar",
+            title: "BarberBook - الحجز عبر الإنترنت",
+            description: "حجز بسيط عبر الإنترنت وإدارة الصالون",
+            loaderTitle: "جار تجهيز الموقع",
+            loaderText: "يرجى الانتظار أثناء تحميل الحجز عبر الإنترنت."
+          },
+          de: {
+            dir: "ltr",
+            htmlLang: "de",
+            title: "BarberBook - Online-Buchung",
+            description: "Einfache Online-Buchung und Salonverwaltung",
+            loaderTitle: "Website wird vorbereitet",
+            loaderText: "Bitte warten Sie, waehrend die Online-Buchung geladen wird."
+          }
+        };
+
+        function normalizeLocale(value) {
+          var raw = String(value || "").toLowerCase().replace("_", "-");
+          var base = raw.split("-")[0];
+          return copy[base] ? base : "fa";
+        }
+
+        function getShellLocale() {
+          var meta = window.__BOOKING_BOOTSTRAP__ && window.__BOOKING_BOOTSTRAP__.meta;
+          var stored = "";
+
+          try {
+            stored = window.localStorage.getItem("barberbook.locale") || "";
+          } catch (error) {
+            stored = "";
+          }
+
+          return normalizeLocale((meta && meta.locale) || stored || document.documentElement.lang);
+        }
+
+        function setMeta(selector, value) {
+          var element = document.querySelector(selector);
+          if (element) {
+            element.setAttribute("content", value);
+          }
+        }
+
+        window.__BOOKING_APPLY_SHELL_LOCALE__ = function () {
+          var locale = getShellLocale();
+          var selected = copy[locale] || copy.fa;
+          document.documentElement.lang = selected.htmlLang;
+          document.documentElement.dir = selected.dir;
+          setMeta('meta[property="og:title"]', selected.title);
+          setMeta('meta[property="og:description"]', selected.description);
+          setMeta('meta[name="twitter:description"]', selected.description);
+
+          var loaderTitle = document.getElementById("boot-loader-title");
+          var loaderText = document.getElementById("boot-loader-text");
+
+          if (loaderTitle) {
+            loaderTitle.textContent = selected.loaderTitle;
+          }
+
+          if (loaderText) {
+            loaderText.textContent = selected.loaderText;
+          }
+        };
+
+        window.__BOOKING_APPLY_SHELL_LOCALE__();
+        document.addEventListener("DOMContentLoaded", window.__BOOKING_APPLY_SHELL_LOCALE__);
+      })();
+    </script>
+
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <link rel="alternate icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <script>
+      (function () {
+        var CACHE_KEY = "barberbook.appearance";
+        var root = document.documentElement;
+        var bootLogoUrl = "";
+
+        var primaryMap = {
+          amber: { primary: "35 92% 50%", foreground: "222 47% 11%" },
+          rose: { primary: "347 77% 60%", foreground: "210 40% 98%" },
+          emerald: { primary: "160 84% 39%", foreground: "210 40% 98%" },
+          sky: { primary: "199 89% 48%", foreground: "210 40% 98%" },
+          violet: { primary: "262 83% 58%", foreground: "210 40% 98%" },
+          copper: { primary: "24 75% 48%", foreground: "210 40% 98%" },
+          teal: { primary: "174 84% 37%", foreground: "210 40% 98%" },
+          indigo: { primary: "239 84% 67%", foreground: "210 40% 98%" },
+          pink: { primary: "330 81% 60%", foreground: "210 40% 98%" },
+          lime: { primary: "84 81% 44%", foreground: "222 47% 11%" },
+          ruby: { primary: "0 72% 52%", foreground: "210 40% 98%" },
+          cyan: { primary: "188 94% 43%", foreground: "222 47% 11%" },
+          orange: { primary: "24 95% 53%", foreground: "222 47% 11%" },
+          blue: { primary: "221 83% 53%", foreground: "210 40% 98%" }
+        };
+
+        var cardMap = {
+          dark: {
+            slate: { card: "222 47% 14%", popover: "222 47% 14%", secondary: "217 33% 17%", muted: "217 33% 17%", border: "217 33% 20%", input: "217 33% 20%" },
+            navy: { card: "223 45% 16%", popover: "223 45% 16%", secondary: "223 36% 19%", muted: "223 36% 19%", border: "223 28% 24%", input: "223 28% 24%" },
+            graphite: { card: "215 19% 17%", popover: "215 19% 17%", secondary: "215 16% 20%", muted: "215 16% 20%", border: "215 14% 26%", input: "215 14% 26%" },
+            plum: { card: "270 24% 16%", popover: "270 24% 16%", secondary: "270 18% 20%", muted: "270 18% 20%", border: "270 16% 26%", input: "270 16% 26%" },
+            forest: { card: "162 35% 14%", popover: "162 35% 14%", secondary: "162 26% 18%", muted: "162 26% 18%", border: "162 20% 24%", input: "162 20% 24%" },
+            midnight: { card: "224 39% 10%", popover: "224 39% 10%", secondary: "224 31% 15%", muted: "224 31% 15%", border: "224 24% 21%", input: "224 24% 21%" },
+            charcoal: { card: "210 12% 15%", popover: "210 12% 15%", secondary: "210 10% 19%", muted: "210 10% 19%", border: "210 8% 25%", input: "210 8% 25%" },
+            ocean: { card: "201 54% 14%", popover: "201 54% 14%", secondary: "201 44% 18%", muted: "201 44% 18%", border: "201 30% 24%", input: "201 30% 24%" },
+            sand: { card: "30 26% 16%", popover: "30 26% 16%", secondary: "30 18% 20%", muted: "30 18% 20%", border: "30 16% 26%", input: "30 16% 26%" },
+            mocha: { card: "18 24% 16%", popover: "18 24% 16%", secondary: "18 18% 20%", muted: "18 18% 20%", border: "18 14% 26%", input: "18 14% 26%" },
+            steel: { card: "215 22% 16%", popover: "215 22% 16%", secondary: "215 18% 20%", muted: "215 18% 20%", border: "215 14% 26%", input: "215 14% 26%" },
+            wine: { card: "344 28% 16%", popover: "344 28% 16%", secondary: "344 20% 20%", muted: "344 20% 20%", border: "344 16% 26%", input: "344 16% 26%" }
+          },
+          light: {
+            slate: { card: "210 40% 99%", popover: "210 40% 99%", secondary: "210 30% 96%", muted: "210 30% 96%", border: "215 25% 87%", input: "215 25% 87%" },
+            navy: { card: "213 48% 97%", popover: "213 48% 97%", secondary: "213 34% 94%", muted: "213 34% 94%", border: "214 30% 86%", input: "214 30% 86%" },
+            graphite: { card: "210 18% 97%", popover: "210 18% 97%", secondary: "210 16% 94%", muted: "210 16% 94%", border: "210 14% 85%", input: "210 14% 85%" },
+            plum: { card: "286 38% 97%", popover: "286 38% 97%", secondary: "286 27% 94%", muted: "286 27% 94%", border: "286 18% 86%", input: "286 18% 86%" },
+            forest: { card: "156 36% 97%", popover: "156 36% 97%", secondary: "156 24% 94%", muted: "156 24% 94%", border: "156 16% 84%", input: "156 16% 84%" },
+            midnight: { card: "223 44% 96%", popover: "223 44% 96%", secondary: "223 28% 93%", muted: "223 28% 93%", border: "223 20% 84%", input: "223 20% 84%" },
+            charcoal: { card: "210 12% 97%", popover: "210 12% 97%", secondary: "210 10% 94%", muted: "210 10% 94%", border: "210 8% 85%", input: "210 8% 85%" },
+            ocean: { card: "196 55% 96%", popover: "196 55% 96%", secondary: "196 40% 93%", muted: "196 40% 93%", border: "196 28% 84%", input: "196 28% 84%" },
+            sand: { card: "36 60% 97%", popover: "36 60% 97%", secondary: "36 42% 93%", muted: "36 42% 93%", border: "36 28% 84%", input: "36 28% 84%" },
+            mocha: { card: "24 38% 97%", popover: "24 38% 97%", secondary: "24 28% 93%", muted: "24 28% 93%", border: "24 18% 84%", input: "24 18% 84%" },
+            steel: { card: "216 30% 97%", popover: "216 30% 97%", secondary: "216 24% 93%", muted: "216 24% 93%", border: "216 18% 84%", input: "216 18% 84%" },
+            wine: { card: "344 42% 97%", popover: "344 42% 97%", secondary: "344 30% 93%", muted: "344 30% 93%", border: "344 18% 84%", input: "344 18% 84%" }
+          }
+        };
+
+        var backgroundMap = {
+          dark: {
+            slate: { background: "222 47% 11%", sidebar: "222 47% 11%", scrollbarTrack: "rgba(17, 24, 39, 0.92)", scrollbarTrackBorder: "rgba(51, 65, 85, 0.8)" },
+            midnight: { background: "224 39% 9%", sidebar: "224 39% 9%", scrollbarTrack: "rgba(11, 18, 33, 0.92)", scrollbarTrackBorder: "rgba(55, 65, 81, 0.8)" },
+            ocean: { background: "203 57% 12%", sidebar: "203 57% 12%", scrollbarTrack: "rgba(10, 30, 39, 0.92)", scrollbarTrackBorder: "rgba(46, 93, 112, 0.72)" },
+            forest: { background: "161 44% 11%", sidebar: "161 44% 11%", scrollbarTrack: "rgba(10, 34, 27, 0.92)", scrollbarTrackBorder: "rgba(52, 93, 79, 0.7)" },
+            plum: { background: "268 31% 12%", sidebar: "268 31% 12%", scrollbarTrack: "rgba(28, 18, 39, 0.92)", scrollbarTrackBorder: "rgba(83, 64, 104, 0.78)" },
+            charcoal: { background: "214 14% 10%", sidebar: "214 14% 10%", scrollbarTrack: "rgba(20, 24, 29, 0.92)", scrollbarTrackBorder: "rgba(74, 85, 104, 0.74)" },
+            dusk: { background: "233 32% 12%", sidebar: "233 32% 12%", scrollbarTrack: "rgba(20, 24, 46, 0.92)", scrollbarTrackBorder: "rgba(88, 99, 145, 0.72)" },
+            espresso: { background: "22 28% 11%", sidebar: "22 28% 11%", scrollbarTrack: "rgba(35, 22, 17, 0.92)", scrollbarTrackBorder: "rgba(110, 84, 71, 0.74)" },
+            aurora: { background: "188 40% 11%", sidebar: "188 40% 11%", scrollbarTrack: "rgba(12, 37, 40, 0.92)", scrollbarTrackBorder: "rgba(68, 126, 126, 0.72)" },
+            stone: { background: "210 10% 12%", sidebar: "210 10% 12%", scrollbarTrack: "rgba(28, 31, 35, 0.92)", scrollbarTrackBorder: "rgba(99, 107, 116, 0.72)" }
+          },
+          light: {
+            slate: { background: "210 40% 98%", sidebar: "210 40% 99%", scrollbarTrack: "rgba(226, 232, 240, 0.95)", scrollbarTrackBorder: "rgba(203, 213, 225, 0.9)" },
+            midnight: { background: "220 33% 97%", sidebar: "220 33% 98%", scrollbarTrack: "rgba(226, 232, 240, 0.95)", scrollbarTrackBorder: "rgba(191, 200, 214, 0.9)" },
+            ocean: { background: "196 55% 97%", sidebar: "196 55% 98%", scrollbarTrack: "rgba(214, 234, 240, 0.95)", scrollbarTrackBorder: "rgba(176, 209, 219, 0.88)" },
+            forest: { background: "156 34% 97%", sidebar: "156 34% 98%", scrollbarTrack: "rgba(220, 236, 229, 0.95)", scrollbarTrackBorder: "rgba(180, 208, 196, 0.88)" },
+            plum: { background: "286 37% 97%", sidebar: "286 37% 98%", scrollbarTrack: "rgba(235, 228, 242, 0.95)", scrollbarTrackBorder: "rgba(206, 192, 224, 0.88)" },
+            charcoal: { background: "210 12% 96%", sidebar: "210 12% 97%", scrollbarTrack: "rgba(229, 231, 235, 0.95)", scrollbarTrackBorder: "rgba(209, 213, 219, 0.9)" },
+            dusk: { background: "232 45% 97%", sidebar: "232 45% 98%", scrollbarTrack: "rgba(228, 232, 248, 0.95)", scrollbarTrackBorder: "rgba(196, 203, 234, 0.88)" },
+            espresso: { background: "28 45% 96%", sidebar: "28 45% 97%", scrollbarTrack: "rgba(238, 228, 220, 0.95)", scrollbarTrackBorder: "rgba(214, 194, 182, 0.88)" },
+            aurora: { background: "186 42% 96%", sidebar: "186 42% 97%", scrollbarTrack: "rgba(221, 239, 240, 0.95)", scrollbarTrackBorder: "rgba(186, 220, 220, 0.88)" },
+            stone: { background: "210 14% 95%", sidebar: "210 14% 96%", scrollbarTrack: "rgba(228, 231, 235, 0.95)", scrollbarTrackBorder: "rgba(199, 206, 214, 0.88)" }
+          }
+        };
+
+        function hslToHex(hsl) {
+          var parts = hsl.split(" ");
+          var h = Number(parts[0]);
+          var s = Number(parts[1]) / 100;
+          var l = Number(parts[2]) / 100;
+          var c = (1 - Math.abs(2 * l - 1)) * s;
+          var x = c * (1 - Math.abs((h / 60) % 2 - 1));
+          var m = l - c / 2;
+          var r = 0;
+          var g = 0;
+          var b = 0;
+
+          if (h < 60) { r = c; g = x; }
+          else if (h < 120) { r = x; g = c; }
+          else if (h < 180) { g = c; b = x; }
+          else if (h < 240) { g = x; b = c; }
+          else if (h < 300) { r = x; b = c; }
+          else { r = c; b = x; }
+
+          function toHex(value) {
+            return Math.round((value + m) * 255).toString(16).padStart(2, "0");
+          }
+
+          return "#" + toHex(r) + toHex(g) + toHex(b);
+        }
+
+        function setBootBookingTemplate(template) {
+          var value = template || "default";
+          root.dataset.bookingTemplate = value;
+
+          function applyToBody() {
+            if (!document.body) {
+              return;
+            }
+
+            if (value === "default") {
+              delete document.body.dataset.bookingTemplate;
+            } else {
+              document.body.dataset.bookingTemplate = value;
+            }
+          }
+
+          if (document.body) {
+            applyToBody();
+          } else {
+            document.addEventListener("DOMContentLoaded", applyToBody, { once: true });
+          }
+        }
+
+        function setPinkBootTheme() {
+          root.style.setProperty("--boot-body-bg", "linear-gradient(180deg, #fff7fa 0%, #fde8f0 100%)");
+          root.style.setProperty("--boot-loader-bg", "linear-gradient(180deg, rgba(255, 250, 252, 0.98) 0%, rgba(253, 232, 240, 0.98) 100%)");
+          root.style.setProperty("--boot-glow", "radial-gradient(circle at top, rgba(216, 116, 155, 0.2), transparent 30%)");
+          root.style.setProperty("--boot-card-bg", "rgba(255, 255, 255, 0.86)");
+          root.style.setProperty("--boot-card-border", "rgba(238, 174, 199, 0.78)");
+          root.style.setProperty("--boot-card-text", "#704357");
+          root.style.setProperty("--boot-card-muted", "rgba(151, 104, 122, 0.78)");
+          root.style.setProperty("--boot-badge-bg", "linear-gradient(135deg, #e38aab, #d7749b)");
+          root.style.setProperty("--boot-badge-color", "#ffffff");
+          root.style.setProperty("--boot-badge-shadow", "0 16px 40px rgba(216, 116, 155, 0.28)");
+          root.style.setProperty("--boot-spinner-border", "rgba(238, 174, 199, 0.36)");
+          root.style.setProperty("--boot-spinner-primary", "#d7749b");
+          root.style.setProperty("--boot-spinner-secondary", "rgba(227, 138, 171, 0.72)");
+
+          var themeMeta = document.querySelector('meta[name="theme-color"]');
+          if (themeMeta) {
+            themeMeta.setAttribute("content", "#fde8f0");
+          }
+        }
+
+        function setBlueBootTheme() {
+          root.style.setProperty("--boot-body-bg", "linear-gradient(180deg, #f3fbff 0%, #dff1fb 100%)");
+          root.style.setProperty("--boot-loader-bg", "linear-gradient(180deg, rgba(248, 252, 255, 0.98) 0%, rgba(223, 241, 251, 0.98) 100%)");
+          root.style.setProperty("--boot-glow", "radial-gradient(circle at top, rgba(86, 172, 226, 0.22), transparent 30%)");
+          root.style.setProperty("--boot-card-bg", "rgba(255, 255, 255, 0.88)");
+          root.style.setProperty("--boot-card-border", "rgba(181, 222, 244, 0.8)");
+          root.style.setProperty("--boot-card-text", "#17415f");
+          root.style.setProperty("--boot-card-muted", "rgba(91, 128, 150, 0.78)");
+          root.style.setProperty("--boot-badge-bg", "linear-gradient(135deg, #56ace2, #1f7eb8)");
+          root.style.setProperty("--boot-badge-color", "#ffffff");
+          root.style.setProperty("--boot-badge-shadow", "0 16px 40px rgba(31, 126, 184, 0.28)");
+          root.style.setProperty("--boot-spinner-border", "rgba(181, 222, 244, 0.42)");
+          root.style.setProperty("--boot-spinner-primary", "#3498d4");
+          root.style.setProperty("--boot-spinner-secondary", "rgba(86, 172, 226, 0.72)");
+
+          var themeMeta = document.querySelector('meta[name="theme-color"]');
+          if (themeMeta) {
+            themeMeta.setAttribute("content", "#dff1fb");
+          }
+        }
+
+        function setGreenBootTheme() {
+          root.style.setProperty("--boot-body-bg", "linear-gradient(180deg, #f1fbf6 0%, #dff4eb 100%)");
+          root.style.setProperty("--boot-loader-bg", "linear-gradient(180deg, rgba(248, 255, 251, 0.98) 0%, rgba(223, 244, 235, 0.98) 100%)");
+          root.style.setProperty("--boot-glow", "radial-gradient(circle at top, rgba(79, 190, 141, 0.22), transparent 30%)");
+          root.style.setProperty("--boot-card-bg", "rgba(255, 255, 255, 0.88)");
+          root.style.setProperty("--boot-card-border", "rgba(194, 234, 216, 0.82)");
+          root.style.setProperty("--boot-card-text", "#1e4c3e");
+          root.style.setProperty("--boot-card-muted", "rgba(92, 128, 114, 0.78)");
+          root.style.setProperty("--boot-badge-bg", "linear-gradient(135deg, #4fbe8d, #21a36f)");
+          root.style.setProperty("--boot-badge-color", "#ffffff");
+          root.style.setProperty("--boot-badge-shadow", "0 16px 40px rgba(33, 163, 111, 0.28)");
+          root.style.setProperty("--boot-spinner-border", "rgba(194, 234, 216, 0.42)");
+          root.style.setProperty("--boot-spinner-primary", "#40bd8a");
+          root.style.setProperty("--boot-spinner-secondary", "rgba(79, 190, 141, 0.72)");
+
+          var themeMeta = document.querySelector('meta[name="theme-color"]');
+          if (themeMeta) {
+            themeMeta.setAttribute("content", "#dff4eb");
+          }
+        }
+
+        function setBootTheme(mode, backgroundValue) {
+          root.dataset.theme = mode;
+          root.classList.toggle("dark", mode === "dark");
+          root.classList.toggle("light", mode === "light");
+          root.style.colorScheme = mode;
+
+          if (mode === "light") {
+            root.style.setProperty("--boot-body-bg", "linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%)");
+            root.style.setProperty("--boot-loader-bg", "linear-gradient(180deg, rgba(248, 250, 252, 0.98) 0%, rgba(238, 242, 247, 0.98) 100%)");
+            root.style.setProperty("--boot-glow", "radial-gradient(circle at top, rgba(245, 158, 11, 0.12), transparent 28%)");
+            root.style.setProperty("--boot-card-bg", "rgba(255, 255, 255, 0.84)");
+            root.style.setProperty("--boot-card-border", "rgba(203, 213, 225, 0.92)");
+            root.style.setProperty("--boot-card-text", "#0f172a");
+            root.style.setProperty("--boot-card-muted", "rgba(51, 65, 85, 0.72)");
+          } else {
+            root.style.setProperty("--boot-body-bg", "linear-gradient(180deg, #111b37 0%, #0f172a 100%)");
+            root.style.setProperty("--boot-loader-bg", "linear-gradient(180deg, rgba(17, 27, 55, 0.98) 0%, rgba(15, 23, 42, 0.98) 100%)");
+            root.style.setProperty("--boot-glow", "radial-gradient(circle at top, rgba(245, 158, 11, 0.16), transparent 28%)");
+            root.style.setProperty("--boot-card-bg", "rgba(15, 23, 42, 0.72)");
+            root.style.setProperty("--boot-card-border", "rgba(71, 85, 105, 0.48)");
+            root.style.setProperty("--boot-card-text", "#f8fafc");
+            root.style.setProperty("--boot-card-muted", "rgba(226, 232, 240, 0.74)");
+          }
+
+          if (backgroundValue) {
+            root.style.setProperty("--boot-surface", "hsl(" + backgroundValue + ")");
+            var themeMeta = document.querySelector('meta[name="theme-color"]');
+            if (themeMeta) {
+              themeMeta.setAttribute("content", hslToHex(backgroundValue));
+            }
+          }
+        }
+
+        try {
+          var raw = window.localStorage.getItem(CACHE_KEY);
+          if (!raw) {
+            return;
+          }
+
+          var settings = JSON.parse(raw);
+          bootLogoUrl = settings && (settings.logoUrl || settings.faviconUrl) ? (settings.logoUrl || settings.faviconUrl) : "";
+          var mode = settings && settings.themeMode === "light" ? "light" : "dark";
+          var backgroundTheme = (backgroundMap[mode] && backgroundMap[mode][settings && settings.backgroundTheme]) || backgroundMap[mode].slate;
+          var cardTheme = (cardMap[mode] && cardMap[mode][settings && settings.cardTheme]) || cardMap[mode].navy;
+          var primaryTheme = primaryMap[(settings && settings.primaryTheme) || "amber"] || primaryMap.amber;
+          var accentTheme = primaryMap[(settings && settings.accentTheme) || "amber"] || primaryMap.amber;
+          var bookingTemplate =
+            settings && (settings.bookingTemplate === "pink" || settings.bookingTemplate === "blue" || settings.bookingTemplate === "green")
+              ? settings.bookingTemplate
+              : "default";
+
+          setBootBookingTemplate(bookingTemplate);
+          setBootTheme(mode, settings && settings.customThemeEnabled ? backgroundTheme.background : mode === "light" ? "210 40% 98%" : "222 47% 11%");
+
+          if (bookingTemplate === "pink") {
+            setPinkBootTheme();
+          } else if (bookingTemplate === "blue") {
+            setBlueBootTheme();
+          } else if (bookingTemplate === "green") {
+            setGreenBootTheme();
+          }
+
+          if (settings && settings.customThemeEnabled) {
+            root.style.setProperty("--background", backgroundTheme.background);
+            root.style.setProperty("--primary", primaryTheme.primary);
+            root.style.setProperty("--primary-foreground", primaryTheme.foreground);
+            root.style.setProperty("--accent", accentTheme.primary);
+            root.style.setProperty("--accent-foreground", accentTheme.foreground);
+            root.style.setProperty("--ring", primaryTheme.primary);
+            root.style.setProperty("--card", cardTheme.card);
+            root.style.setProperty("--popover", cardTheme.popover);
+            root.style.setProperty("--secondary", cardTheme.secondary);
+            root.style.setProperty("--muted", cardTheme.muted);
+            root.style.setProperty("--border", cardTheme.border);
+            root.style.setProperty("--input", cardTheme.input);
+            root.style.setProperty("--sidebar-primary", primaryTheme.primary);
+            root.style.setProperty("--sidebar-primary-foreground", primaryTheme.foreground);
+            root.style.setProperty("--sidebar", backgroundTheme.sidebar);
+            root.style.setProperty("--sidebar-accent", cardTheme.secondary);
+            root.style.setProperty("--sidebar-border", cardTheme.border);
+            root.style.setProperty("--scrollbar-track", backgroundTheme.scrollbarTrack);
+            root.style.setProperty("--scrollbar-track-border", backgroundTheme.scrollbarTrackBorder);
+          }
+        } catch (error) {
+          root.dataset.theme = "dark";
+          root.classList.add("dark");
+        }
+
+        if (bootLogoUrl) {
+          window.__BOOKING_BOOT_LOGO_URL__ = bootLogoUrl;
+        }
+      })();
+    </script>
+    <style>
+      :root {
+        color-scheme: dark;
+        --boot-glow: radial-gradient(circle at top, rgba(245, 158, 11, 0.16), transparent 28%);
+        --boot-body-bg: linear-gradient(180deg, #111b37 0%, #0f172a 100%);
+        --boot-loader-bg: linear-gradient(180deg, rgba(17, 27, 55, 0.98) 0%, rgba(15, 23, 42, 0.98) 100%);
+        --boot-card-bg: rgba(15, 23, 42, 0.72);
+        --boot-card-border: rgba(71, 85, 105, 0.48);
+        --boot-card-text: #f8fafc;
+        --boot-card-muted: rgba(226, 232, 240, 0.74);
+      }
+
+      body {
+        margin: 0;
+        font-family: "Vazirmatn", sans-serif;
+        background:
+          var(--boot-glow),
+          var(--boot-body-bg);
+      }
+
+      #boot-loader {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        background:
+          var(--boot-glow),
+          var(--boot-loader-bg);
+        transition: opacity 0.35s ease, visibility 0.35s ease;
+      }
+
+      #boot-loader.is-hidden {
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+      }
+
+      .boot-loader__card {
+        width: min(100%, 360px);
+        border: 1px solid var(--boot-card-border);
+        border-radius: 28px;
+        padding: 28px 24px;
+        text-align: center;
+        color: var(--boot-card-text);
+        background: var(--boot-card-bg);
+        box-shadow:
+          0 22px 60px rgba(0, 0, 0, 0.32),
+          inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(16px);
+      }
+
+      .boot-loader__badge {
+        width: 68px;
+        height: 68px;
+        margin: 0 auto 18px;
+        display: grid;
+        place-items: center;
+        border-radius: 24px;
+        background: var(--boot-badge-bg, linear-gradient(135deg, #f59e0b, #fbbf24));
+        color: var(--boot-badge-color, #0f172a);
+        font-size: 30px;
+        font-weight: 800;
+        box-shadow: var(--boot-badge-shadow, 0 16px 40px rgba(245, 158, 11, 0.34));
+      }
+
+      .boot-loader__badge img {
+        width: 52px;
+        height: 52px;
+        object-fit: contain;
+      }
+
+      .boot-loader__spinner {
+        width: 56px;
+        height: 56px;
+        margin: 0 auto 18px;
+        border-radius: 999px;
+        border: 3px solid var(--boot-spinner-border, rgba(148, 163, 184, 0.18));
+        border-top-color: var(--boot-spinner-primary, #f59e0b);
+        border-right-color: var(--boot-spinner-secondary, rgba(251, 191, 36, 0.7));
+        animation: boot-loader-spin 0.9s linear infinite;
+      }
+
+      .boot-loader__title {
+        margin: 0;
+        font-size: 22px;
+        font-weight: 800;
+      }
+
+      .boot-loader__text {
+        margin: 10px 0 0;
+        color: var(--boot-card-muted);
+        font-size: 14px;
+        line-height: 1.9;
+      }
+
+      @keyframes boot-loader-spin {
+        from {
+          transform: rotate(0deg);
+        }
+        to {
+          transform: rotate(360deg);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="boot-loader" aria-hidden="true">
+      <div class="boot-loader__card">
+        <div class="boot-loader__badge">
+          <img id="boot-loader-logo" src="/apple-touch-icon.png" alt="" />
+        </div>
+        <div class="boot-loader__spinner"></div>
+        <h2 id="boot-loader-title" class="boot-loader__title"></h2>
+        <p id="boot-loader-text" class="boot-loader__text"></p>
+      </div>
+    </div>
+    <div id="root"></div>
+    <script>
+      (function () {
+        var logoUrl = window.__BOOKING_BOOT_LOGO_URL__;
+        var logo = document.getElementById("boot-loader-logo");
+
+        if (logoUrl && logo) {
+          logo.setAttribute("src", logoUrl);
+        }
+      })();
+    </script>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

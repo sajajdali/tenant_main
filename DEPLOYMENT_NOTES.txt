@@ -1,0 +1,6 @@
+Deployment notes:
+
+1. Upload/extract this archive at the repository root.
+2. Delete every path listed in DELETE_FILES.txt.
+3. From laravel-app run: php artisan optimize:clear
+4. From laravel-app run: php artisan l5-swagger:generate

@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="BarberBook">
+  <rect width="512" height="512" rx="112" fill="#0F172A"/>
+  <circle cx="256" cy="256" r="154" fill="#F59E0B"/>
+  <path fill="#0F172A" d="M166 136h122c58 0 92 28 92 75 0 29-15 52-42 64 34 11 54 37 54 76 0 53-39 85-103 85H166V136Zm71 118h43c22 0 34-12 34-31s-12-30-34-30h-43v61Zm0 125h52c24 0 37-13 37-34 0-20-14-33-38-33h-51v67Z"/>
+</svg>

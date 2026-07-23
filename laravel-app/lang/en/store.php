@@ -1,0 +1,71 @@
+<?php
+
+return [
+    'category' => [
+        'created' => 'Product category created.',
+        'updated' => 'Product category updated.',
+        'deleted' => 'Product category deleted.',
+    ],
+    'product' => [
+        'created' => 'Product created.',
+        'updated' => 'Product updated.',
+        'deleted' => 'Product deleted.',
+        'discount_greater_than_price' => 'Discounted price cannot be greater than the original price.',
+    ],
+    'review' => [
+        'default_reviewer' => 'User',
+        'submitted' => 'Your review was submitted and will be displayed after admin approval.',
+        'updated' => 'Review updated.',
+        'deleted' => 'Review deleted.',
+    ],
+    'settings' => [
+        'faq_saved' => 'Store FAQ saved.',
+        'shipping_saved' => 'Store shipping settings saved.',
+        'home_saved' => 'Store home page settings saved.',
+        'home_banner_saved' => 'Main site home banner settings saved.',
+        'module_required_for_sms' => 'To enable store SMS messages, enable the store module first.',
+        'general_saved' => 'Store general settings saved.',
+    ],
+    'order' => [
+        'payment_description' => 'Store order payment',
+        'validation' => [
+            'customer_phone_regex' => 'Mobile number must be 11 digits and start with 09.',
+            'items_min' => 'Your cart is empty.',
+            'address_required' => 'Enter your address to confirm and place the order.',
+        ],
+        'checkout' => [
+            'free' => 'The order was placed successfully without payment.',
+            'sandbox' => 'Order was placed in sandbox mode and payment was confirmed.',
+            'gateway' => 'Payment gateway is ready.',
+            'card' => 'Order was placed and is waiting for admin approval.',
+            'default' => 'Your order was placed successfully.',
+        ],
+        'valid_item_required' => 'At least one valid item is required for the order.',
+        'items_edited_comment' => 'Order products were edited by an admin.',
+        'sms_disabled' => 'SMS sending was disabled.',
+        'updated' => 'Order updated successfully.',
+        'sms_registered' => 'SMS registered.',
+        'payment_cancelled' => 'Payment was cancelled by the user.',
+        'currency_toman' => 'toman',
+        'default_business_name' => 'Business',
+        'status' => [
+            'pending_payment' => 'Pending payment',
+            'awaiting_card_transfer' => 'Waiting for admin approval',
+            'placed' => 'Placed',
+            'paid' => 'Paid',
+            'processing' => 'Processing',
+            'shipped' => 'Shipped',
+            'returned' => 'Returned',
+            'cancelled' => 'Cancelled',
+            'rejected' => 'Rejected',
+            'failed' => 'Failed',
+        ],
+        'sms' => [
+            'store_disabled' => 'Store SMS is disabled.',
+            'main_settings_missing' => 'Main system SMS settings were not found.',
+            'template_missing' => 'No approved and active template was found for this status.',
+            'rendered_empty' => 'SMS text became empty after replacing parameters.',
+            'queued' => 'SMS has been queued for sending.',
+        ],
+    ],
+];

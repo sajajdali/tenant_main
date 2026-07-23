@@ -1,0 +1,470 @@
+لیست کامل آیتم‌های قابل ویرایش پروفایل و route/API مربوطه
+بررسی‌شده از کد فعلی پروژه
+
+1) پروفایل عمومی کاربر در وب/اپ tenant
+
+- محل استفاده فرانت:
+  - کامپوننت فرم: client/src/components/user-profile-form.tsx
+  - API wrapper: client/src/lib/api.ts -> api.auth.updateProfile
+
+- آیتم‌های قابل ویرایش:
+  - نام کامل: name
+  - ایمیل: email
+  - جنسیت: gender
+  - کد ملی: nationalCode
+  - تاریخ تولد: birthDate / birthYear / birthMonth / birthDay
+  - استان: provinceId / provinceName
+  - شهر: cityId / cityName
+  - شغل: jobTitle
+
+- route ذخیره:
+  - Method: POST
+  - URL: /api/v1/auth/otp/profile
+  - Laravel route name: tenant.api.auth.profile
+  - Controller: App\Http\Controllers\Tenant\TenantOtpAuthApiController@updateProfile
+  - فایل route: laravel-app/routes/tenant.php
+
+- routeهای کمکی همین بخش:
+  - POST /api/v1/auth/otp/send
+    - tenant.api.auth.otp.send
+    - TenantOtpAuthApiController@send
+  - POST /api/v1/auth/otp/verify
+    - tenant.api.auth.otp.verify
+    - TenantOtpAuthApiController@verify
+  - GET /api/v1/auth/otp/me
+    - tenant.api.auth.me
+    - TenantOtpAuthApiController@me
+  - POST /api/v1/auth/otp/logout
+    - tenant.api.auth.logout
+    - TenantOtpAuthApiController@logout
+
+
+2) پروفایل رژیم مشتری - صفحه اصلی پروفایل تغذیه
+
+- route صفحه فرانت:
+  - /nutrition/profile
+  - فایل: client/src/nutrition/pages/nutrition-profile-home.tsx
+  - تعریف route: client/src/nutrition/routes.tsx
+
+- دکمه‌های ویرایش پروفایل در این صفحه کاربر را می‌فرستند به:
+  - /nutrition/membership/review?edit_only=1&from=profile_home
+
+- route دریافت اطلاعات پروفایل:
+  - API wrapper: api.nutrition.getProfile
+  - Method: GET
+  - URL: /api/v1/nutrition/profile
+  - Laravel route name: tenant.api.nutrition.profile.show
+  - Controller: App\Http\Controllers\Tenant\NutritionProfileController@show
+
+- route دریافت داشبورد پروفایل:
+  - API wrapper: api.nutrition.getProfileDashboard
+  - Method: GET
+  - URL: /api/v1/nutrition/profile-dashboard
+  - Laravel route name: tenant.api.nutrition.profile-dashboard.show
+  - Controller: App\Http\Controllers\Tenant\NutritionProfileDashboardController@show
+
+
+3) آیتم‌های پایه پروفایل رژیم
+
+این آیتم‌ها در حالت ویرایش از helper زیر ذخیره می‌شوند:
+- client/src/nutrition/lib/membership-edit-persistence.ts -> saveMembershipProfileEdit
+
+برای تغییر هرکدام از آیتم‌های زیر، کل پروفایل پایه با یک endpoint ذخیره می‌شود:
+- هدف رژیم: dietGoal
+  - صفحه: /nutrition/membership/goal
+  - فایل: client/src/nutrition/pages/nutrition-membership-goal.tsx
+- جنسیت: gender
+  - صفحه: /nutrition/membership/gender
+  - فایل: client/src/nutrition/pages/nutrition-membership-gender.tsx
+- وضعیت ورزشکار / غیر ورزشکار: athleteMode
+  - صفحه: /nutrition/membership/activity
+  - فایل: client/src/nutrition/pages/nutrition-membership-activity.tsx
+- سطح فعالیت: activityLevel
+  - صفحه: /nutrition/membership/activity
+  - فایل: client/src/nutrition/pages/nutrition-membership-activity.tsx
+- قد: heightCm
+  - صفحه: /nutrition/membership/height
+  - فایل: client/src/nutrition/pages/nutrition-membership-height.tsx
+- وزن فعلی: weightKg
+  - صفحه: /nutrition/membership/weight
+  - فایل: client/src/nutrition/pages/nutrition-membership-weight.tsx
+
+- route ذخیره مشترک برای موارد بالا:
+  - API wrapper: api.nutrition.saveProfile
+  - Method: POST
+  - URL: /api/v1/nutrition/profile
+  - Laravel route name: tenant.api.nutrition.profile.store
+  - Controller: App\Http\Controllers\Tenant\NutritionProfileController@store
+  - payload اصلی: dietGoal, gender, athleteMode, activityLevel, birthDate, heightCm, weightKg
+
+
+4) تاریخ تولد پروفایل رژیم
+
+- آیتم قابل ویرایش:
+  - تاریخ تولد: birthDate
+
+- محل فرانت:
+  - صفحه: /nutrition/membership/birth-date
+  - فایل: client/src/nutrition/pages/nutrition-membership-birth-date.tsx
+  - helper ذخیره: saveMembershipProfileEdit({ step: "birth-date" })
+
+- route ذخیره:
+  - API wrapper: api.nutrition.updateBirthDate
+  - Method: POST
+  - URL: /api/v1/nutrition/profile/birth-date
+  - Laravel route name: tenant.api.nutrition.profile.birth-date
+  - Controller: App\Http\Controllers\Tenant\NutritionProfileController@updateBirthDate
+  - payload: birthDate
+
+
+5) وزن هدف و سرعت تغییر وزن
+
+- آیتم‌های قابل ویرایش:
+  - وزن هدف: targetWeightKg
+  - نرخ تغییر وزن هفتگی: weeklyWeightChangeKg
+
+- محل فرانت:
+  - وزن هدف:
+    - صفحه: /nutrition/membership/target-weight
+    - فایل: client/src/nutrition/pages/nutrition-membership-target-weight.tsx
+  - نرخ هفتگی:
+    - صفحه: /nutrition/membership/result یا /nutrition/membership/next
+    - فایل: client/src/nutrition/pages/nutrition-membership-next.tsx
+  - helper ذخیره: saveMembershipProfileEdit با stepهای target-weight و weekly-rate
+
+- route ذخیره:
+  - API wrapper: api.nutrition.updateTargetWeight
+  - Method: POST
+  - URL: /api/v1/nutrition/profile/target-weight
+  - Laravel route name: tenant.api.nutrition.profile.target-weight
+  - Controller: App\Http\Controllers\Tenant\NutritionProfileController@updateTargetWeight
+  - payload: targetWeightKg, weeklyWeightChangeKg
+
+
+6) ترجیحات، بیماری‌ها، داروها، آلرژی و غذاهای disliked
+
+- آیتم‌های قابل ویرایش:
+  - بیماری‌ها / شرایط پزشکی: medicalConditions
+  - آیتم‌های ساختاری بیماری‌ها: medicalConditionsItems
+  - داروها و مکمل‌ها: medicationsAndSupplements
+  - حساسیت‌های غذایی: foodAllergies
+  - غذاهای مورد علاقه نبودن / غذاهای نامطلوب: dislikedFoods
+
+- محل فرانت:
+  - بیماری‌ها:
+    - صفحه: /nutrition/membership/medical-conditions
+    - فایل: client/src/nutrition/pages/nutrition-membership-medical-conditions.tsx
+  - داروها و مکمل‌ها:
+    - صفحه: /nutrition/membership/medications-and-supplements
+    - فایل: client/src/nutrition/pages/nutrition-membership-medications-and-supplements.tsx
+  - آلرژی‌ها:
+    - صفحه: /nutrition/membership/allergies
+    - فایل: client/src/nutrition/pages/nutrition-membership-allergies.tsx
+  - غذاهای نامطلوب:
+    - صفحه: /nutrition/membership/disliked-foods
+    - فایل: client/src/nutrition/pages/nutrition-membership-disliked-foods.tsx
+  - helper ذخیره: saveMembershipProfileEdit با stepهای medical-conditions, medications-and-supplements, allergies, disliked-foods
+
+- route ذخیره مشترک:
+  - API wrapper: api.nutrition.savePreferences
+  - Method: POST
+  - URL: /api/v1/nutrition/profile/preferences
+  - Laravel route name: tenant.api.nutrition.profile.preferences
+  - Controller: App\Http\Controllers\Tenant\NutritionProfileController@updatePreferences
+  - payload: medicalConditions, medicalConditionsItems, medicationsAndSupplements, foodAllergies, dislikedFoods
+
+
+7) سوالات ذهنیت / سبک برنامه
+
+- آیتم‌های قابل ویرایش:
+  - reason
+  - barrier
+  - stressAppetite
+  - hardestTime
+  - planStyle
+
+- محل فرانت:
+  - صفحه: /nutrition/membership/mindset/:step
+  - فایل: client/src/nutrition/pages/nutrition-membership-mindset.tsx
+  - helper ذخیره: saveMembershipProfileEdit({ step: "mindset" })
+
+- route ذخیره:
+  - API wrapper: api.nutrition.saveMindset
+  - Method: POST
+  - URL: /api/v1/nutrition/profile/mindset
+  - Laravel route name: tenant.api.nutrition.profile.mindset
+  - Controller: App\Http\Controllers\Tenant\NutritionProfileController@updateMindset
+  - payload: answers
+
+
+8) انتخاب پکیج تغذیه
+
+- آیتم قابل ویرایش/انتخاب:
+  - پکیج انتخابی: nutritionPackageId
+
+- محل فرانت:
+  - صفحه لیست پکیج‌ها: /nutrition/membership/packages
+  - صفحه انتخاب پکیج: /nutrition/membership/packages/:packageId/select
+  - فایل‌ها:
+    - client/src/nutrition/pages/nutrition-membership-packages.tsx
+    - client/src/nutrition/pages/nutrition-membership-package-select.tsx
+
+- route ذخیره انتخاب پکیج در پروفایل:
+  - API wrapper: api.nutrition.selectPackage
+  - Method: POST
+  - URL: /api/v1/nutrition/profile/package-selection
+  - Laravel route name: tenant.api.nutrition.profile.package-selection
+  - Controller: App\Http\Controllers\Tenant\NutritionProfileController@updatePackageSelection
+  - payload: nutritionPackageId
+
+- routeهای مرتبط با خرید/نمایش پکیج:
+  - GET /api/v1/nutrition/package-checkout/summary
+    - tenant.api.nutrition.package-checkout.summary
+    - NutritionPackagePurchaseController@mySummary
+  - POST /api/v1/nutrition/package-checkout/preview
+    - tenant.api.nutrition.package-checkout.preview
+    - NutritionPackagePurchaseController@preview
+  - POST /api/v1/nutrition/package-checkout/pay
+    - tenant.api.nutrition.package-checkout.pay
+    - NutritionPackagePurchaseController@checkout
+
+
+9) پروفایل عضویت customer app با prefix /api/v1/app/membership
+
+این routeها در backend موجودند و برای مراحل عضویت customer app استفاده می‌شوند.
+
+- GET /api/v1/app/membership/profile
+  - tenant.api.app.membership.profile
+  - CustomerAppMembershipController@profile
+- POST /api/v1/app/membership/profile
+  - tenant.api.app.membership.profile.store
+  - CustomerAppMembershipController@storeProfile
+- GET /api/v1/app/membership/goal
+  - tenant.api.app.membership.goal
+  - CustomerAppMembershipController@goal
+- POST /api/v1/app/membership/goal
+  - tenant.api.app.membership.goal.store
+  - CustomerAppMembershipController@storeGoal
+- GET /api/v1/app/membership/activity
+  - tenant.api.app.membership.activity
+  - CustomerAppMembershipController@activity
+- POST /api/v1/app/membership/activity
+  - tenant.api.app.membership.activity.store
+  - CustomerAppMembershipController@storeActivity
+- GET /api/v1/app/membership/birth-date
+  - tenant.api.app.membership.birth-date
+  - CustomerAppMembershipController@birthDate
+- POST /api/v1/app/membership/birth-date
+  - tenant.api.app.membership.birth-date.store
+  - CustomerAppMembershipController@storeBirthDate
+- GET /api/v1/app/membership/height
+  - tenant.api.app.membership.height
+  - CustomerAppMembershipController@height
+- POST /api/v1/app/membership/height
+  - tenant.api.app.membership.height.store
+  - CustomerAppMembershipController@storeHeight
+- GET /api/v1/app/membership/weight
+  - tenant.api.app.membership.weight
+  - CustomerAppMembershipController@weight
+- POST /api/v1/app/membership/weight
+  - tenant.api.app.membership.weight.store
+  - CustomerAppMembershipController@storeWeight
+- GET /api/v1/app/membership/target-weight
+  - tenant.api.app.membership.target-weight
+  - CustomerAppMembershipController@targetWeight
+- POST /api/v1/app/membership/target-weight
+  - tenant.api.app.membership.target-weight.store
+  - CustomerAppMembershipController@storeTargetWeight
+- GET /api/v1/app/membership/result
+  - tenant.api.app.membership.result
+  - CustomerAppMembershipController@result
+- POST /api/v1/app/membership/result
+  - tenant.api.app.membership.result.store
+  - CustomerAppMembershipController@storeResult
+- GET /api/v1/app/membership/medical-conditions
+  - tenant.api.app.membership.medical-conditions
+  - CustomerAppMembershipController@medicalConditions
+- POST /api/v1/app/membership/medical-conditions
+  - tenant.api.app.membership.medical-conditions.store
+  - CustomerAppMembershipController@storeMedicalConditions
+- GET /api/v1/app/membership/medications-and-supplements
+  - tenant.api.app.membership.medications-and-supplements
+  - CustomerAppMembershipController@medicationsAndSupplements
+- POST /api/v1/app/membership/medications-and-supplements
+  - tenant.api.app.membership.medications-and-supplements.store
+  - CustomerAppMembershipController@storeMedicationsAndSupplements
+- GET /api/v1/app/membership/allergies
+  - tenant.api.app.membership.allergies
+  - CustomerAppMembershipController@allergies
+- POST /api/v1/app/membership/allergies
+  - tenant.api.app.membership.allergies.store
+  - CustomerAppMembershipController@storeAllergies
+- GET /api/v1/app/membership/disliked-foods
+  - tenant.api.app.membership.disliked-foods
+  - CustomerAppMembershipController@dislikedFoods
+- POST /api/v1/app/membership/disliked-foods
+  - tenant.api.app.membership.disliked-foods.store
+  - CustomerAppMembershipController@storeDislikedFoods
+- GET /api/v1/app/membership/mindset
+  - tenant.api.app.membership.mindset
+  - CustomerAppMembershipController@mindset
+- POST /api/v1/app/membership/mindset
+  - tenant.api.app.membership.mindset.store
+  - CustomerAppMembershipController@storeMindset
+
+
+10) ویرایش پروفایل کاربر توسط پنل مدیریت tenant
+
+- route صفحه فرانت:
+  - /panel/users
+  - فایل: client/src/pages/panel-users.tsx
+
+- کامپوننت فرم:
+  - client/src/components/user-profile-form.tsx
+
+- آیتم‌های قابل ویرایش:
+  - نام کامل: name
+  - موبایل: mobile
+  - ایمیل: email
+  - جنسیت: gender
+  - کد ملی: nationalCode
+  - تاریخ تولد: birthDate
+  - استان: provinceId / provinceName
+  - شهر: cityId / cityName
+  - شغل: jobTitle
+  - پیام ثابت پروفایل تغذیه: nutrition_profile_fixed_message
+
+- route ذخیره:
+  - API wrapper: api.users.updateIdentity
+  - Method: PUT
+  - URL: /api/v1/users/{mobile}
+  - Laravel route: Route::put('/users/{mobile}', [TenantUserController::class, 'updateIdentity'])
+  - Controller: App\Http\Controllers\Tenant\TenantUserController@updateIdentity
+  - فایل route: laravel-app/routes/tenant.php
+  - payload اصلی: barber_id, name, mobile, email, gender, nationalCode, birthDate, provinceId, provinceName, cityId, cityName, jobTitle, nutrition_profile_fixed_message
+
+- routeهای مرتبط در همین صفحه:
+  - GET /api/v1/users
+    - TenantUserController@index
+  - GET /api/v1/users/lookup
+    - TenantUserController@lookup
+  - GET /api/v1/users/{mobile}/appointments
+    - TenantUserController@appointments
+  - PUT /api/v1/users/{mobile}/booking-access
+    - TenantUserController@updateBookingAccess
+  - PUT /api/v1/users/{mobile}/vip-access
+    - TenantUserController@updateVipAccess
+  - DELETE /api/v1/users/{mobile}
+    - TenantUserController@destroy
+
+
+11) ساخت/ویرایش پروفایل کاربر در جریان تجویز رژیم توسط پنل تغذیه
+
+- route صفحه فرانت:
+  - /panel/nutrition/prescribe/users/:mobile
+  - فایل: client/src/nutrition/pages/panel-nutrition-prescribe-user-profile.tsx
+  - تعریف route: client/src/nutrition/routes.tsx
+
+- route ذخیره پروفایل تجویز:
+  - API wrapper: api.nutritionAdminUsers.savePrescribeProfile
+  - Method: POST
+  - URL: /api/v1/nutrition/admin-prescribe/profile
+  - Laravel route: Route::post('/nutrition/admin-prescribe/profile', [NutritionAdminUserController::class, 'savePrescribeProfile'])
+  - Controller: App\Http\Controllers\Tenant\NutritionAdminUserController@savePrescribeProfile
+  - فایل route: laravel-app/routes/tenant.php
+
+- آیتم‌های payload:
+  - full_name
+  - mobile
+  - diet_goal
+  - gender
+  - athlete_mode
+  - activity_level
+  - birth_date
+  - height_cm
+  - weight_kg
+  - target_weight_kg
+  - weekly_weight_change_kg
+  - medical_conditions
+  - medical_conditions_items
+  - medications_and_supplements
+  - food_allergies
+  - disliked_foods
+  - mindset_answers
+
+- route نمایش پروفایل کاربر برای پنل تغذیه:
+  - API wrapper: api.nutritionAdminUsers.show
+  - Method: GET
+  - URL: /api/v1/nutrition/admin-users/{mobile}
+  - Controller: NutritionAdminUserController@show
+
+- routeهای ادیت مرتبط با همان پروفایل/کاربر:
+  - POST /api/v1/nutrition/admin-users/{mobile}/grant-package
+    - NutritionAdminUserController@grantPackage
+  - PUT /api/v1/nutrition/admin-users/{mobile}/subscriptions/{subscription}/dates
+    - NutritionAdminUserController@updateSubscriptionDates
+  - POST /api/v1/nutrition/admin-users/{mobile}/subscriptions/{subscription}/credits
+    - NutritionAdminUserController@adjustSubscriptionCredits
+  - POST /api/v1/nutrition/admin-users/{mobile}/access
+    - NutritionAdminUserController@updateAccess
+
+
+12) پروفایل landing customer
+
+- route backend:
+  - Method: POST
+  - URL: /landing-api/v1/auth/otp/profile
+  - Laravel route name: landing.auth.otp.profile
+  - Controller: App\Http\Controllers\Landing\LandingCustomerAuthController@updateProfile
+  - فایل route: laravel-app/routes/web.php
+
+- API wrapper:
+  - client/src/lib/api.ts -> api.landingAuth.updateProfile
+
+- آیتم‌های payload:
+  - name
+  - email
+  - gender
+  - national_code
+  - birth_date
+  - province_id
+  - province_name
+  - city_id
+  - city_name
+  - job_title
+
+
+خلاصه مسیرهای اصلی ویرایش پروفایل تغذیه مشتری
+
+- /nutrition/profile
+  - صفحه اصلی پروفایل و دکمه ورود به ویرایش
+- /nutrition/membership/review?edit_only=1&from=profile_home
+  - صفحه review/ویرایش آیتم‌ها
+- /nutrition/membership/goal
+  - dietGoal -> POST /api/v1/nutrition/profile
+- /nutrition/membership/gender
+  - gender -> POST /api/v1/nutrition/profile
+- /nutrition/membership/activity
+  - athleteMode, activityLevel -> POST /api/v1/nutrition/profile
+- /nutrition/membership/birth-date
+  - birthDate -> POST /api/v1/nutrition/profile/birth-date
+- /nutrition/membership/height
+  - heightCm -> POST /api/v1/nutrition/profile
+- /nutrition/membership/weight
+  - weightKg -> POST /api/v1/nutrition/profile
+- /nutrition/membership/target-weight
+  - targetWeightKg -> POST /api/v1/nutrition/profile/target-weight
+- /nutrition/membership/result یا /nutrition/membership/next
+  - weeklyWeightChangeKg -> POST /api/v1/nutrition/profile/target-weight
+- /nutrition/membership/medical-conditions
+  - medicalConditions, medicalConditionsItems -> POST /api/v1/nutrition/profile/preferences
+- /nutrition/membership/medications-and-supplements
+  - medicationsAndSupplements -> POST /api/v1/nutrition/profile/preferences
+- /nutrition/membership/allergies
+  - foodAllergies -> POST /api/v1/nutrition/profile/preferences
+- /nutrition/membership/disliked-foods
+  - dislikedFoods -> POST /api/v1/nutrition/profile/preferences
+- /nutrition/membership/mindset/:step
+  - mindset answers -> POST /api/v1/nutrition/profile/mindset
+- /nutrition/membership/packages/:packageId/select
+  - nutritionPackageId -> POST /api/v1/nutrition/profile/package-selection
