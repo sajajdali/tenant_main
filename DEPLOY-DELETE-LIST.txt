@@ -1,0 +1,5 @@
+These files were deleted from Git and are intentionally not included in this archive.
+Delete them from the server after extracting the ZIP:
+
+laravel-app/public/booking-app/assets/index-CQusj15z.js
+laravel-app/public/booking-app/assets/index-DJQohCto.css

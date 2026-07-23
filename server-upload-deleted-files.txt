@@ -1,0 +1,8 @@
+فایل‌هایی که در git حذف شده‌اند و داخل zip قرار نمی‌گیرند.
+اگر سرور با آپلود zip به‌روزرسانی می‌شود، این فایل‌ها را روی سرور حذف کنید:
+
+laravel-app/public/booking-app/assets/ar-CvENj2KO.js
+laravel-app/public/booking-app/assets/de-CSmSm6R2.js
+laravel-app/public/booking-app/assets/en-BAjyXYcV.js
+laravel-app/public/booking-app/assets/index-lrvHD4u-.js
+laravel-app/public/booking-app/assets/index-D7HpWb0O.js

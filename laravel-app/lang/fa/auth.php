@@ -1,0 +1,36 @@
+<?php
+
+return [
+    'admin_login' => [
+        'brand_name' => 'Tenant',
+        'fallback_panel_title' => 'ورود به پنل',
+        'fallback_side_title' => 'ورود به پنل مدیریت',
+        'fallback_panel_description' => 'از این بخش مدیر می‌تواند آرایشگاه‌ها، دامنه‌ها، تنظیمات و نوبت‌ها را مدیریت کند.',
+        'central_panel_title' => 'ورود به پنل',
+        'central_panel_description' => 'مدیر کل، مدیر فروش و کارشناس فروش از این بخش با شماره موبایل و رمز عبور وارد پنل خودشان می‌شوند.',
+        'tenant_panel_title' => 'ورود مدیر آرایشگاه',
+        'tenant_panel_description' => 'با حساب کاربری مدیر وارد پنل این آرایشگاه شوید.',
+        'description_otp' => 'با شماره موبایل و کد یکبارمصرف وارد شوید.',
+        'description_password' => 'با شماره موبایل و رمز عبور وارد شوید.',
+        'access_locked_title' => 'دسترسی این پنل بسته شده است.',
+        'access_locked_message' => 'دسترسی به پنل بسته شده است. لطفا با پشتیبانی تماس بگیرید.',
+        'mobile_label' => 'شماره موبایل',
+        'code_label' => 'کد ورود',
+        'password_label' => 'رمز عبور',
+        'password_placeholder' => 'رمز عبور',
+        'test_code' => 'کد تستی فعلی: :code',
+        'remember_me' => 'مرا به خاطر بسپار',
+        'send_otp' => 'ارسال کد ورود',
+        'submit_panel' => 'ورود به پنل',
+        'submit_with_mobile' => 'ورود با شماره موبایل',
+        'invalid_credentials' => 'شماره موبایل یا رمز عبور نادرست است.',
+        'tenant_admin_not_found' => 'کاربر مدیر در این tenant پیدا نشد.',
+        'js' => [
+            'mobile_length' => 'شماره موبایل باید ۱۱ رقم باشد.',
+            'send_failed' => 'ارسال کد با خطا مواجه شد.',
+            'otp_sent' => 'کد ورود ارسال شد. کد تستی فعلی :code است.',
+            'verify_required' => 'شماره موبایل و کد ورود را کامل وارد کنید.',
+            'login_failed' => 'ورود انجام نشد.',
+        ],
+    ],
+];

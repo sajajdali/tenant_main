@@ -1,0 +1,5 @@
+laravel-app/public/booking-app/assets/ar-CDs7-a1d.js
+laravel-app/public/booking-app/assets/de-Cma2Y9Pi.js
+laravel-app/public/booking-app/assets/en-B-fIwr5X.js
+laravel-app/public/booking-app/assets/index-9qR4LGrr.css
+laravel-app/public/booking-app/assets/index-Bj96a-67.js

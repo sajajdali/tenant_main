@@ -1,0 +1,7 @@
+فایل‌های زیر در نسخه جدید حذف شده‌اند و باید از سرور نیز حذف شوند:
+
+laravel-app/public/booking-app/assets/ar-BCPm9CjU.js
+laravel-app/public/booking-app/assets/de-JsihU0pW.js
+laravel-app/public/booking-app/assets/en-DDFwl4ir.js
+laravel-app/public/booking-app/assets/index-4B4N5P7V.js
+laravel-app/public/booking-app/assets/index-C4idzrqs.css

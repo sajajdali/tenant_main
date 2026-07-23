@@ -1,0 +1,15 @@
+Barber Book appointment security fix
+Generated: 2026-07-01
+
+Contents:
+- 3 modified files
+- 2 new files
+- DEPLOYMENT-MANIFEST.txt
+- DELETED-FILES.txt
+
+Deploy:
+1. Extract this archive in the project root while preserving paths.
+2. Delete the files listed in DELETED-FILES.txt from the server.
+3. Run: cd laravel-app && php artisan optimize:clear
+
+No database migration is required for this package.

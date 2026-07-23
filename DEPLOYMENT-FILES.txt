@@ -1,0 +1,3 @@
+client/src/pages/home.tsx
+laravel-app/public/booking-app/assets/index-CfKL-mQU.js
+laravel-app/public/booking-app/index.html
