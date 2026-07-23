@@ -1,13 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
 import { getInitialTenantMeta } from "@/lib/bootstrap";
-import defaultHeroImage from "../../../attached_assets/new-landing-tempplate/assets/hero-photo.webp";
-import defaultVideoCover from "../../../attached_assets/new-landing-tempplate/assets/video-poster.webp";
 import { useLandingAuth } from "@/lib/landing-auth";
 import { LandingAuthDialog } from "@/components/landing-auth-dialog";
 import { getLandingSiteSettings } from "@/lib/landing-site";
 import { Menu, Phone, X } from "lucide-react";
 import { api } from "@/lib/api";
 import type { LandingOrderSummary } from "@/lib/types";
+
+const defaultHeroImage = "http://127.0.0.1:8000/booking-app/assets/hero-photo-Nr4dc0GO.webp";
+const defaultVideoCover = "http://127.0.0.1:8000/booking-app/assets/video-poster-DEWPFhsm.webp";
 
 const DEFAULT_ITEMS = [
   "حتی نصف شب هم، بدون یک تماس، نوبت بگیرن؟",
