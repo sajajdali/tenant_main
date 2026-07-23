@@ -10,3 +10,16 @@ declare module "iran-cities-json" {
     ostan: number | string;
   }>;
 }
+
+declare module "@replit/vite-plugin-runtime-error-modal" {
+  const runtimeErrorOverlay: () => unknown;
+  export default runtimeErrorOverlay;
+}
+
+declare module "@replit/vite-plugin-cartographer" {
+  export const cartographer: () => unknown;
+}
+
+declare module "@replit/vite-plugin-dev-banner" {
+  export const devBanner: () => unknown;
+}

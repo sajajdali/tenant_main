@@ -1,6 +1,7 @@
 import { useRoute } from "wouter";
 import { getInitialTenantMeta } from "@/lib/bootstrap";
-import defaultHeroImage from "../../../attached_assets/new-landing-tempplate/assets/hero-photo.webp";
+
+const defaultHeroImage = "http://127.0.0.1:8000/booking-app/assets/hero-photo-Nr4dc0GO.webp";
 
 type Feature = { title: string; badge: string; short: string; detail: string; url: string; images: string[]; videoUrl: string; coverUrl: string; benefits: string[] };
 
