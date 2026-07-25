@@ -1659,8 +1659,11 @@ export const api = {
 
     create: async (payload: {
       name: string;
+      shortTitle?: string | null;
+      subtitle?: string | null;
       slug?: string;
       description?: string | null;
+      features?: Array<{ icon: string; text: string }>;
       image?: File | null;
       parentId?: string | null;
       applicableGoals: string[];
@@ -1670,13 +1673,22 @@ export const api = {
       priceAmount: number;
       discountedPriceAmount?: number | null;
       badgeTitle?: string | null;
+      isRecommended?: boolean;
+      visualStyle?: string;
+      actionLabel?: string | null;
       sortOrder?: number;
       isActive?: boolean;
     }): Promise<ApiResponse<NutritionPackageItem>> => {
       const formData = new FormData();
       formData.append("name", payload.name);
+      formData.append("short_title", payload.shortTitle ?? "");
+      formData.append("subtitle", payload.subtitle ?? "");
       formData.append("slug", payload.slug || "");
       formData.append("description", payload.description ?? "");
+      (payload.features ?? []).forEach((feature, index) => {
+        formData.append(`features[${index}][icon]`, feature.icon);
+        formData.append(`features[${index}][text]`, feature.text);
+      });
       formData.append("parent_id", payload.parentId || "");
       payload.applicableGoals.forEach((goal) => formData.append("applicable_goals[]", goal));
       formData.append("online_diet_count", String(payload.onlineDietCount));
@@ -1685,6 +1697,9 @@ export const api = {
       formData.append("price_amount", String(payload.priceAmount));
       formData.append("discounted_price_amount", payload.discountedPriceAmount == null ? "" : String(payload.discountedPriceAmount));
       formData.append("badge_title", payload.badgeTitle ?? "");
+      formData.append("is_recommended", payload.isRecommended ? "1" : "0");
+      formData.append("visual_style", payload.visualStyle ?? "normal");
+      formData.append("action_label", payload.actionLabel ?? "");
       formData.append("sort_order", String(payload.sortOrder ?? 0));
       formData.append("is_active", payload.isActive === false ? "0" : "1");
       if (payload.image) {
@@ -1695,8 +1710,11 @@ export const api = {
 
     update: async (id: string, payload: {
       name: string;
+      shortTitle?: string | null;
+      subtitle?: string | null;
       slug?: string;
       description?: string | null;
+      features?: Array<{ icon: string; text: string }>;
       image?: File | null;
       removeImage?: boolean;
       parentId?: string | null;
@@ -1707,13 +1725,22 @@ export const api = {
       priceAmount: number;
       discountedPriceAmount?: number | null;
       badgeTitle?: string | null;
+      isRecommended?: boolean;
+      visualStyle?: string;
+      actionLabel?: string | null;
       sortOrder?: number;
       isActive: boolean;
     }): Promise<ApiResponse<NutritionPackageItem>> => {
       const formData = new FormData();
       formData.append("name", payload.name);
+      formData.append("short_title", payload.shortTitle ?? "");
+      formData.append("subtitle", payload.subtitle ?? "");
       formData.append("slug", payload.slug || "");
       formData.append("description", payload.description ?? "");
+      (payload.features ?? []).forEach((feature, index) => {
+        formData.append(`features[${index}][icon]`, feature.icon);
+        formData.append(`features[${index}][text]`, feature.text);
+      });
       formData.append("parent_id", payload.parentId || "");
       payload.applicableGoals.forEach((goal) => formData.append("applicable_goals[]", goal));
       formData.append("online_diet_count", String(payload.onlineDietCount));
@@ -1722,6 +1749,9 @@ export const api = {
       formData.append("price_amount", String(payload.priceAmount));
       formData.append("discounted_price_amount", payload.discountedPriceAmount == null ? "" : String(payload.discountedPriceAmount));
       formData.append("badge_title", payload.badgeTitle ?? "");
+      formData.append("is_recommended", payload.isRecommended ? "1" : "0");
+      formData.append("visual_style", payload.visualStyle ?? "normal");
+      formData.append("action_label", payload.actionLabel ?? "");
       formData.append("sort_order", String(payload.sortOrder ?? 0));
       formData.append("is_active", payload.isActive ? "1" : "0");
       formData.append("remove_image", payload.removeImage ? "1" : "0");

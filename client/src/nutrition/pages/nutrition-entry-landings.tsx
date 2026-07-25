@@ -78,6 +78,9 @@ function DietEditorialLanding({ previewMode = false }: { previewMode?: boolean }
   const content = variant.content;
   const heroImageUrl = variant.imageUrl || "/booking-app/nutrition-hero.jpg";
   const ActionIcon = isRtl ? ArrowLeft : ChevronLeft;
+  const highlightWords = content.highlight.split(/\s+/).filter(Boolean);
+  const highlightIntro = highlightWords.length > 2 ? highlightWords.slice(0, 2).join(" ") : "";
+  const highlightRest = highlightWords.length > 2 ? highlightWords.slice(2).join(" ") : content.highlight;
 
   const handleNutritionStart = async () => {
     if (user?.name?.trim()) {
@@ -89,101 +92,84 @@ function DietEditorialLanding({ previewMode = false }: { previewMode?: boolean }
   };
 
   return (
-    <div className="min-h-screen bg-[#120d09] text-white" dir={dir}>
-      <div className="relative isolate overflow-hidden">
-        <div className="absolute inset-0 -z-20 bg-[radial-gradient(circle_at_top_left,rgba(245,158,11,0.2),transparent_28%),linear-gradient(135deg,#140d08_0%,#25160d_40%,#0f172a_100%)]" />
-        <div className="absolute inset-y-0 start-0 -z-10 hidden w-[46%] lg:block">
-          <img src={heroImageUrl} alt={brandName} className="h-full w-full object-cover opacity-80" />
-          <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(9,6,5,0.2),rgba(9,6,5,0.88)_82%,rgba(9,6,5,1)_100%)]" />
-        </div>
+    <div className="min-h-screen overflow-hidden bg-[#0b0705] text-white" dir={dir}>
+      <section className="relative h-[clamp(320px,42vw,620px)] overflow-hidden">
+        <img src={heroImageUrl} alt={brandName} className="h-full w-full object-cover" />
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(11,7,5,0.15)_0%,rgba(11,7,5,0.55)_55%,rgba(11,7,5,0.97)_100%)]" />
 
-        <div className="mx-auto min-h-screen w-full max-w-7xl px-5 pb-10 pt-10 sm:px-8 lg:px-10">
+        <div className="absolute inset-x-0 top-0 z-10 px-[clamp(16px,4vw,56px)] pt-[clamp(16px,3vw,36px)]">
           <NutritionTopbar
             backHref="/booking"
             title={t("nutritionEntryLanding.diet.topbarTitle")}
             description={t("nutritionEntryLanding.diet.topbarDescription")}
             onRequireLogin={() => setLoginOpen(true)}
+            variant="hero"
+            compact
           />
-
           {previewMode ? <PreviewTabs currentPath="/nutrition/landing-diet" /> : null}
+        </div>
 
-          <div className="mt-8 grid gap-8 lg:grid-cols-[0.92fr_1.08fr] lg:items-end">
-            <div className="lg:hidden">
-              <div className="overflow-hidden rounded-[32px] border border-white/10 bg-white/5 shadow-[0_30px_90px_-50px_rgba(0,0,0,0.95)]">
-                <img src={heroImageUrl} alt={brandName} className="h-72 w-full object-cover" />
-              </div>
-            </div>
+        <div className="absolute bottom-[clamp(16px,3vw,32px)] start-[clamp(16px,4vw,56px)] inline-flex items-center gap-2 rounded-full border border-[#ffb266]/35 bg-white/10 px-[18px] py-[9px] text-[clamp(12.5px,1.3vw,14px)] font-semibold text-[#ffcf99] backdrop-blur-md">
+          <UtensilsCrossed className="h-4 w-4" />
+          <span>{content.badge}</span>
+        </div>
+      </section>
 
-            <div className="space-y-6 pb-4">
-              <div className="inline-flex items-center gap-2 rounded-full border border-amber-300/20 bg-amber-300/10 px-4 py-2 text-xs font-black text-amber-200">
-                <Sparkles className="h-4 w-4" />
-                {content.badge}
-              </div>
+      <main className="mx-auto flex w-full max-w-6xl flex-col gap-[clamp(20px,3vw,28px)] px-[clamp(20px,4vw,56px)] pb-[clamp(48px,7vw,80px)] pt-[clamp(24px,5vw,56px)]">
+        <div className="text-[clamp(13.5px,1.4vw,15px)] font-semibold text-[#e2b980]">{content.eyebrow}</div>
 
-              <div className="max-w-3xl space-y-5">
-                <div className="text-sm font-bold tracking-[0.28em] text-amber-100/75">{content.eyebrow}</div>
-                <h1 className="text-4xl font-black leading-[1.18] sm:text-6xl">
-                  {content.title}
-                  <span className="mx-2 bg-[linear-gradient(135deg,#fde68a_0%,#f59e0b_45%,#fb7185_100%)] bg-clip-text text-transparent">
-                    {content.highlight}
-                  </span>
-                </h1>
-                <p className="max-w-2xl text-base leading-9 text-white/78 sm:text-lg">{content.description}</p>
-              </div>
+        <h1 className="m-0 max-w-[14ch] text-[clamp(30px,5vw,60px)] font-extrabold leading-[1.28] text-[#f7f0e7]">
+          {content.title}
+          {highlightIntro ? <span className="bg-[linear-gradient(90deg,#ff9d4d,#ff5f6d)] bg-clip-text text-transparent"> {highlightIntro}</span> : null}
+          <br />
+          <span className="bg-[linear-gradient(90deg,#ffb066,#ff6b6b)] bg-clip-text text-transparent">
+            {highlightRest}
+          </span>
+        </h1>
 
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="rounded-[30px] border border-white/10 bg-white/6 p-5 backdrop-blur-xl">
-                  <div className="text-xs font-bold text-amber-200/80">{t("nutritionEntryLanding.mainBenefit")}</div>
-                  <div className="mt-3 text-2xl font-black">{content.feature_title}</div>
-                  <div className="mt-3 text-sm leading-8 text-white/72">{content.feature_body}</div>
-                </div>
-                <div className="rounded-[30px] border border-white/10 bg-black/18 p-5 backdrop-blur-xl">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-[18px] bg-amber-300/14 text-amber-200">
-                      <UtensilsCrossed className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <div className="text-xs font-bold text-white/55">{t("nutritionEntryLanding.versionSlogan")}</div>
-                      <div className="text-lg font-black">{content.quote_title}</div>
-                    </div>
-                  </div>
-                  <div className="mt-4 text-sm leading-8 text-white/72">{content.quote_body}</div>
-                </div>
-              </div>
-            </div>
+        <p className="m-0 max-w-2xl text-[clamp(15px,1.6vw,18px)] font-normal leading-[1.95] text-[#f5efe7]/80">{content.description}</p>
 
-            <div className="rounded-[40px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.08),rgba(255,255,255,0.03))] p-4 shadow-[0_50px_120px_-60px_rgba(0,0,0,0.95)] backdrop-blur-2xl sm:p-6">
-              <div className="overflow-hidden rounded-[32px] border border-white/10 bg-black/20">
-                <img src={heroImageUrl} alt={brandName} className="h-72 w-full object-cover sm:h-[420px]" />
-              </div>
+        <div className="mt-1 flex flex-wrap gap-4">
+          <div className="flex min-w-[260px] flex-1 flex-col gap-3 rounded-[20px] border border-white/12 bg-white/6 px-6 py-[22px]">
+            <div className="text-[13px] font-semibold text-[#e2b980]">{t("nutritionEntryLanding.versionSlogan")}</div>
+            <div className="text-lg font-bold leading-[1.5] text-[#f7f0e7]">{content.quote_title}</div>
+            <div className="text-[14.5px] leading-[1.85] text-[#f5efe7]/65">{content.quote_body}</div>
+          </div>
 
-              <div className="mt-6 rounded-[30px] border border-amber-300/20 bg-[linear-gradient(135deg,rgba(251,191,36,0.16),rgba(244,114,182,0.08))] p-6">
-                <div className="text-sm font-bold text-amber-100">{t("nutritionEntryLanding.primaryEntry")}</div>
-                <div className="mt-2 text-3xl font-black">{content.cta_label}</div>
-                <div className="mt-3 text-sm leading-8 text-white/78">{content.cta_body}</div>
-
-                <button
-                  type="button"
-                  onClick={() => void handleNutritionStart()}
-                  className="mt-6 flex w-full items-center justify-between rounded-[24px] bg-[linear-gradient(135deg,#fde68a_0%,#f59e0b_48%,#fb923c_100%)] px-5 py-4 text-start text-slate-950 shadow-[0_24px_70px_-30px_rgba(245,158,11,0.8)] transition hover:brightness-105"
-                >
-                  <div>
-                    <div className="text-xs font-black text-slate-900/70">{t("nutritionEntryLanding.primaryCta")}</div>
-                    <div className="mt-1 text-xl font-black">{content.cta_label}</div>
-                  </div>
-                  <ActionIcon className="h-6 w-6" />
-                </button>
-              </div>
-
-              {previewMode ? (
-                <div className="mt-4">
-                  <PreviewFooter />
-                </div>
-              ) : null}
-            </div>
+          <div className="flex min-w-[260px] flex-1 flex-col gap-3 rounded-[20px] border border-white/12 bg-white/6 px-6 py-[22px]">
+            <div className="text-[13px] font-semibold text-[#e2b980]">{t("nutritionEntryLanding.mainBenefit")}</div>
+            <div className="text-lg font-bold leading-[1.5] text-[#f7f0e7]">{content.feature_title}</div>
+            <div className="text-[14.5px] leading-[1.85] text-[#f5efe7]/65">{content.feature_body}</div>
           </div>
         </div>
-      </div>
+
+        <div className="w-full max-w-xl">
+          <div className="flex flex-col gap-[18px] rounded-[24px] border border-[#ffb266]/25 bg-[#120c08]/75 p-[22px] shadow-[0_24px_60px_rgba(0,0,0,0.45)] backdrop-blur-xl">
+            <div className="flex items-center gap-4">
+              <div className="h-16 w-16 shrink-0 overflow-hidden rounded-2xl">
+                <img src={heroImageUrl} alt={brandName} className="h-full w-full object-cover" />
+              </div>
+              <div className="flex flex-col gap-1">
+                <div className="text-[12.5px] font-semibold text-[#e2b980]">{t("nutritionEntryLanding.primaryEntry")}</div>
+                <div className="text-xl font-bold text-[#f7f0e7]">{content.cta_label}</div>
+              </div>
+            </div>
+
+            <div className="text-[14.5px] leading-[1.85] text-[#f5efe7]/65">{content.cta_body}</div>
+
+            <button
+              type="button"
+              onClick={() => void handleNutritionStart()}
+              className="flex w-full items-center justify-center gap-2.5 rounded-full border-0 bg-[linear-gradient(90deg,#ffb066,#ff6b3d)] px-6 py-[18px] text-[16.5px] font-bold text-[#2b1305] shadow-[0_12px_28px_rgba(255,107,61,0.35)] transition hover:brightness-105"
+            >
+              <span>{content.cta_label}</span>
+              <ActionIcon className="h-5 w-5" />
+            </button>
+          </div>
+        </div>
+
+        {previewMode ? <PreviewFooter /> : null}
+      </main>
 
       <NutritionStartDialog open={loginOpen} onOpenChange={setLoginOpen} onComplete={async () => setLocation(await resolveNutritionStartPath())} />
     </div>

@@ -211,6 +211,7 @@ export default function PanelNutritionPrescribePackagesPage() {
               visibleItems.map((item) => {
                 const hasChildren = (item.children ?? []).length > 0;
                 const effectivePrice = item.discountedPriceAmount ?? item.priceAmount;
+                const featureRows = (item.features ?? []).filter((feature) => feature.text?.trim());
 
                 return (
                   <button
@@ -231,12 +232,18 @@ export default function PanelNutritionPrescribePackagesPage() {
                       <div className="space-y-2">
                         <div className="flex flex-wrap items-center gap-2">
                           <div className="text-xl font-black">{item.name}</div>
+                          {item.isRecommended ? (
+                            <Badge className="border-0 bg-amber-400/15 text-amber-300 hover:bg-amber-400/15">
+                              {t("panelNutritionPackages.fields.recommended")}
+                            </Badge>
+                          ) : null}
                           {item.discountedPriceAmount && item.discountedPriceAmount < item.priceAmount ? (
                             <Badge className="border-0 bg-emerald-500/15 text-emerald-300 hover:bg-emerald-500/15">
                               {t("panelNutritionPrescribePackages.discounted")}
                             </Badge>
                           ) : null}
                         </div>
+                        {item.subtitle ? <div className="text-sm font-bold text-amber-300">{item.subtitle}</div> : null}
                         <div className="flex flex-wrap gap-2">
                           <Badge variant="outline" className="border-white/15 bg-white/5 text-slate-200">
                             {item.durationDays % 30 === 0
@@ -250,6 +257,13 @@ export default function PanelNutritionPrescribePackagesPage() {
                             {t("panelNutritionPrescribePackages.offlineDietCount", { count: format.number(item.offlineDietCount) })}
                           </Badge>
                         </div>
+                        {featureRows.length > 0 ? (
+                          <div className="mt-3 grid gap-1.5 text-xs font-bold leading-6 text-slate-300">
+                            {featureRows.slice(0, 5).map((feature, index) => (
+                              <div key={`${feature.icon}-${index}`}>{feature.text}</div>
+                            ))}
+                          </div>
+                        ) : null}
                       </div>
                       <div className="flex h-12 w-12 items-center justify-center rounded-[18px] bg-amber-400/12 text-amber-300">
                         {grantingId === item.id ? <Loader2 className="h-6 w-6 animate-spin" /> : hasChildren ? <ChevronLeft className={`h-6 w-6 ${isRtl ? "" : "rotate-180"}`} /> : <ArrowLeft className={`h-6 w-6 ${isRtl ? "" : "rotate-180"}`} />}

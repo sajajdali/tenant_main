@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, Boxes, CalendarClock, ChevronLeft, CircleHelp, Crown, Loader2, ShieldAlert, Sparkles } from "lucide-react";
+import { Apple, ArrowLeft, BarChart3, Boxes, CalendarClock, Camera, ChevronLeft, CircleHelp, ClipboardList, Crown, Headphones, Loader2, Shield, ShieldAlert, Sparkles, Target, UserRound, Utensils } from "lucide-react";
 import { useLocation, useRoute } from "wouter";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
@@ -42,6 +42,25 @@ function remainingSubscriptionDays(endsAt?: string | null) {
   const todayUtc = Date.UTC(today.getFullYear(), today.getMonth(), today.getDate());
 
   return Math.max(0, Math.round((endUtc - todayUtc) / 86_400_000));
+}
+
+const packageFeatureIcons = {
+  clipboard: ClipboardList,
+  user: UserRound,
+  target: Target,
+  chart: BarChart3,
+  headphones: Headphones,
+  utensils: Utensils,
+  camera: Camera,
+  apple: Apple,
+  shield: Shield,
+  sparkles: Sparkles,
+};
+
+function PackageFeatureIcon({ name }: { name: string }) {
+  const Icon = packageFeatureIcons[name as keyof typeof packageFeatureIcons] ?? ClipboardList;
+
+  return <Icon className="h-4 w-4" />;
 }
 
 export default function NutritionMembershipPackagesPage() {
@@ -252,9 +271,10 @@ export default function NutritionMembershipPackagesPage() {
               const effectivePrice = item.discountedPriceAmount ?? item.priceAmount;
               const discountPercent = getDiscountPercent(item);
               const badgeTitle = item.badgeTitle?.trim() || (discountPercent ? t("nutritionMembershipPackages.specialDiscount") : "");
-              const featured = !hasChildren && badgeTitle !== "";
+              const featured = !hasChildren && (Boolean(item.isRecommended) || badgeTitle !== "" || item.visualStyle === "gold" || item.visualStyle === "vip");
               const imageUrl = item.imageUrl?.trim();
               const packageDescription = item.description?.trim() ?? "";
+              const featureRows = (item.features ?? []).filter((feature) => feature.text?.trim());
               const destination = hasChildren
                 ? `/nutrition/membership/packages/${item.id}${directBuy ? "?direct_buy=1" : ""}`
                 : `/nutrition/membership/packages/${item.id}/select${directBuy ? "?direct_buy=1" : ""}`;
@@ -283,7 +303,8 @@ export default function NutritionMembershipPackagesPage() {
 
                   <div className="flex items-start justify-between gap-5">
                     <div className="min-w-0 pt-1.5">
-                      <div className="text-[19px] font-black leading-7 text-white">{item.name}</div>
+                      <div className="text-[19px] font-black leading-7 text-white">{item.shortTitle?.trim() || item.name}</div>
+                      {item.subtitle ? <div className="mt-1 text-[12px] font-black leading-6 text-amber-300">{item.subtitle}</div> : null}
                       {!currentNode && packageDescription ? (
                         <button
                           type="button"
@@ -321,26 +342,37 @@ export default function NutritionMembershipPackagesPage() {
 
                   <div className="my-4 h-px bg-white/10" />
 
-                  <div className="grid grid-cols-[1fr_auto] gap-x-7 gap-y-2.5 text-[12px]">
-                    {item.durationDays > 0 ? (
-                      <>
-                        <div className="font-black text-slate-500">{t("nutritionMembershipPackages.duration")}</div>
-                        <div className="text-end font-black text-white">{t("nutritionMembershipPackages.daysValue", { days: format.number(item.durationDays) })}</div>
-                      </>
-                    ) : null}
-                    {item.onlineDietCount > 0 ? (
-                      <>
-                        <div className="font-black text-slate-500">{t("nutritionMembershipPackages.onlineDiet")}</div>
-                        <div className="text-end font-black text-white">{t("nutritionMembershipPackages.planValue", { count: format.number(item.onlineDietCount) })}</div>
-                      </>
-                    ) : null}
-                    {item.offlineDietCount > 0 ? (
-                      <>
-                        <div className="font-black text-slate-500">{t("nutritionMembershipPackages.offlineDiet")}</div>
-                        <div className="text-end font-black text-white">{t("nutritionMembershipPackages.sessionValue", { count: format.number(item.offlineDietCount) })}</div>
-                      </>
-                    ) : null}
-                  </div>
+                  {featureRows.length > 0 ? (
+                    <div className="grid gap-3 text-[12px]">
+                      {featureRows.map((feature, index) => (
+                        <div key={`${feature.icon}-${index}`} className="grid grid-cols-[24px_minmax(0,1fr)] items-center gap-3 border-b border-white/7 pb-2.5 last:border-b-0 last:pb-0">
+                          <span className="flex h-6 w-6 items-center justify-center text-amber-300"><PackageFeatureIcon name={feature.icon} /></span>
+                          <span className="font-bold leading-6 text-slate-200">{feature.text}</span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-[1fr_auto] gap-x-7 gap-y-2.5 text-[12px]">
+                      {item.durationDays > 0 ? (
+                        <>
+                          <div className="font-black text-slate-500">{t("nutritionMembershipPackages.duration")}</div>
+                          <div className="text-end font-black text-white">{t("nutritionMembershipPackages.daysValue", { days: format.number(item.durationDays) })}</div>
+                        </>
+                      ) : null}
+                      {item.onlineDietCount > 0 ? (
+                        <>
+                          <div className="font-black text-slate-500">{t("nutritionMembershipPackages.onlineDiet")}</div>
+                          <div className="text-end font-black text-white">{t("nutritionMembershipPackages.planValue", { count: format.number(item.onlineDietCount) })}</div>
+                        </>
+                      ) : null}
+                      {item.offlineDietCount > 0 ? (
+                        <>
+                          <div className="font-black text-slate-500">{t("nutritionMembershipPackages.offlineDiet")}</div>
+                          <div className="text-end font-black text-white">{t("nutritionMembershipPackages.sessionValue", { count: format.number(item.offlineDietCount) })}</div>
+                        </>
+                      ) : null}
+                    </div>
+                  )}
 
                   <button
                     type="button"
@@ -350,7 +382,7 @@ export default function NutritionMembershipPackagesPage() {
                     }}
                     className="mt-4 flex h-10 w-full items-center justify-center gap-2 rounded-[12px] border border-amber-300/25 bg-white/[0.025] px-4 text-[12px] font-black text-amber-200 transition hover:border-amber-300/45 hover:bg-amber-400/10 hover:text-amber-100"
                   >
-                    {hasChildren ? t("nutritionMembershipPackages.viewOptions") : t("nutritionMembershipPackages.orderPackage")}
+                    {item.actionLabel?.trim() || (hasChildren ? t("nutritionMembershipPackages.viewOptions") : t("nutritionMembershipPackages.orderPackage"))}
                     <ArrowLeft className={isRtl ? "h-3.5 w-3.5 opacity-70" : "h-3.5 w-3.5 rotate-180 opacity-70"} />
                   </button>
                 </div>

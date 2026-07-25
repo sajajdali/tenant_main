@@ -134,8 +134,11 @@ export interface NutritionPackageItem {
   parentId?: string | null;
   depth?: number;
   name: string;
+  shortTitle?: string | null;
+  subtitle?: string | null;
   slug: string;
   description?: string | null;
+  features?: Array<{ icon: string; text: string }>;
   imageUrl?: string | null;
   onlineDietCount: number;
   offlineDietCount: number;
@@ -143,6 +146,9 @@ export interface NutritionPackageItem {
   priceAmount: number;
   discountedPriceAmount?: number | null;
   badgeTitle?: string | null;
+  isRecommended?: boolean;
+  visualStyle?: "normal" | "gold" | "vip" | string;
+  actionLabel?: string | null;
   applicableGoals?: string[];
   applicableGoalLabels?: string[];
   sortOrder: number;

@@ -93,7 +93,7 @@ class MembershipController extends Controller
 
         return $this->success([
             'step' => 'goal',
-            'title' => 'هدف شما از رژیم چیست؟',
+            'title' => 'هدفت از رژیم چیه ؟',
             'value' => [
                 'dietGoal' => $profile?->diet_goal ?? $this->draft($user)['dietGoal'] ?? null,
             ],
@@ -139,7 +139,7 @@ class MembershipController extends Controller
 
         return $this->success([
             'step' => 'activity',
-            'title' => 'میزان فعالیت شما چقدر است؟',
+            'title' => 'میزان فعالیت شما چقدره ؟',
             'value' => [
                 'athleteMode' => $profile?->athlete_mode ?? $draft['athleteMode'] ?? null,
                 'activityLevel' => $profile?->activity_level ?? $draft['activityLevel'] ?? null,
@@ -197,7 +197,7 @@ class MembershipController extends Controller
 
         return $this->success([
             'step' => 'birth-date',
-            'title' => 'تاریخ تولد خود را انتخاب کنید',
+            'title' => 'لطفا تاریخ تولدت رو وارد کن',
             'value' => $this->birthDateValue($birthDate),
             'options' => [
                 'calendar' => 'jalali',
@@ -1283,7 +1283,7 @@ class MembershipController extends Controller
             'step' => 'disliked-foods',
             'title' => 'غذاهای نامطلوب',
             'subtitle' => 'مرحله ترجیحات غذایی',
-            'description' => 'غذاهایی که دوست ندارید یا نمی‌خواهید در رژیم باشد را وارد کنید.',
+            'description' => 'چه غذاهایی دوست نداری تو رژیمت باشه رو برامون بنویس',
             'value' => $this->dislikedFoodsValue($profile),
             'options' => [
                 'allowEmpty' => true,
@@ -1380,9 +1380,9 @@ class MembershipController extends Controller
     private function goalLabel(string $goal): string
     {
         return match ($goal) {
-            'lose-weight' => 'کاهش وزن',
-            'gain-weight' => 'افزایش وزن',
-            'maintain-weight' => 'تثبیت وزن',
+            'lose-weight' => 'رسیدن به وزن کمتر و خوش اندام',
+            'gain-weight' => 'وزن سالم و فرم دهی به بدن',
+            'maintain-weight' => 'حفظ وزن و لایف استایل بهتر',
             default => $goal,
         };
     }
@@ -1488,12 +1488,17 @@ class MembershipController extends Controller
                     ? 'رسیدن به وزن هدف'
                     : 'ایستگاه '.JalaliDate::toPersianDigits((string) ($index + 1)),
                 'progress' => $progress,
-                'weight' => round($boundedWeight, 2),
+                'weight' => $this->roundWeightToHalfKg($boundedWeight),
                 'date' => $date->toDateString(),
                 'dateFormatted' => JalaliDate::format($date),
                 'weekLabel' => $weekLabel,
             ];
         }, $steps, array_keys($steps));
+    }
+
+    private function roundWeightToHalfKg(float $weight): float
+    {
+        return round($weight * 2) / 2;
     }
 
     private function milestoneProgressSteps(int $totalWeeks): array
@@ -1645,9 +1650,9 @@ class MembershipController extends Controller
     private function goalOptions(): array
     {
         return [
-            ['value' => 'lose-weight', 'label' => 'کاهش وزن', 'description' => 'برای رسیدن به وزن کمتر و سبک‌تر شدن'],
-            ['value' => 'gain-weight', 'label' => 'افزایش وزن', 'description' => 'برای ساخت توده بدنی و افزایش وزن هدفمند'],
-            ['value' => 'maintain-weight', 'label' => 'تثبیت وزن', 'description' => 'برای حفظ وضعیت فعلی و کنترل بهتر برنامه غذایی'],
+            ['value' => 'lose-weight', 'label' => 'رسیدن به وزن کمتر و خوش اندام', 'description' => 'برای سبک‌تر شدن و ساخت فرم بدنی دلخواه'],
+            ['value' => 'gain-weight', 'label' => 'وزن سالم و فرم دهی به بدن', 'description' => 'برای رسیدن به وزن سالم و فرم‌دهی هدفمند'],
+            ['value' => 'maintain-weight', 'label' => 'حفظ وزن و لایف استایل بهتر', 'description' => 'برای نگه داشتن وزن و ساخت سبک زندگی بهتر'],
         ];
     }
 

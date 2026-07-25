@@ -23,6 +23,10 @@ const MS_PER_DAY = 24 * 60 * 60 * 1000;
 const PROFILE_SETUP_STEP = MEMBERSHIP_STEPS.result;
 const PROFILE_SETUP_TOTAL_STEPS = MEMBERSHIP_TOTAL_STEPS;
 
+function roundWeightToHalfKg(weight: number) {
+  return Math.round(weight * 2) / 2;
+}
+
 function buildMilestones(
   currentWeight: number,
   targetWeight: number,
@@ -46,7 +50,7 @@ function buildMilestones(
     return {
       id: `${index}-${progress}`,
       progress,
-      weight: Number(boundedWeight.toFixed(2)),
+      weight: roundWeightToHalfKg(boundedWeight),
       date: pointDate,
       weekLabel: totalWeeks <= 2
         ? `${labels.week} ${formatNumber(Math.round(elapsedWeeks))}`
