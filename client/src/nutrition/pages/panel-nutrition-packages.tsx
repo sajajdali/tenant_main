@@ -26,6 +26,30 @@ function slugify(value: string) {
 
 type Translator = ReturnType<typeof useT>;
 type Formatter = ReturnType<typeof useFormat>;
+type PackageFeatureRow = { icon: string; text: string };
+
+const EMPTY_FEATURE_ROWS: PackageFeatureRow[] = Array.from({ length: 6 }, () => ({ icon: "clipboard", text: "" }));
+const PACKAGE_FEATURE_ICON_OPTIONS = [
+  { value: "clipboard", label: "برنامه" },
+  { value: "user", label: "کاربر" },
+  { value: "target", label: "هدف" },
+  { value: "chart", label: "پیشرفت" },
+  { value: "headphones", label: "پشتیبانی" },
+  { value: "utensils", label: "غذا" },
+  { value: "camera", label: "ثبت وعده" },
+  { value: "apple", label: "ارزش غذایی" },
+  { value: "shield", label: "سلامت" },
+  { value: "sparkles", label: "ویژه" },
+];
+
+function normalizeFeatureRows(rows: PackageFeatureRow[]) {
+  return rows.map((row) => ({ icon: row.icon || "clipboard", text: row.text.trim() })).filter((row) => row.text !== "");
+}
+
+function featureRowsFromItem(item?: NutritionPackageItem | null): PackageFeatureRow[] {
+  const rows = (item?.features ?? []).map((feature) => ({ icon: feature.icon || "clipboard", text: feature.text || "" }));
+  return [...rows, ...EMPTY_FEATURE_ROWS].slice(0, EMPTY_FEATURE_ROWS.length);
+}
 
 function formatTomans(value: number, t: Translator, format: Formatter) {
   return t("panelNutritionPackages.tomanAmount", { amount: format.number(Math.max(0, value)) });
@@ -56,14 +80,20 @@ export default function PanelNutritionPackagesPage() {
   const [goalOptions, setGoalOptions] = useState<NutritionDietTemplateOption[]>([]);
 
   const [name, setName] = useState("");
+  const [shortTitle, setShortTitle] = useState("");
+  const [subtitle, setSubtitle] = useState("");
   const [slug, setSlug] = useState("");
   const [description, setDescription] = useState("");
+  const [featureRows, setFeatureRows] = useState<PackageFeatureRow[]>(featureRowsFromItem());
   const [onlineDietCount, setOnlineDietCount] = useState("0");
   const [offlineDietCount, setOfflineDietCount] = useState("0");
   const [durationDays, setDurationDays] = useState("30");
   const [priceAmount, setPriceAmount] = useState("0");
   const [discountedPriceAmount, setDiscountedPriceAmount] = useState("");
   const [badgeTitle, setBadgeTitle] = useState("");
+  const [isRecommended, setIsRecommended] = useState(false);
+  const [visualStyle, setVisualStyle] = useState("normal");
+  const [actionLabel, setActionLabel] = useState("");
   const [sortOrder, setSortOrder] = useState("0");
   const [isActive, setIsActive] = useState(true);
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -73,14 +103,20 @@ export default function PanelNutritionPackagesPage() {
 
   const [editItem, setEditItem] = useState<NutritionPackageItem | null>(null);
   const [editName, setEditName] = useState("");
+  const [editShortTitle, setEditShortTitle] = useState("");
+  const [editSubtitle, setEditSubtitle] = useState("");
   const [editSlug, setEditSlug] = useState("");
   const [editDescription, setEditDescription] = useState("");
+  const [editFeatureRows, setEditFeatureRows] = useState<PackageFeatureRow[]>(featureRowsFromItem());
   const [editOnlineDietCount, setEditOnlineDietCount] = useState("0");
   const [editOfflineDietCount, setEditOfflineDietCount] = useState("0");
   const [editDurationDays, setEditDurationDays] = useState("30");
   const [editPriceAmount, setEditPriceAmount] = useState("0");
   const [editDiscountedPriceAmount, setEditDiscountedPriceAmount] = useState("");
   const [editBadgeTitle, setEditBadgeTitle] = useState("");
+  const [editIsRecommended, setEditIsRecommended] = useState(false);
+  const [editVisualStyle, setEditVisualStyle] = useState("normal");
+  const [editActionLabel, setEditActionLabel] = useState("");
   const [editSortOrder, setEditSortOrder] = useState("0");
   const [editIsActive, setEditIsActive] = useState(true);
   const [editImageFile, setEditImageFile] = useState<File | null>(null);
@@ -117,14 +153,20 @@ export default function PanelNutritionPackagesPage() {
 
   const resetCreateForm = () => {
     setName("");
+    setShortTitle("");
+    setSubtitle("");
     setSlug("");
     setDescription("");
+    setFeatureRows(featureRowsFromItem());
     setOnlineDietCount("0");
     setOfflineDietCount("0");
     setDurationDays("30");
     setPriceAmount("0");
     setDiscountedPriceAmount("");
     setBadgeTitle("");
+    setIsRecommended(false);
+    setVisualStyle("normal");
+    setActionLabel("");
     setSortOrder("0");
     setIsActive(true);
     setImageFile(null);
@@ -219,6 +261,17 @@ export default function PanelNutritionPackagesPage() {
                 />
               </div>
 
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="package-short-title">{t("panelNutritionPackages.fields.shortTitle")}</Label>
+                  <Input id="package-short-title" value={shortTitle} onChange={(e) => setShortTitle(e.target.value)} placeholder={t("panelNutritionPackages.optional")} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="package-subtitle">{t("panelNutritionPackages.fields.subtitle")}</Label>
+                  <Input id="package-subtitle" value={subtitle} onChange={(e) => setSubtitle(e.target.value)} placeholder={t("panelNutritionPackages.optional")} />
+                </div>
+              </div>
+
               <div className="space-y-2">
                 <Label htmlFor="package-description">{t("panelNutritionPackages.fields.description")}</Label>
                 <Textarea
@@ -230,6 +283,8 @@ export default function PanelNutritionPackagesPage() {
                 />
                 <div className="text-xs text-muted-foreground">{t("panelNutritionPackages.descriptionHint")}</div>
               </div>
+
+              <PackageFeatureEditor rows={featureRows} onChange={setFeatureRows} t={t} />
 
               <div className="space-y-2">
                 <Label>{t("panelNutritionPackages.fields.parent")}</Label>
@@ -331,6 +386,29 @@ export default function PanelNutritionPackagesPage() {
                 <div className="text-xs text-muted-foreground">{t("panelNutritionPackages.badgeHint")}</div>
               </div>
 
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="package-visual-style">{t("panelNutritionPackages.fields.visualStyle")}</Label>
+                  <select id="package-visual-style" value={visualStyle} onChange={(event) => setVisualStyle(event.target.value)} className="flex h-11 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm">
+                    <option value="normal">{t("panelNutritionPackages.visualStyle.normal")}</option>
+                    <option value="gold">{t("panelNutritionPackages.visualStyle.gold")}</option>
+                    <option value="vip">{t("panelNutritionPackages.visualStyle.vip")}</option>
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="package-action-label">{t("panelNutritionPackages.fields.actionLabel")}</Label>
+                  <Input id="package-action-label" value={actionLabel} onChange={(e) => setActionLabel(e.target.value)} placeholder={t("panelNutritionPackages.optional")} />
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between rounded-2xl border border-border/70 bg-background/30 px-4 py-3">
+                <div>
+                  <div className="font-bold">{t("panelNutritionPackages.fields.recommended")}</div>
+                  <div className="text-xs text-muted-foreground">{t("panelNutritionPackages.recommendedHint")}</div>
+                </div>
+                <Switch checked={isRecommended} onCheckedChange={setIsRecommended} />
+              </div>
+
               <div className="flex items-center justify-between rounded-2xl border border-border/70 bg-background/30 px-4 py-3">
                 <div>
                   <div className="font-bold">{t("panelNutritionPackages.fields.active")}</div>
@@ -346,8 +424,11 @@ export default function PanelNutritionPackagesPage() {
                   setSubmitting(true);
                   const res = await api.nutritionPackages.create({
                     name,
+                    shortTitle: shortTitle.trim() || null,
+                    subtitle: subtitle.trim() || null,
                     slug,
                     description: description.trim() || null,
+                    features: normalizeFeatureRows(featureRows),
                     image: imageFile,
                     parentId: parentId === "none" ? null : parentId,
                     applicableGoals,
@@ -357,6 +438,9 @@ export default function PanelNutritionPackagesPage() {
                     priceAmount: Number(priceAmount) || 0,
                     discountedPriceAmount: discountedPriceAmount.trim() === "" ? null : Number(discountedPriceAmount) || 0,
                     badgeTitle: badgeTitle.trim() || null,
+                    isRecommended,
+                    visualStyle,
+                    actionLabel: actionLabel.trim() || null,
                     sortOrder: Number(sortOrder) || 0,
                     isActive,
                   });
@@ -404,14 +488,20 @@ export default function PanelNutritionPackagesPage() {
                       onEdit={(selected) => {
                         setEditItem(selected);
                         setEditName(selected.name);
+                        setEditShortTitle(selected.shortTitle ?? "");
+                        setEditSubtitle(selected.subtitle ?? "");
                         setEditSlug(selected.slug);
                         setEditDescription(selected.description ?? "");
+                        setEditFeatureRows(featureRowsFromItem(selected));
                         setEditOnlineDietCount(String(selected.onlineDietCount));
                         setEditOfflineDietCount(String(selected.offlineDietCount));
                         setEditDurationDays(String(selected.durationDays));
                         setEditPriceAmount(String(selected.priceAmount));
                         setEditDiscountedPriceAmount(selected.discountedPriceAmount !== null && selected.discountedPriceAmount !== undefined ? String(selected.discountedPriceAmount) : "");
                         setEditBadgeTitle(selected.badgeTitle ?? "");
+                        setEditIsRecommended(Boolean(selected.isRecommended));
+                        setEditVisualStyle(selected.visualStyle ?? "normal");
+                        setEditActionLabel(selected.actionLabel ?? "");
                         setEditSortOrder(String(selected.sortOrder));
                         setEditIsActive(selected.isActive);
                         setEditImageFile(null);
@@ -454,6 +544,16 @@ export default function PanelNutritionPackagesPage() {
               <Label>{t("panelNutritionPackages.fields.slug")}</Label>
               <Input value={editSlug} onChange={(e) => setEditSlug(slugify(e.target.value))} className="text-start [direction:ltr]" />
             </div>
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-2">
+                <Label>{t("panelNutritionPackages.fields.shortTitle")}</Label>
+                <Input value={editShortTitle} onChange={(e) => setEditShortTitle(e.target.value)} placeholder={t("panelNutritionPackages.optional")} />
+              </div>
+              <div className="space-y-2">
+                <Label>{t("panelNutritionPackages.fields.subtitle")}</Label>
+                <Input value={editSubtitle} onChange={(e) => setEditSubtitle(e.target.value)} placeholder={t("panelNutritionPackages.optional")} />
+              </div>
+            </div>
             <div className="space-y-2">
               <Label>{t("panelNutritionPackages.fields.description")}</Label>
               <Textarea
@@ -464,6 +564,7 @@ export default function PanelNutritionPackagesPage() {
               />
               <div className="text-xs text-muted-foreground">{t("panelNutritionPackages.descriptionHint")}</div>
             </div>
+            <PackageFeatureEditor rows={editFeatureRows} onChange={setEditFeatureRows} t={t} />
             <div className="space-y-2">
               <Label>{t("panelNutritionPackages.fields.parent")}</Label>
               <select
@@ -574,6 +675,27 @@ export default function PanelNutritionPackagesPage() {
               />
               <div className="text-xs text-muted-foreground">{t("panelNutritionPackages.badgeHint")}</div>
             </div>
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-2">
+                <Label>{t("panelNutritionPackages.fields.visualStyle")}</Label>
+                <select value={editVisualStyle} onChange={(event) => setEditVisualStyle(event.target.value)} className="flex h-11 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm">
+                  <option value="normal">{t("panelNutritionPackages.visualStyle.normal")}</option>
+                  <option value="gold">{t("panelNutritionPackages.visualStyle.gold")}</option>
+                  <option value="vip">{t("panelNutritionPackages.visualStyle.vip")}</option>
+                </select>
+              </div>
+              <div className="space-y-2">
+                <Label>{t("panelNutritionPackages.fields.actionLabel")}</Label>
+                <Input value={editActionLabel} onChange={(e) => setEditActionLabel(e.target.value)} placeholder={t("panelNutritionPackages.optional")} />
+              </div>
+            </div>
+            <div className="flex items-center justify-between rounded-2xl border border-border/70 bg-background/30 px-4 py-3">
+              <div>
+                <div className="font-bold">{t("panelNutritionPackages.fields.recommended")}</div>
+                <div className="text-xs text-muted-foreground">{t("panelNutritionPackages.recommendedHint")}</div>
+              </div>
+              <Switch checked={editIsRecommended} onCheckedChange={setEditIsRecommended} />
+            </div>
             <div className="flex items-center justify-between rounded-2xl border border-border/70 bg-background/30 px-4 py-3">
               <div>
                 <div className="font-bold">{t("panelNutritionPackages.fields.active")}</div>
@@ -587,8 +709,11 @@ export default function PanelNutritionPackagesPage() {
                 if (!editItem) return;
                 const res = await api.nutritionPackages.update(editItem.id, {
                   name: editName,
+                  shortTitle: editShortTitle.trim() || null,
+                  subtitle: editSubtitle.trim() || null,
                   slug: editSlug,
                   description: editDescription.trim() || null,
+                  features: normalizeFeatureRows(editFeatureRows),
                   image: editImageFile,
                   removeImage: editRemoveImage,
                   parentId: editParentId === "none" ? null : editParentId,
@@ -599,6 +724,9 @@ export default function PanelNutritionPackagesPage() {
                   priceAmount: Number(editPriceAmount) || 0,
                   discountedPriceAmount: editDiscountedPriceAmount.trim() === "" ? null : Number(editDiscountedPriceAmount) || 0,
                   badgeTitle: editBadgeTitle.trim() || null,
+                  isRecommended: editIsRecommended,
+                  visualStyle: editVisualStyle,
+                  actionLabel: editActionLabel.trim() || null,
                   sortOrder: Number(editSortOrder) || 0,
                   isActive: editIsActive,
                 });
@@ -616,6 +744,33 @@ export default function PanelNutritionPackagesPage() {
           </div>
         </DialogContent>
       </Dialog>
+    </div>
+  );
+}
+
+function PackageFeatureEditor({ rows, onChange, t }: { rows: PackageFeatureRow[]; onChange: (rows: PackageFeatureRow[]) => void; t: Translator }) {
+  const updateRow = (index: number, patch: Partial<PackageFeatureRow>) => {
+    onChange(rows.map((row, rowIndex) => rowIndex === index ? { ...row, ...patch } : row));
+  };
+
+  return (
+    <div className="space-y-3 rounded-2xl border border-border/70 bg-background/25 p-4">
+      <div>
+        <Label>{t("panelNutritionPackages.fields.features")}</Label>
+        <div className="mt-1 text-xs text-muted-foreground">{t("panelNutritionPackages.featuresHint")}</div>
+      </div>
+      <div className="grid gap-3">
+        {rows.map((row, index) => (
+          <div key={index} className="grid gap-2 md:grid-cols-[140px_minmax(0,1fr)]">
+            <select value={row.icon} onChange={(event) => updateRow(index, { icon: event.target.value })} className="flex h-10 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm">
+              {PACKAGE_FEATURE_ICON_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>{option.label}</option>
+              ))}
+            </select>
+            <Input value={row.text} onChange={(event) => updateRow(index, { text: event.target.value })} placeholder={t("panelNutritionPackages.fields.featurePlaceholder")} />
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -651,8 +806,13 @@ function PackageAdminCard({
                 <Badge variant={item.isActive ? "default" : "secondary"}>{item.isActive ? t("panelNutritionPackages.status.active") : t("panelNutritionPackages.status.inactive")}</Badge>
                 <Badge variant="outline">{formatDuration(item.durationDays, t, format)}</Badge>
                 {item.badgeTitle ? <Badge variant="outline">{item.badgeTitle}</Badge> : null}
+                {item.isRecommended ? <Badge variant="outline">{t("panelNutritionPackages.fields.recommended")}</Badge> : null}
+                {item.visualStyle && item.visualStyle !== "normal" ? <Badge variant="outline">{t(`panelNutritionPackages.visualStyle.${item.visualStyle}` as any)}</Badge> : null}
                 {(item.depth ?? 0) > 0 ? <Badge variant="outline">{t("panelNutritionPackages.card.childLevel", { level: format.number(item.depth ?? 0) })}</Badge> : null}
               </div>
+              {item.shortTitle || item.subtitle ? (
+                <div className="text-sm font-bold text-muted-foreground">{[item.shortTitle, item.subtitle].filter(Boolean).join(" - ")}</div>
+              ) : null}
               <div className="text-xs text-muted-foreground text-start [direction:ltr]">{item.slug}</div>
               {item.description ? (
                 <div className="line-clamp-2 text-sm leading-6 text-muted-foreground">{item.description}</div>
@@ -662,6 +822,13 @@ function PackageAdminCard({
                   <Badge key={goal} variant="outline">{goal}</Badge>
                 ))}
               </div>
+              {(item.features ?? []).length > 0 ? (
+                <div className="grid gap-1.5 text-xs text-muted-foreground">
+                  {(item.features ?? []).slice(0, 4).map((feature, index) => (
+                    <div key={`${feature.icon}-${index}`}>{feature.text}</div>
+                  ))}
+                </div>
+              ) : null}
             </div>
             <div className="flex items-center gap-2">
               <Button variant="outline" size="sm" className="gap-2" onClick={() => onEdit(item)}>

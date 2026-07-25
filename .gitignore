@@ -7,6 +7,8 @@ vite.config.ts.*
 maliart-payment-standalone/
 maliart-payment-standard/
 attached_assets/
+diet-landing-design-html/
+special-design-tmp/
 
 
 .DS_Store

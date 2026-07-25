@@ -19,6 +19,25 @@ class NutritionPackageController extends Controller
         'maintain-weight',
     ];
 
+    private const VISUAL_STYLES = [
+        'normal',
+        'gold',
+        'vip',
+    ];
+
+    private const FEATURE_ICONS = [
+        'clipboard',
+        'user',
+        'target',
+        'chart',
+        'headphones',
+        'utensils',
+        'camera',
+        'apple',
+        'shield',
+        'sparkles',
+    ];
+
     public function publicIndex(): JsonResponse
     {
         $goal = trim((string) request()->query('goal', ''));
@@ -97,8 +116,11 @@ class NutritionPackageController extends Controller
             'parent_id' => $parent?->id,
             'depth' => $depth,
             'name' => trim((string) $validated['name']),
+            'short_title' => $this->normalizeShortText($validated['short_title'] ?? null),
+            'subtitle' => $this->normalizeShortText($validated['subtitle'] ?? null),
             'slug' => $this->uniqueSlug((string) ($validated['slug'] ?? $validated['name'])),
             'description' => $this->normalizeDescription($validated['description'] ?? null),
+            'features' => $this->normalizeFeatures($validated['features'] ?? []),
             'image_path' => $imagePath,
             'online_diet_count' => (int) $validated['online_diet_count'],
             'offline_diet_count' => (int) $validated['offline_diet_count'],
@@ -106,6 +128,9 @@ class NutritionPackageController extends Controller
             'price_amount' => (int) $validated['price_amount'],
             'discounted_price_amount' => $this->normalizeDiscountedPrice($validated['discounted_price_amount'] ?? null, (int) $validated['price_amount']),
             'badge_title' => $this->normalizeBadgeTitle($validated['badge_title'] ?? null),
+            'is_recommended' => (bool) ($validated['is_recommended'] ?? false),
+            'visual_style' => $this->normalizeVisualStyle($validated['visual_style'] ?? 'normal'),
+            'action_label' => $this->normalizeShortText($validated['action_label'] ?? null),
             'applicable_goals' => array_values($validated['applicable_goals']),
             'sort_order' => (int) ($validated['sort_order'] ?? 0),
             'is_active' => (bool) ($validated['is_active'] ?? true),
@@ -139,8 +164,11 @@ class NutritionPackageController extends Controller
             'parent_id' => $parent?->id,
             'depth' => $depth,
             'name' => trim((string) $validated['name']),
+            'short_title' => $this->normalizeShortText($validated['short_title'] ?? null),
+            'subtitle' => $this->normalizeShortText($validated['subtitle'] ?? null),
             'slug' => $this->uniqueSlug((string) ($validated['slug'] ?? $validated['name']), (int) $nutritionPackage->id),
             'description' => $this->normalizeDescription($validated['description'] ?? null),
+            'features' => $this->normalizeFeatures($validated['features'] ?? []),
             'image_path' => $nutritionPackage->image_path,
             'online_diet_count' => (int) $validated['online_diet_count'],
             'offline_diet_count' => (int) $validated['offline_diet_count'],
@@ -148,6 +176,9 @@ class NutritionPackageController extends Controller
             'price_amount' => (int) $validated['price_amount'],
             'discounted_price_amount' => $this->normalizeDiscountedPrice($validated['discounted_price_amount'] ?? null, (int) $validated['price_amount']),
             'badge_title' => $this->normalizeBadgeTitle($validated['badge_title'] ?? null),
+            'is_recommended' => (bool) ($validated['is_recommended'] ?? false),
+            'visual_style' => $this->normalizeVisualStyle($validated['visual_style'] ?? 'normal'),
+            'action_label' => $this->normalizeShortText($validated['action_label'] ?? null),
             'applicable_goals' => array_values($validated['applicable_goals']),
             'sort_order' => (int) ($validated['sort_order'] ?? 0),
             'is_active' => (bool) $validated['is_active'],
@@ -183,8 +214,13 @@ class NutritionPackageController extends Controller
     {
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
+            'short_title' => ['nullable', 'string', 'max:255'],
+            'subtitle' => ['nullable', 'string', 'max:255'],
             'slug' => ['nullable', 'string', 'max:255'],
             'description' => ['nullable', 'string', 'max:5000'],
+            'features' => ['nullable', 'array', 'max:12'],
+            'features.*.icon' => ['nullable', 'string', 'in:' . implode(',', self::FEATURE_ICONS)],
+            'features.*.text' => ['nullable', 'string', 'max:255'],
             'image' => ['nullable', 'file', 'mimes:jpg,jpeg,png,gif,webp,avif', 'max:8192'],
             'parent_id' => ['nullable', 'integer', 'exists:nutrition_packages,id'],
             'online_diet_count' => ['required', 'integer', 'min:0'],
@@ -193,6 +229,9 @@ class NutritionPackageController extends Controller
             'price_amount' => ['required', 'integer', 'min:0'],
             'discounted_price_amount' => ['nullable', 'integer', 'min:0'],
             'badge_title' => ['nullable', 'string', 'max:80'],
+            'is_recommended' => ['nullable', 'boolean'],
+            'visual_style' => ['nullable', 'string', 'in:' . implode(',', self::VISUAL_STYLES)],
+            'action_label' => ['nullable', 'string', 'max:80'],
             'applicable_goals' => ['required', 'array', 'min:1'],
             'applicable_goals.*' => ['string', 'in:' . implode(',', self::APPLICABLE_GOALS)],
             'sort_order' => ['nullable', 'integer', 'min:0'],
@@ -235,8 +274,11 @@ class NutritionPackageController extends Controller
             'parentId' => $item->parent_id ? (string) $item->parent_id : null,
             'depth' => (int) $item->depth,
             'name' => $item->name,
+            'shortTitle' => $item->short_title,
+            'subtitle' => $item->subtitle,
             'slug' => $item->slug,
             'description' => $item->description,
+            'features' => $this->normalizeFeatures($item->features ?? []),
             'imageUrl' => $this->tenantMediaUrl($item->image_path),
             'onlineDietCount' => (int) $item->online_diet_count,
             'offlineDietCount' => (int) $item->offline_diet_count,
@@ -244,6 +286,9 @@ class NutritionPackageController extends Controller
             'priceAmount' => (int) $item->price_amount,
             'discountedPriceAmount' => $item->discounted_price_amount !== null ? (int) $item->discounted_price_amount : null,
             'badgeTitle' => $item->badge_title,
+            'isRecommended' => (bool) $item->is_recommended,
+            'visualStyle' => $this->normalizeVisualStyle($item->visual_style ?? 'normal'),
+            'actionLabel' => $item->action_label,
             'applicableGoals' => $goals,
             'applicableGoalLabels' => collect($goals)
                 ->map(fn (string $goal) => $this->goalOptions()->get($goal, $goal))
@@ -335,6 +380,45 @@ class NutritionPackageController extends Controller
         $normalized = trim((string) $value);
 
         return $normalized !== '' ? $normalized : null;
+    }
+
+    private function normalizeShortText(null|string $value): ?string
+    {
+        $normalized = trim((string) $value);
+
+        return $normalized !== '' ? $normalized : null;
+    }
+
+    private function normalizeVisualStyle(null|string $value): string
+    {
+        $normalized = trim((string) $value);
+
+        return in_array($normalized, self::VISUAL_STYLES, true) ? $normalized : 'normal';
+    }
+
+    private function normalizeFeatures(array $features): array
+    {
+        return collect($features)
+            ->map(function ($feature): ?array {
+                if (! is_array($feature)) {
+                    return null;
+                }
+
+                $text = trim((string) ($feature['text'] ?? ''));
+                if ($text === '') {
+                    return null;
+                }
+
+                $icon = trim((string) ($feature['icon'] ?? 'clipboard'));
+
+                return [
+                    'icon' => in_array($icon, self::FEATURE_ICONS, true) ? $icon : 'clipboard',
+                    'text' => $text,
+                ];
+            })
+            ->filter()
+            ->values()
+            ->all();
     }
 
     private function normalizeDescription(null|string $value): ?string
