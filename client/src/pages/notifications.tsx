@@ -7,6 +7,7 @@ import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { getInitialTenantMeta } from "@/lib/bootstrap";
 import { applyAppearance, readCachedAppearance } from "@/lib/appearance";
+import { getAudienceLabels } from "@/lib/audience";
 import type { AppearanceSettings, UserNotificationItem } from "@/lib/types";
 import { emitNotificationsUpdated } from "@/lib/notifications";
 import { useFormat, useLocale, useT } from "@/i18n/locale";
@@ -36,7 +37,7 @@ export default function NotificationsPage() {
       : null;
 
   const audienceLabel = useMemo(() => {
-    return tenantMeta?.audience?.pluralLabel?.trim() || tenantMeta?.audience?.name?.trim() || t("notificationsPage.audienceFallback");
+    return getAudienceLabels(tenantMeta).plural || t("notificationsPage.audienceFallback");
   }, [tenantMeta, t]);
 
   const roleBadgeMap = useMemo<Record<string, string>>(

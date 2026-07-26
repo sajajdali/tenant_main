@@ -1,0 +1,71 @@
+<?php
+
+return [
+    'category' => [
+        'created' => 'Die Produktkategorie wurde erstellt.',
+        'updated' => 'Die Produktkategorie wurde aktualisiert.',
+        'deleted' => 'Die Produktkategorie wurde gelöscht.',
+    ],
+    'product' => [
+        'created' => 'Das Produkt wurde erstellt.',
+        'updated' => 'Das Produkt wurde aktualisiert.',
+        'deleted' => 'Das Produkt wurde gelöscht.',
+        'discount_greater_than_price' => 'Der reduzierte Preis darf nicht höher als der ursprüngliche Preis sein.',
+    ],
+    'review' => [
+        'default_reviewer' => 'Benutzer',
+        'submitted' => 'Ihre Bewertung wurde übermittelt und wird nach der Freigabe durch einen Administrator angezeigt.',
+        'updated' => 'Die Bewertung wurde aktualisiert.',
+        'deleted' => 'Die Bewertung wurde gelöscht.',
+    ],
+    'settings' => [
+        'faq_saved' => 'Die häufig gestellten Fragen des Shops wurden gespeichert.',
+        'shipping_saved' => 'Die Versandeinstellungen des Shops wurden gespeichert.',
+        'home_saved' => 'Die Startseiteneinstellungen des Shops wurden gespeichert.',
+        'home_banner_saved' => 'Die Banner-Einstellungen der Hauptstartseite wurden gespeichert.',
+        'module_required_for_sms' => 'Aktivieren Sie zuerst das Shop-Modul, um Shop-SMS zu aktivieren.',
+        'general_saved' => 'Die allgemeinen Shop-Einstellungen wurden gespeichert.',
+    ],
+    'order' => [
+        'payment_description' => 'Zahlung der Shop-Bestellung',
+        'validation' => [
+            'customer_phone_regex' => 'Die Mobilnummer muss aus 11 Ziffern bestehen und mit 09 beginnen.',
+            'items_min' => 'Ihr Warenkorb ist leer.',
+            'address_required' => 'Geben Sie Ihre Adresse ein, um die Bestellung zu bestätigen und aufzugeben.',
+        ],
+        'checkout' => [
+            'free' => 'Die Bestellung wurde erfolgreich ohne Zahlung aufgegeben.',
+            'sandbox' => 'Die Bestellung wurde im Sandbox-Modus aufgegeben und die Zahlung bestätigt.',
+            'gateway' => 'Das Zahlungsportal ist bereit.',
+            'card' => 'Die Bestellung wurde aufgegeben und wartet auf die Freigabe durch einen Administrator.',
+            'default' => 'Ihre Bestellung wurde erfolgreich aufgegeben.',
+        ],
+        'valid_item_required' => 'Für die Bestellung ist mindestens ein gültiger Artikel erforderlich.',
+        'items_edited_comment' => 'Die Produkte der Bestellung wurden von einem Administrator bearbeitet.',
+        'sms_disabled' => 'Der SMS-Versand wurde deaktiviert.',
+        'updated' => 'Die Bestellung wurde erfolgreich aktualisiert.',
+        'sms_registered' => 'Die SMS wurde registriert.',
+        'payment_cancelled' => 'Die Zahlung wurde vom Benutzer abgebrochen.',
+        'currency_toman' => 'Toman',
+        'default_business_name' => 'Unternehmen',
+        'status' => [
+            'pending_payment' => 'Zahlung ausstehend',
+            'awaiting_card_transfer' => 'Wartet auf die Freigabe durch einen Administrator',
+            'placed' => 'Aufgegeben',
+            'paid' => 'Bezahlt',
+            'processing' => 'In Bearbeitung',
+            'shipped' => 'Versandt',
+            'returned' => 'Zurückgesandt',
+            'cancelled' => 'Storniert',
+            'rejected' => 'Abgelehnt',
+            'failed' => 'Fehlgeschlagen',
+        ],
+        'sms' => [
+            'store_disabled' => 'Shop-SMS sind deaktiviert.',
+            'main_settings_missing' => 'Die SMS-Haupteinstellungen des Systems wurden nicht gefunden.',
+            'template_missing' => 'Für diesen Status wurde keine genehmigte und aktive Vorlage gefunden.',
+            'rendered_empty' => 'Der SMS-Text war nach dem Ersetzen der Parameter leer.',
+            'queued' => 'Die SMS wurde zum Senden in die Warteschlange gestellt.',
+        ],
+    ],
+];

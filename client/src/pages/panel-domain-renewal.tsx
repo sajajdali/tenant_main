@@ -20,6 +20,14 @@ const STATUS_LABELS = {
   cancelled: "domainRenewal.status.cancelled",
 } as const;
 
+const DOMAIN_STATUS_LABELS = {
+  self_managed: "domainRenewal.domainStatus.selfManaged",
+  not_registered: "domainRenewal.notSet",
+  expired: "panelDashboard.support.expired",
+  due_soon: "panelDashboard.domain.dueSoonBadge",
+  active: "panelDashboard.support.active",
+} as const;
+
 export default function PanelDomainRenewalPage() {
   const { isAdmin } = useAuth();
   const { toast } = useToast();
@@ -147,6 +155,12 @@ export default function PanelDomainRenewalPage() {
   };
 
   const domain = overview?.domain ?? tenantMeta?.domainRenewal ?? tenantMeta?.irDomain;
+  const domainLabel = domain?.tld
+    ? t("domainRenewal.labelWithTld", { tld: domain.tld })
+    : t("domainRenewal.domainFallback");
+  const domainStatusLabel = domain?.statusKey && domain.statusKey in DOMAIN_STATUS_LABELS
+    ? t(DOMAIN_STATUS_LABELS[domain.statusKey as keyof typeof DOMAIN_STATUS_LABELS])
+    : t("domainRenewal.notSet");
   const primaryDomain = tenantMeta?.tenant_domains?.[0] || "-";
   const canRenewNow = domain?.renewalAvailable !== false;
   const statusTone = useMemo(() => {
@@ -188,7 +202,7 @@ export default function PanelDomainRenewalPage() {
       <header className="sticky top-0 z-10 border-b border-border bg-card/80 backdrop-blur-md">
         <div className="container mx-auto flex items-center justify-between px-4 py-4">
           <div className="space-y-1">
-            <h1 className="text-xl font-bold text-foreground">{domain?.label || t("domainRenewal.title")}</h1>
+            <h1 className="text-xl font-bold text-foreground">{domainLabel}</h1>
           </div>
           <Link href="/panel">
             <Button variant="outline" size="icon" title={t("domainRenewal.back")} className="h-10 w-10 rounded-2xl border-border bg-background/40 hover:bg-background/70">
@@ -207,7 +221,7 @@ export default function PanelDomainRenewalPage() {
                 <CardDescription>{t("domainRenewal.currentStatusDescription")}</CardDescription>
               </div>
               <Badge variant={statusTone === "destructive" ? "destructive" : statusTone === "warning" ? "outline" : "secondary"}>
-                {domain?.statusLabel || t("domainRenewal.notSet")}
+                {domainStatusLabel}
               </Badge>
             </div>
           </CardHeader>
@@ -257,12 +271,12 @@ export default function PanelDomainRenewalPage() {
               <CardTitle className="text-base">{t("domainRenewal.paymentReminderTitle")}</CardTitle>
               <CardDescription>
                 {domain.expired
-                  ? t("domainRenewal.expiredDescription", { domain: domain.label || t("domainRenewal.domainFallback") })
+                  ? t("domainRenewal.expiredDescription", { domain: domainLabel })
                   : domain.isDueSoon
                     ? t("domainRenewal.dueSoonDescription", { days: format.number(Number(domain.daysRemaining ?? 0)), domain: domain.tld || t("domainRenewal.domainFallback") })
                     : canRenewNow
-                      ? t("domainRenewal.activeDescription", { domain: domain.label || t("domainRenewal.domainFallback") })
-                      : domain.renewalBlockedReason || t("domainRenewal.notDueYet")}
+                      ? t("domainRenewal.activeDescription", { domain: domainLabel })
+                      : t("domainRenewal.notDueYet")}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -287,7 +301,7 @@ export default function PanelDomainRenewalPage() {
 
               {!canRenewNow ? (
                 <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-3 text-sm text-amber-200">
-                  {domain?.renewalBlockedReason || t("domainRenewal.notDueYet")}
+                  {t("domainRenewal.notDueYet")}
                 </div>
               ) : null}
 

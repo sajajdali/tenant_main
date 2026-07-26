@@ -7,6 +7,7 @@ namespace App\Services;
 use App\Domain\Tenant\Models\FeatureModule;
 use App\Domain\Tenant\Models\Tenant;
 use App\Domain\Tenant\Models\TenantFeatureModule;
+use App\Support\TenantFeatureModuleLabels;
 use App\Support\TenantSupport;
 use Illuminate\Support\Carbon;
 use RuntimeException;
@@ -58,13 +59,14 @@ class FeatureModuleBillingService
                 $selected = $selectedLookup === null
                     ? $isActive
                     : in_array((int) $module->id, $selectedLookup, true);
+                $labels = TenantFeatureModuleLabels::for($module);
 
                 return [
                     'id' => $tenantModule?->id ? (string) $tenantModule->id : 'module-'.$module->id,
                     'moduleId' => (string) $module->id,
                     'slug' => $module->slug,
-                    'name' => $module->name,
-                    'description' => $module->description,
+                    'name' => $labels['name'],
+                    'description' => $labels['description'],
                     'monthlyPriceAmount' => (int) $pricing['monthlyPriceAmount'],
                     'renewalAmount' => $amount,
                     'billingMode' => $isActive ? 'renewal' : 'activation',
@@ -85,7 +87,7 @@ class FeatureModuleBillingService
             : null;
 
         if (! $supportEndsAt || now()->greaterThan($supportEndsAt)) {
-            throw new RuntimeException('برای فعال‌سازی این ماژول، ابتدا باید پشتیبانی سامانه فعال باشد.');
+            throw new RuntimeException(__('tenant.feature_modules.support_required'));
         }
 
         $existing = TenantFeatureModule::query()
@@ -94,7 +96,7 @@ class FeatureModuleBillingService
             ->first();
 
         if ($existing?->status === 'active' && ($existing->expires_at === null || $existing->expires_at?->greaterThanOrEqualTo($supportEndsAt))) {
-            throw new RuntimeException('این ماژول تا پایان دوره فعلی شما فعال است و نیازی به خرید دوباره ندارد.');
+            throw new RuntimeException(__('tenant.feature_modules.already_active'));
         }
 
         $pricing = $module->pricingFor($tenant->audience_type_id);
@@ -102,13 +104,14 @@ class FeatureModuleBillingService
             now()->startOfDay()->diffInDays($supportEndsAt->copy()->startOfDay(), false) + 1,
         );
         $amount = $this->proratedAmount((int) $pricing['monthlyPriceAmount'], $remainingDays);
+        $labels = TenantFeatureModuleLabels::for($module);
 
         return [
             'module' => [
                 'id' => (string) $module->id,
                 'slug' => $module->slug,
-                'name' => $module->name,
-                'description' => $module->description,
+                'name' => $labels['name'],
+                'description' => $labels['description'],
                 'monthlyPriceAmount' => (int) $pricing['monthlyPriceAmount'],
             ],
             'currentSupportEndsAt' => $supportEndsAt->toDateString(),
@@ -116,7 +119,7 @@ class FeatureModuleBillingService
             'amount' => $amount,
             'discountAmount' => 0,
             'payableAmount' => $amount,
-            'message' => 'این ماژول تا پایان پشتیبانی فعلی سامانه برای شما فعال می‌شود.',
+            'message' => __('tenant.feature_modules.preview_message'),
         ];
     }
 
@@ -135,17 +138,18 @@ class FeatureModuleBillingService
         $pricing = $module->pricingFor($tenant->audience_type_id);
         $isActive = $tenantModule?->status === 'active'
             && ($tenantModule->expires_at === null || $tenantModule->expires_at->greaterThanOrEqualTo(now()->startOfDay()));
+        $labels = TenantFeatureModuleLabels::for($module);
 
         return [
             'id' => (string) $module->id,
             'slug' => $module->slug,
-            'name' => $module->name,
-            'description' => $module->description,
+            'name' => $labels['name'],
+            'description' => $labels['description'],
             'monthlyPriceAmount' => (int) $pricing['monthlyPriceAmount'],
             'isActive' => $isActive,
             'expiresAt' => $tenantModule?->expires_at?->toDateString(),
             'status' => $isActive ? 'active' : 'locked',
-            'ctaNote' => (string) ($module->metadata['cta_note'] ?? 'این ماژول نیاز به فعال‌سازی و پرداخت هزینه جداگانه دارد.'),
+            'ctaNote' => $labels['ctaNote'],
         ];
     }
 }

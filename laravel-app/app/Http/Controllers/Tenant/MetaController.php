@@ -16,6 +16,7 @@ use App\Services\TenantFeatureModuleManager;
 use App\Services\VipFeatureService;
 use App\Services\TenantStorageService;
 use App\Support\AudienceSpecializedCourseSettings;
+use App\Support\TenantAudienceLabels;
 use App\Support\TenantIrDomain;
 use App\Support\TenantLocale;
 use App\Support\TenantSupport;
@@ -41,6 +42,7 @@ class MetaController extends Controller
         $support = TenantSupport::summary($tenant);
         $domainRenewal = TenantIrDomain::summary($tenant);
         $audience = $tenant->audienceType;
+        $audienceLabels = TenantAudienceLabels::for($audience);
         $generalSettings = GeneralSetting::query()->first();
         $rules = $generalSettings?->booking_rules ?? [];
         $localeMeta = TenantLocale::meta($generalSettings, $request);
@@ -97,11 +99,11 @@ class MetaController extends Controller
                 ],
                 'audience' => $audience ? [
                     'id' => (string) $audience->id,
-                    'name' => $audience->name,
+                    'name' => $audienceLabels['name'],
                     'slug' => $audience->slug,
-                    'singularLabel' => $audience->singular_label,
-                    'pluralLabel' => $audience->plural_label,
-                    'businessLabel' => $audience->business_label,
+                    'singularLabel' => $audienceLabels['singular'],
+                    'pluralLabel' => $audienceLabels['plural'],
+                    'businessLabel' => $audienceLabels['business'],
                     'enabledFeatures' => $audience->enabled_features ?? [],
                     'nutritionFeatures' => $audience->nutrition_features ?? [],
                     'futureFeatures' => $audience->future_features ?? [],

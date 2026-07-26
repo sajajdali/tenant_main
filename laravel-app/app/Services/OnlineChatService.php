@@ -53,7 +53,7 @@ class OnlineChatService
         if (! $this->isModuleActive($tenant)) {
             throw new HttpResponseException(response()->json([
                 'success' => false,
-                'message' => 'ماژول چت آنلاین برای این سامانه فعال نیست.',
+                'message' => __('tenant.online_chat.module_inactive'),
             ], 403));
         }
     }
@@ -65,14 +65,14 @@ class OnlineChatService
         }
 
         if ($actor->role !== 'barber') {
-            abort(403, 'شما به مدیریت چت آنلاین دسترسی ندارید.');
+            abort(403, __('tenant.online_chat.access_denied'));
         }
 
         $barber = Barber::query()
             ->where('user_id', $actor->id)
             ->first();
 
-        abort_if(! $barber || ! $barber->can_access_panel, 403, 'دسترسی پنل این کاربر مسدود شده است.');
+        abort_if(! $barber || ! $barber->can_access_panel, 403, __('tenant.online_chat.panel_access_blocked'));
     }
 
     public function getConversationForCustomer(TenantUser $customer): ?OnlineChatConversation
@@ -331,14 +331,14 @@ class OnlineChatService
         }
 
         if ($attachmentsCount > 1) {
-            return sprintf('%d فایل پیوست شد', $attachmentsCount);
+            return trans_choice('tenant.online_chat.preview.attachments', $attachmentsCount, ['count' => $attachmentsCount]);
         }
 
         if ($attachmentsCount === 1) {
-            return 'یک فایل پیوست شد';
+            return trans_choice('tenant.online_chat.preview.attachments', 1, ['count' => 1]);
         }
 
-        return 'پیام جدید';
+        return __('tenant.online_chat.preview.new_message');
     }
 
     private function storeAttachments(OnlineChatMessage $message, array $files): int

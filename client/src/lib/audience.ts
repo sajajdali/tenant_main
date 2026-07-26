@@ -1,8 +1,53 @@
 import { TenantMeta } from "./types";
 import { translate } from "@/i18n/messages";
+import type { MessageKey } from "@/i18n/messages";
 import { DEFAULT_LOCALE, normalizeLocale } from "@/i18n/registry";
 
 const NUTRITION_AUDIENCE_SLUGS = ["nutritionists", "nutrition-doctors"];
+
+const AUDIENCE_LABEL_KEYS = {
+  barbers: {
+    singular: "audience.barbers.singular",
+    plural: "audience.barbers.plural",
+    business: "audience.barbers.business",
+  },
+  doctors: {
+    singular: "audience.doctors.singular",
+    plural: "audience.doctors.plural",
+    business: "audience.doctors.business",
+  },
+  lawyers: {
+    singular: "audience.lawyers.singular",
+    plural: "audience.lawyers.plural",
+    business: "audience.lawyers.business",
+  },
+  consultants: {
+    singular: "audience.consultants.singular",
+    plural: "audience.consultants.plural",
+    business: "audience.consultants.business",
+  },
+  experts: {
+    singular: "audience.experts.singular",
+    plural: "audience.experts.plural",
+    business: "audience.experts.business",
+  },
+  nutritionists: {
+    singular: "audience.nutritionists.singular",
+    plural: "audience.nutritionists.plural",
+    business: "audience.nutritionists.business",
+  },
+  "nutrition-doctors": {
+    singular: "audience.nutrition-doctors.singular",
+    plural: "audience.nutrition-doctors.plural",
+    business: "audience.nutrition-doctors.business",
+  },
+} satisfies Record<string, Record<"singular" | "plural" | "business", MessageKey>>;
+
+const DEFAULT_AUDIENCE_LABEL_KEYS = {
+  singular: "audience.default.singular",
+  plural: "audience.default.plural",
+  business: "audience.default.business",
+} satisfies Record<"singular" | "plural" | "business", MessageKey>;
 
 const FEATURE_FALLBACKS: Record<string, string[]> = {
   finance_reports: ["reports"],
@@ -35,6 +80,18 @@ function resolveFeatureIndex(features: string[], key: string) {
 
 export function getAudienceLabels(meta?: TenantMeta | null) {
   const locale = normalizeLocale(meta?.locale) ?? DEFAULT_LOCALE;
+  const slug = meta?.audience?.slug;
+  const labelKeys = slug && slug in AUDIENCE_LABEL_KEYS
+    ? AUDIENCE_LABEL_KEYS[slug as keyof typeof AUDIENCE_LABEL_KEYS]
+    : DEFAULT_AUDIENCE_LABEL_KEYS;
+
+  if (locale !== "fa") {
+    return {
+      singular: translate(locale, labelKeys.singular),
+      plural: translate(locale, labelKeys.plural),
+      business: translate(locale, labelKeys.business),
+    };
+  }
 
   return {
     singular: meta?.audience?.singularLabel || translate(locale, "audience.default.singular"),

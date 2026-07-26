@@ -70,9 +70,53 @@ return [
         'webhook_failed' => 'The :channel webhook could not be registered.',
         'channels' => ['telegram' => 'Telegram', 'bale' => 'Bale'],
     ],
+    'site_meta' => [
+        'pwa' => ['description' => 'Online booking and service management', 'short_name' => 'Booking'],
+        'booking' => ['title' => ':name | Online booking', 'description' => 'Online booking and information about available services.'],
+        'about' => ['title' => 'About us | :name', 'description' => 'Learn more about :name.'],
+        'contact' => [
+            'title' => 'Contact | :name',
+            'description_with_channels' => 'Contact options for :name, including phone number and address.',
+            'description' => 'Contact information for :name.',
+        ],
+        'store' => ['title' => 'Store | :name', 'description' => 'The :name online store with selected, popular, and bestselling products.'],
+        'bestsellers' => ['title' => 'Bestselling products | :name', 'description' => 'The bestselling products in the :name store.'],
+        'popular' => ['title' => 'Most popular products | :name', 'description' => 'The most popular products in the :name store.'],
+        'search' => ['title' => 'Product search | :name', 'description' => 'Product search results in the :name store.'],
+        'checkout' => ['title' => 'Cart and checkout | :name', 'description' => 'Review your cart and complete your order in the :name store.'],
+        'payment' => ['title' => 'Choose payment method | :name', 'description' => 'Choose a payment method for your order in the :name store.'],
+        'result' => ['title' => 'Order result | :name', 'description' => 'The status of your order in the :name store.'],
+        'product' => ['title' => 'Product details | :name', 'description' => 'Product details in the :name store.'],
+    ],
     'domain_renewal' => [
         'sandbox_completed' => 'The sandbox domain renewal was completed successfully.',
         'payment_created' => 'The domain renewal payment request was created.',
+        'summary' => [
+            'label' => 'Domain',
+            'label_with_tld' => ':tld domain',
+            'status' => [
+                'self_managed' => 'User-managed domain',
+                'not_registered' => 'Not registered',
+                'expired' => 'Expired',
+                'due_soon' => 'Due soon',
+                'active' => 'Active',
+            ],
+            'blocked' => [
+                'self_managed' => 'This system uses a user-managed domain and cannot be renewed from this section.',
+                'not_registered' => 'No renewable domain has been registered for this system yet.',
+                'not_due_yet' => 'It is not time to renew the domain yet.',
+            ],
+        ],
+    ],
+    'audience_labels' => [
+        'default' => ['singular' => 'professional', 'plural' => 'professionals', 'business' => 'business'],
+        'barbers' => ['singular' => 'barber', 'plural' => 'barbers', 'business' => 'barbershop'],
+        'doctors' => ['singular' => 'doctor', 'plural' => 'doctors', 'business' => 'clinic'],
+        'lawyers' => ['singular' => 'lawyer', 'plural' => 'lawyers', 'business' => 'law office'],
+        'consultants' => ['singular' => 'consultant', 'plural' => 'consultants', 'business' => 'consulting center'],
+        'experts' => ['singular' => 'specialist', 'plural' => 'specialists', 'business' => 'specialist center'],
+        'nutritionists' => ['singular' => 'nutritionist', 'plural' => 'nutritionists', 'business' => 'nutrition center'],
+        'nutrition-doctors' => ['singular' => 'nutrition doctor', 'plural' => 'nutrition doctors', 'business' => 'nutrition clinic'],
     ],
     'payments' => [
         'cancelled_by_user' => 'Payment cancelled by the user.',
@@ -91,6 +135,13 @@ return [
         'admin_reply_sent' => 'The reply was sent to the user.',
         'closed' => 'Conversation closed.',
         'reopened' => 'Conversation reopened.',
+        'module_inactive' => 'The online chat module is not active for this system.',
+        'access_denied' => 'You do not have permission to manage online chat.',
+        'panel_access_blocked' => 'This user’s panel access is blocked.',
+        'preview' => [
+            'attachments' => 'One file attached|:count files attached',
+            'new_message' => 'New message',
+        ],
         'validation' => [
             'attachments_max' => 'You can send up to 5 images.',
             'attachment_size' => 'Each image can be at most 10 MB.',
@@ -127,6 +178,47 @@ return [
     'feature_modules' => [
         'sandbox_activated' => 'The module was activated successfully in sandbox mode.',
         'payment_created' => 'The module activation payment request was created.',
+        'support_required' => 'Activate support for this system before enabling this module.',
+        'already_active' => 'This module is already active until the end of your current period and does not need to be purchased again.',
+        'preview_message' => 'This module will be active until the end of your current support period.',
+        'default_cta' => 'This module requires separate activation and payment.',
+        'catalog' => [
+            'default' => [
+                'name' => 'Special feature',
+                'description' => 'An additional feature for managing your business.',
+                'cta_note' => 'This feature must be activated separately.',
+            ],
+            'online-store' => [
+                'name' => 'Online store',
+                'description' => 'Sell your products online and manage orders directly in the system.',
+                'cta_note' => 'After activation, you can fully manage products, orders, and store settings.',
+            ],
+            'vip-customers' => [
+                'name' => 'VIP customers',
+                'description' => 'Mark special customers and set exclusive appointment times for them.',
+                'cta_note' => 'After activation, you can manage VIP customers and exclusive time slots.',
+            ],
+            'customer-club' => [
+                'name' => 'Customer club',
+                'description' => 'Use points, wallet credit, tiers, and rewards to strengthen customer loyalty.',
+                'cta_note' => 'After activation, you can fully manage the customer club, wallet, tiers, and rewards.',
+            ],
+            'customer-feedback' => [
+                'name' => 'Customer feedback and surveys',
+                'description' => 'Send surveys after appointments and review customer satisfaction.',
+                'cta_note' => 'After activation, you can manage surveys, questions, reports, and notifications.',
+            ],
+            'online-chat' => [
+                'name' => 'Online chat',
+                'description' => 'Chat directly with customers and answer their messages from the management panel.',
+                'cta_note' => 'After activation, you can display online chat on your website and manage customer conversations.',
+            ],
+            'cooking-recipes' => [
+                'name' => 'Cooking recipes',
+                'description' => 'Publish and manage your own cooking recipes for customers.',
+                'cta_note' => 'After activation, you can publish and manage your own cooking recipes.',
+            ],
+        ],
     ],
     'file_manager' => [
         'invalid_path' => 'The file path is invalid.',

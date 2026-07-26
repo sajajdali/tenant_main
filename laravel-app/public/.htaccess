@@ -1,13 +1,12 @@
 <IfModule mod_rewrite.c>
-     RequestHeader set X-Forwarded-Proto "https"
-    RequestHeader set X-Forwarded-Port "443"
-    RequestHeader set X-Forwarded-Ssl "on"
     <IfModule mod_negotiation.c>
         Options -MultiViews -Indexes
     </IfModule>
 
     RewriteEngine On
+    RewriteCond %{HTTP_HOST} !\.test(?::\d+)?$ [NC]
     RewriteCond %{HTTPS} !=on
+    RewriteCond %{HTTP:X-Forwarded-Proto} !https [NC]
     RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 
     # Handle Authorization Header

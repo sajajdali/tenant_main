@@ -70,9 +70,53 @@ return [
         'webhook_failed' => 'Der :channel-Webhook konnte nicht registriert werden.',
         'channels' => ['telegram' => 'Telegram', 'bale' => 'Bale'],
     ],
+    'site_meta' => [
+        'pwa' => ['description' => 'Online-Terminbuchung und Serviceverwaltung', 'short_name' => 'Terminbuchung'],
+        'booking' => ['title' => ':name | Online-Terminbuchung', 'description' => 'Online-Terminbuchung und Informationen zu den angebotenen Leistungen.'],
+        'about' => ['title' => 'Über uns | :name', 'description' => 'Weitere Informationen über :name.'],
+        'contact' => [
+            'title' => 'Kontakt | :name',
+            'description_with_channels' => 'Kontaktmöglichkeiten für :name, einschließlich Telefonnummer und Adresse.',
+            'description' => 'Kontaktdaten von :name.',
+        ],
+        'store' => ['title' => 'Shop | :name', 'description' => 'Der Online-Shop von :name mit ausgewählten, beliebten und meistverkauften Produkten.'],
+        'bestsellers' => ['title' => 'Meistverkaufte Produkte | :name', 'description' => 'Die meistverkauften Produkte im Shop von :name.'],
+        'popular' => ['title' => 'Beliebteste Produkte | :name', 'description' => 'Die beliebtesten Produkte im Shop von :name.'],
+        'search' => ['title' => 'Produktsuche | :name', 'description' => 'Suchergebnisse für Produkte im Shop von :name.'],
+        'checkout' => ['title' => 'Warenkorb und Bestellung | :name', 'description' => 'Warenkorb prüfen und die Bestellung im Shop von :name abschließen.'],
+        'payment' => ['title' => 'Zahlungsart auswählen | :name', 'description' => 'Zahlungsart für Ihre Bestellung im Shop von :name auswählen.'],
+        'result' => ['title' => 'Bestellergebnis | :name', 'description' => 'Status Ihrer Bestellung im Shop von :name.'],
+        'product' => ['title' => 'Produktdetails | :name', 'description' => 'Produktdetails im Shop von :name.'],
+    ],
     'domain_renewal' => [
         'sandbox_completed' => 'Die Sandbox-Domainverlängerung wurde erfolgreich abgeschlossen.',
         'payment_created' => 'Die Zahlungsanfrage zur Domainverlängerung wurde erstellt.',
+        'summary' => [
+            'label' => 'Domain',
+            'label_with_tld' => ':tld-Domain',
+            'status' => [
+                'self_managed' => 'Vom Benutzer verwaltete Domain',
+                'not_registered' => 'Nicht registriert',
+                'expired' => 'Abgelaufen',
+                'due_soon' => 'Bald fällig',
+                'active' => 'Aktiv',
+            ],
+            'blocked' => [
+                'self_managed' => 'Dieses System verwendet eine vom Benutzer verwaltete Domain, die in diesem Bereich nicht verlängert werden kann.',
+                'not_registered' => 'Für dieses System wurde noch keine verlängerbare Domain registriert.',
+                'not_due_yet' => 'Die Domain kann derzeit noch nicht verlängert werden.',
+            ],
+        ],
+    ],
+    'audience_labels' => [
+        'default' => ['singular' => 'Fachkraft', 'plural' => 'Fachkräfte', 'business' => 'Unternehmen'],
+        'barbers' => ['singular' => 'Friseur', 'plural' => 'Friseure', 'business' => 'Friseursalon'],
+        'doctors' => ['singular' => 'Arzt', 'plural' => 'Ärzte', 'business' => 'Klinik'],
+        'lawyers' => ['singular' => 'Rechtsanwalt', 'plural' => 'Rechtsanwälte', 'business' => 'Kanzlei'],
+        'consultants' => ['singular' => 'Berater', 'plural' => 'Berater', 'business' => 'Beratungszentrum'],
+        'experts' => ['singular' => 'Fachkraft', 'plural' => 'Fachkräfte', 'business' => 'Fachzentrum'],
+        'nutritionists' => ['singular' => 'Ernährungsberater', 'plural' => 'Ernährungsberater', 'business' => 'Ernährungszentrum'],
+        'nutrition-doctors' => ['singular' => 'Ernährungsmediziner', 'plural' => 'Ernährungsmediziner', 'business' => 'Ernährungsklinik'],
     ],
     'payments' => [
         'cancelled_by_user' => 'Zahlung vom Benutzer abgebrochen.',
@@ -91,6 +135,13 @@ return [
         'admin_reply_sent' => 'Die Antwort wurde an den Benutzer gesendet.',
         'closed' => 'Unterhaltung geschlossen.',
         'reopened' => 'Unterhaltung wieder geöffnet.',
+        'module_inactive' => 'Das Online-Chat-Modul ist für dieses System nicht aktiviert.',
+        'access_denied' => 'Sie sind nicht berechtigt, den Online-Chat zu verwalten.',
+        'panel_access_blocked' => 'Der Verwaltungszugriff dieses Benutzers ist gesperrt.',
+        'preview' => [
+            'attachments' => 'Eine Datei wurde angehängt|:count Dateien wurden angehängt',
+            'new_message' => 'Neue Nachricht',
+        ],
         'validation' => [
             'attachments_max' => 'Sie können maximal 5 Bilder senden.',
             'attachment_size' => 'Jedes Bild darf maximal 10 MB groß sein.',
@@ -127,6 +178,47 @@ return [
     'feature_modules' => [
         'sandbox_activated' => 'Das Modul wurde im Sandbox-Modus erfolgreich aktiviert.',
         'payment_created' => 'Die Zahlungsanfrage zur Modulaktivierung wurde erstellt.',
+        'support_required' => 'Aktivieren Sie zuerst den Support für dieses System, bevor Sie dieses Modul freischalten.',
+        'already_active' => 'Dieses Modul ist bis zum Ende Ihres aktuellen Zeitraums bereits aktiv und muss nicht erneut gekauft werden.',
+        'preview_message' => 'Dieses Modul wird bis zum Ende Ihres aktuellen Supportzeitraums aktiviert.',
+        'default_cta' => 'Dieses Modul muss separat aktiviert und bezahlt werden.',
+        'catalog' => [
+            'default' => [
+                'name' => 'Sonderfunktion',
+                'description' => 'Eine zusätzliche Funktion für die Verwaltung Ihres Unternehmens.',
+                'cta_note' => 'Diese Funktion muss separat aktiviert werden.',
+            ],
+            'online-store' => [
+                'name' => 'Online-Shop',
+                'description' => 'Verkaufen Sie Ihre Produkte online und verwalten Sie Bestellungen direkt im System.',
+                'cta_note' => 'Nach der Aktivierung können Sie Produkte, Bestellungen und Shop-Einstellungen vollständig verwalten.',
+            ],
+            'vip-customers' => [
+                'name' => 'VIP-Kunden',
+                'description' => 'Kennzeichnen Sie besondere Kunden und richten Sie exklusive Termine für sie ein.',
+                'cta_note' => 'Nach der Aktivierung können Sie VIP-Kunden und exklusive Zeitfenster verwalten.',
+            ],
+            'customer-club' => [
+                'name' => 'Kundenclub',
+                'description' => 'Nutzen Sie Punkte, Guthaben, Kundenstufen und Prämien für eine stärkere Kundenbindung.',
+                'cta_note' => 'Nach der Aktivierung können Sie den Kundenclub, Guthaben, Stufen und Prämien vollständig verwalten.',
+            ],
+            'customer-feedback' => [
+                'name' => 'Kundenfeedback und Umfragen',
+                'description' => 'Versenden Sie Umfragen nach Terminen und werten Sie die Kundenzufriedenheit aus.',
+                'cta_note' => 'Nach der Aktivierung können Sie Umfragen, Fragen, Berichte und Benachrichtigungen verwalten.',
+            ],
+            'online-chat' => [
+                'name' => 'Online-Chat',
+                'description' => 'Chatten Sie direkt mit Ihren Kunden und beantworten Sie ihre Nachrichten im Verwaltungsbereich.',
+                'cta_note' => 'Nach der Aktivierung können Sie den Online-Chat auf Ihrer Website anzeigen und Kundenunterhaltungen verwalten.',
+            ],
+            'cooking-recipes' => [
+                'name' => 'Kochrezepte',
+                'description' => 'Veröffentlichen und verwalten Sie eigene Kochrezepte für Ihre Kunden.',
+                'cta_note' => 'Nach der Aktivierung können Sie eigene Kochrezepte veröffentlichen und verwalten.',
+            ],
+        ],
     ],
     'file_manager' => [
         'invalid_path' => 'Der Dateipfad ist ungültig.',

@@ -11,7 +11,7 @@ import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { getInitialTenantMeta } from "@/lib/bootstrap";
 import { applyAppearance, readCachedAppearance } from "@/lib/appearance";
-import { isAppointmentBookingDisabled } from "@/lib/audience";
+import { getAudienceLabels, isAppointmentBookingDisabled } from "@/lib/audience";
 import { useToast } from "@/hooks/use-toast";
 import type { AppearanceSettings, PublicAppointmentDetails } from "@/lib/types";
 import { useFormat, useLocale, useT } from "@/i18n/locale";
@@ -270,7 +270,7 @@ export default function AppointmentPublicPage() {
       year: "numeric",
     });
   }, [appointment?.date, format]);
-  const professionalLabel = tenantMeta?.audience?.singularLabel || t("appointment.public.professionalFallback");
+  const professionalLabel = getAudienceLabels(tenantMeta).singular || t("appointment.public.professionalFallback");
   const appointmentStartsAt = useMemo(
     () => parseAppointmentDateTime(appointment?.date, appointment?.startTime),
     [appointment?.date, appointment?.startTime],

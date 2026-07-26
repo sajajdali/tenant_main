@@ -22,6 +22,60 @@ const MODULE_ICONS: Record<string, typeof ShoppingCart> = {
 
 type SpecialFeaturesTranslate = (key: MessageKey, params?: Record<string, string | number>) => string;
 
+const MODULE_COPY_KEYS = {
+  "online-store": {
+    name: "panelSpecialFeatures.catalog.onlineStore.name",
+    description: "panelSpecialFeatures.catalog.onlineStore.description",
+    ctaNote: "panelSpecialFeatures.catalog.onlineStore.ctaNote",
+  },
+  "vip-customers": {
+    name: "panelSpecialFeatures.catalog.vipCustomers.name",
+    description: "panelSpecialFeatures.catalog.vipCustomers.description",
+    ctaNote: "panelSpecialFeatures.catalog.vipCustomers.ctaNote",
+  },
+  "customer-club": {
+    name: "panelSpecialFeatures.catalog.customerClub.name",
+    description: "panelSpecialFeatures.catalog.customerClub.description",
+    ctaNote: "panelSpecialFeatures.catalog.customerClub.ctaNote",
+  },
+  "customer-feedback": {
+    name: "panelSpecialFeatures.catalog.customerFeedback.name",
+    description: "panelSpecialFeatures.catalog.customerFeedback.description",
+    ctaNote: "panelSpecialFeatures.catalog.customerFeedback.ctaNote",
+  },
+  "online-chat": {
+    name: "panelSpecialFeatures.catalog.onlineChat.name",
+    description: "panelSpecialFeatures.catalog.onlineChat.description",
+    ctaNote: "panelSpecialFeatures.catalog.onlineChat.ctaNote",
+  },
+  "cooking-recipes": {
+    name: "panelSpecialFeatures.catalog.cookingRecipes.name",
+    description: "panelSpecialFeatures.catalog.cookingRecipes.description",
+    ctaNote: "panelSpecialFeatures.catalog.cookingRecipes.ctaNote",
+  },
+} satisfies Record<string, Record<"name" | "description" | "ctaNote", MessageKey>>;
+
+const getModuleCopy = (module: FeatureModuleSummary, t: SpecialFeaturesTranslate) => {
+  const keys = MODULE_COPY_KEYS[module.slug as keyof typeof MODULE_COPY_KEYS];
+
+  return keys
+    ? {
+        name: t(keys.name),
+        description: t(keys.description),
+        ctaNote: t(keys.ctaNote),
+      }
+    : {
+        name: t("panelSpecialFeatures.module.defaultName"),
+        description: t("panelSpecialFeatures.module.defaultDescription"),
+        ctaNote: t("panelSpecialFeatures.module.defaultCtaNote"),
+      };
+};
+
+const getModuleNameBySlug = (slug: string, t: SpecialFeaturesTranslate) => {
+  const keys = MODULE_COPY_KEYS[slug as keyof typeof MODULE_COPY_KEYS];
+  return keys ? t(keys.name) : slug;
+};
+
 const moduleActiveUntil = (module: FeatureModuleSummary, t: SpecialFeaturesTranslate, formatDate: (value?: string | null) => string) =>
   module.expiresAt ? t("panelSpecialFeatures.module.activeUntil", { date: formatDate(module.expiresAt) }) : "";
 
@@ -118,7 +172,7 @@ export default function PanelSpecialFeaturesPage() {
       toast({
         title: t("panelSpecialFeatures.toast.activatedTitle"),
         description: moduleSlug
-          ? t("panelSpecialFeatures.toast.activatedWithModule", { module: moduleSlug })
+          ? t("panelSpecialFeatures.toast.activatedWithModule", { module: getModuleNameBySlug(moduleSlug, t) })
           : t("panelSpecialFeatures.toast.activatedDescription"),
       });
       void reloadModules();
@@ -148,8 +202,9 @@ export default function PanelSpecialFeaturesPage() {
       return null;
     }
 
-    return modules.find((module) => module.slug === requestedSlug)?.name ?? null;
-  }, [modules, requestedSlug]);
+    const module = modules.find((item) => item.slug === requestedSlug);
+    return module ? getModuleCopy(module, t).name : null;
+  }, [modules, requestedSlug, t]);
 
   const selectedIcon = useMemo(() => {
     if (!previewModule) return ShoppingCart;
@@ -282,6 +337,7 @@ export default function PanelSpecialFeaturesPage() {
             {filteredModules.map((module) => {
               const Icon = MODULE_ICONS[module.slug] ?? ShoppingCart;
               const actionConfig = getModuleActionConfig(module, t, formatDate);
+              const moduleCopy = getModuleCopy(module, t);
 
               return (
                 <Card key={module.id} className="border-border/70 bg-card/60">
@@ -293,8 +349,8 @@ export default function PanelSpecialFeaturesPage() {
                             <Icon className="h-6 w-6" />
                           </div>
                           <div>
-                            <CardTitle className="text-base">{module.name}</CardTitle>
-                            <CardDescription>{module.description || t("panelSpecialFeatures.module.defaultDescription")}</CardDescription>
+                            <CardTitle className="text-base">{moduleCopy.name}</CardTitle>
+                            <CardDescription>{moduleCopy.description}</CardDescription>
                           </div>
                         </div>
                       </div>
@@ -312,7 +368,7 @@ export default function PanelSpecialFeaturesPage() {
                     <div className="rounded-2xl border border-border/70 bg-background/40 p-4 text-sm leading-7 text-muted-foreground">
                       {module.isActive
                         ? actionConfig.activeDescription
-                        : module.ctaNote}
+                        : moduleCopy.ctaNote}
                     </div>
 
                     <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center">
@@ -361,7 +417,7 @@ export default function PanelSpecialFeaturesPage() {
                 const Icon = selectedIcon;
                 return <Icon className="h-5 w-5 text-primary" />;
               })()}
-              {t("panelSpecialFeatures.activation.title", { module: previewModule?.name ?? "" })}
+              {t("panelSpecialFeatures.activation.title", { module: previewModule ? getModuleCopy(previewModule, t).name : "" })}
             </DialogTitle>
             <DialogDescription>
               {t("panelSpecialFeatures.activation.description")}
@@ -395,7 +451,7 @@ export default function PanelSpecialFeaturesPage() {
               </div>
 
               <div className="rounded-2xl border border-border/70 bg-background/40 p-4 text-sm leading-7 text-muted-foreground">
-                {preview.message}
+                {t("panelSpecialFeatures.activation.previewMessage")}
               </div>
 
               <div className="flex flex-col gap-3 sm:flex-row sm:justify-between">

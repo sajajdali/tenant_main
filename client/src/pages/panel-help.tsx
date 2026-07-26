@@ -9,6 +9,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { CodeText } from "@/i18n/ltr-text";
 import { useLocale, useT } from "@/i18n/locale";
+import { getAudienceLabels } from "@/lib/audience";
+import { getInitialTenantMeta } from "@/lib/bootstrap";
 
 const INTRO_TOPIC_KEY = "panel/help:intro";
 
@@ -38,6 +40,7 @@ export default function PanelHelpPage() {
   const { toast } = useToast();
   const t = useT();
   const { dir, isRtl } = useLocale();
+  const audienceLabels = getAudienceLabels(getInitialTenantMeta());
   const [loading, setLoading] = useState(true);
   const [topics, setTopics] = useState<HelpTopic[]>([]);
   const [selectedTopic, setSelectedTopic] = useState<HelpTopic | null>(null);
@@ -186,7 +189,7 @@ export default function PanelHelpPage() {
               <div className="space-y-4 p-5 lg:p-6">
                 <div className="flex flex-wrap items-center gap-2">
                   <Badge variant="secondary">{heroTopic.moduleKey ? <CodeText>{heroTopic.moduleKey}</CodeText> : t("panelHelp.generalModule")}</Badge>
-                  {heroTopic.audience ? <Badge variant="outline">{heroTopic.audience.name}</Badge> : null}
+                  {heroTopic.audience ? <Badge variant="outline">{audienceLabels.plural}</Badge> : null}
                 </div>
                 <div>
                   <h2 className="text-2xl font-black leading-10">{heroTopic.title}</h2>
