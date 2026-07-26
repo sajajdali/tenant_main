@@ -1,6 +1,31 @@
 <?php
 
 return [
+    'auth' => [
+        'otp_sent' => 'Der Anmeldecode wurde gesendet.',
+        'otp_invalid' => 'Der Anmeldecode oder die Mobilnummer ist falsch.',
+        'otp_forbidden' => 'Der Anmeldecode oder die Zugriffsebene dieses Benutzers ist falsch.',
+        'login_success' => 'Sie haben sich erfolgreich angemeldet.',
+        'logout_success' => 'Sie haben sich erfolgreich abgemeldet.',
+        'profile_updated' => 'Ihre Kontodaten wurden aktualisiert.',
+        'login_required' => 'Bitte melden Sie sich an, um fortzufahren.',
+        'unauthenticated' => 'Bitte melden Sie sich an, um fortzufahren.',
+        'mobile_required' => 'Geben Sie die Mobilnummer ein.',
+        'mobile_regex' => 'Die Mobilnummer muss aus 11 Ziffern bestehen und mit 09 beginnen.',
+        'code_required' => 'Geben Sie den Anmeldecode ein.',
+        'code_digits' => 'Der Anmeldecode muss aus 4 Ziffern bestehen.',
+        'email_unique' => 'Diese E-Mail-Adresse ist bereits für einen anderen Benutzer registriert.',
+        'central_user_not_found' => 'Für diese Mobilnummer wurde kein aktiver Administrator gefunden.',
+        'tenant_not_found' => 'Der ausgewählte Barbershop wurde nicht gefunden.',
+        'user_inactive' => 'Dieser Benutzer ist inaktiv.',
+        'retry_after_seconds' => 'Bitte versuchen Sie es in :seconds Sekunden erneut.',
+        'sms_not_configured' => 'Der SMS-Dienst für die Anmeldung ist noch nicht vollständig konfiguriert.',
+        'sms_template_unapproved' => 'Die SMS-Vorlage für die Anmeldung wurde noch nicht genehmigt.',
+        'sms_not_enabled' => 'Der SMS-Dienst für die Anmeldung ist noch nicht aktiviert.',
+        'sms_api_key_missing' => 'Der SMS-API-Schlüssel wurde in der zentralen Verwaltung nicht konfiguriert.',
+        'otp_queued' => 'Der Anmeldecode wurde zum Senden in die Warteschlange gestellt.',
+        'default_business_name' => 'Buchungssystem',
+    ],
     'nutrition' => [
         'access_locked' => 'Ihr Zugriff auf den Ernahrungsbereich ist gesperrt. Bitte kontaktieren Sie den Support.',
         'diet_request' => [

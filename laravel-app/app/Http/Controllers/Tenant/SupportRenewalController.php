@@ -8,6 +8,7 @@ use App\Domain\Tenant\Models\SubscriptionPackage;
 use App\Domain\Tenant\Models\TenantSubscriptionPayment;
 use App\Http\Controllers\Controller;
 use App\Services\SupportRenewalPaymentService;
+use App\Support\TenantAudienceLabels;
 use App\Support\TenantPaymentGateways;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -71,12 +72,14 @@ class SupportRenewalController extends Controller
 
     public function publicPackages(Request $request): JsonResponse
     {
+        $audienceLabels = TenantAudienceLabels::for(tenant()->audienceType);
+
         return response()->json([
             'success' => true,
             'data' => [
                 'audience' => [
-                    'pluralLabel' => tenant()->audienceType?->plural_label ?? 'کاربر',
-                    'singularLabel' => tenant()->audienceType?->singular_label ?? 'کاربر',
+                    'pluralLabel' => $audienceLabels['plural'],
+                    'singularLabel' => $audienceLabels['singular'],
                 ],
                 'packages' => SubscriptionPackage::query()
                     ->with('audiencePrices')

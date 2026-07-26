@@ -24,8 +24,12 @@ class TenantManagedDomain
             ? Carbon::parse($tenant->managed_domain_renews_at)->endOfDay()
             : ($tenant?->ir_domain_renews_at ? Carbon::parse($tenant->ir_domain_renews_at)->endOfDay() : null);
         $amount = $tenant?->managed_domain_amount ?? $tenant?->ir_domain_amount;
-        $label = trim((string) (DomainTldPrice::query()->where('tld', $tld)->value('meta_json->label') ?? ''));
-        $label = $label !== '' ? $label : ($tld !== '' ? "دامنه {$tld}" : 'دامنه');
+        $configuredLabel = trim((string) (DomainTldPrice::query()->where('tld', $tld)->value('meta_json->label') ?? ''));
+        $label = app()->isLocale('fa') && $configuredLabel !== ''
+            ? $configuredLabel
+            : ($tld !== ''
+                ? __('tenant.domain_renewal.summary.label_with_tld', ['tld' => $tld])
+                : __('tenant.domain_renewal.summary.label'));
 
         if ($mode === 'self_managed') {
             return [
@@ -42,10 +46,10 @@ class TenantManagedDomain
                 'isDueSoon' => false,
                 'amount' => null,
                 'statusKey' => 'self_managed',
-                'statusLabel' => 'دامنه شخصی کاربر',
+                'statusLabel' => __('tenant.domain_renewal.summary.status.self_managed'),
                 'renewalAvailable' => false,
                 'renewalWindowOpen' => false,
-                'renewalBlockedReason' => 'این سامانه از دامنه شخصی استفاده می‌کند و امکان تمدید از این بخش را ندارد.',
+                'renewalBlockedReason' => __('tenant.domain_renewal.summary.blocked.self_managed'),
             ];
         }
 
@@ -55,7 +59,7 @@ class TenantManagedDomain
                 'selfManaged' => false,
                 'managementMode' => $mode,
                 'tld' => $tld !== '' ? $tld : '.ir',
-                'label' => $tld !== '' ? $label : 'دامنه .ir',
+                'label' => $tld !== '' ? $label : __('tenant.domain_renewal.summary.label_with_tld', ['tld' => '.ir']),
                 'registeredAt' => $tenant?->managed_domain_registered_at?->toDateString() ?? $tenant?->ir_domain_registered_at?->toDateString(),
                 'lastPaidAt' => $tenant?->managed_domain_last_paid_at?->toDateString() ?? $tenant?->ir_domain_last_paid_at?->toDateString(),
                 'renewsAt' => null,
@@ -64,10 +68,10 @@ class TenantManagedDomain
                 'isDueSoon' => false,
                 'amount' => $amount,
                 'statusKey' => 'not_registered',
-                'statusLabel' => 'ثبت نشده',
+                'statusLabel' => __('tenant.domain_renewal.summary.status.not_registered'),
                 'renewalAvailable' => false,
                 'renewalWindowOpen' => false,
-                'renewalBlockedReason' => 'برای این سامانه هنوز دامنه قابل تمدید ثبت نشده است.',
+                'renewalBlockedReason' => __('tenant.domain_renewal.summary.blocked.not_registered'),
             ];
         }
 
@@ -78,7 +82,7 @@ class TenantManagedDomain
             : $now->startOfDay()->diffInDays($renewsAt->copy()->startOfDay()) + 1;
         $isDueSoon = ! $expired && $daysRemaining <= 30;
         $renewalWindowOpen = $expired || $daysRemaining <= self::RENEWAL_WINDOW_DAYS;
-        $renewalBlockedReason = $renewalWindowOpen ? null : 'هنوز زمان تمدید دامنه فرا نرسیده است.';
+        $renewalBlockedReason = $renewalWindowOpen ? null : __('tenant.domain_renewal.summary.blocked.not_due_yet');
 
         return [
             'enabled' => true,
@@ -94,7 +98,11 @@ class TenantManagedDomain
             'isDueSoon' => $isDueSoon,
             'amount' => $amount,
             'statusKey' => $expired ? 'expired' : ($isDueSoon ? 'due_soon' : 'active'),
-            'statusLabel' => $expired ? 'منقضی شده' : ($isDueSoon ? 'در آستانه سررسید' : 'فعال'),
+            'statusLabel' => $expired
+                ? __('tenant.domain_renewal.summary.status.expired')
+                : ($isDueSoon
+                    ? __('tenant.domain_renewal.summary.status.due_soon')
+                    : __('tenant.domain_renewal.summary.status.active')),
             'renewalAvailable' => $renewalWindowOpen,
             'renewalWindowOpen' => $renewalWindowOpen,
             'renewalBlockedReason' => $renewalBlockedReason,

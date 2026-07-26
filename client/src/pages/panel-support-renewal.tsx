@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { useAuth } from "@/lib/auth";
 import { api } from "@/lib/api";
 import { getInitialTenantMeta } from "@/lib/bootstrap";
+import { getAudienceLabels } from "@/lib/audience";
 import type { SupportRenewalPackage, SupportRenewalSettings, TenantMeta } from "@/lib/types";
 import { useFormat, useLocale, useT } from "@/i18n/locale";
 
@@ -25,7 +26,7 @@ export default function PanelSupportRenewalPage() {
   const durationStepRef = useRef<HTMLDivElement | null>(null);
   const summaryStepRef = useRef<HTMLDivElement | null>(null);
 
-  const unitLabel = tenantMeta?.audience?.pluralLabel?.trim() || t("supportRenewal.defaultUnit");
+  const unitLabel = getAudienceLabels(tenantMeta).plural || t("supportRenewal.defaultUnit");
   const userLimitKey = (value?: number | null) => (value == null ? "unlimited" : String(value));
   const currentProfessionalCount = Math.max(0, tenantMeta?.barbersCount ?? 0);
   const currentTenantPackage = tenantMeta?.subscriptionPackage ?? null;

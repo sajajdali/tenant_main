@@ -1,0 +1,36 @@
+<?php
+
+return [
+    'admin_login' => [
+        'brand_name' => 'Mandant',
+        'fallback_panel_title' => 'Panel-Anmeldung',
+        'fallback_side_title' => 'Anmeldung im Administrationspanel',
+        'fallback_panel_description' => 'Administratoren können in diesem Panel Barbershops, Domains, Einstellungen und Termine verwalten.',
+        'central_panel_title' => 'Panel-Anmeldung',
+        'central_panel_description' => 'Superadministratoren, Vertriebsleiter und Vertriebsmitarbeiter melden sich mit Mobilnummer und Passwort in ihrem Panel an.',
+        'tenant_panel_title' => 'Anmeldung in der Barbershop-Verwaltung',
+        'tenant_panel_description' => 'Melden Sie sich mit einem Administratorkonto im Panel dieses Barbershops an.',
+        'description_otp' => 'Melden Sie sich mit Ihrer Mobilnummer und einem Einmalcode an.',
+        'description_password' => 'Melden Sie sich mit Ihrer Mobilnummer und Ihrem Passwort an.',
+        'access_locked_title' => 'Der Zugriff auf dieses Panel ist gesperrt.',
+        'access_locked_message' => 'Der Panelzugriff ist gesperrt. Bitte wenden Sie sich an den Support.',
+        'mobile_label' => 'Mobilnummer',
+        'code_label' => 'Anmeldecode',
+        'password_label' => 'Passwort',
+        'password_placeholder' => 'Passwort',
+        'test_code' => 'Aktueller Testcode: :code',
+        'remember_me' => 'Angemeldet bleiben',
+        'send_otp' => 'Anmeldecode senden',
+        'submit_panel' => 'Im Panel anmelden',
+        'submit_with_mobile' => 'Mit Mobilnummer anmelden',
+        'invalid_credentials' => 'Die Mobilnummer oder das Passwort ist falsch.',
+        'tenant_admin_not_found' => 'Für diesen Mandanten wurde kein Administrator gefunden.',
+        'js' => [
+            'mobile_length' => 'Die Mobilnummer muss aus 11 Ziffern bestehen.',
+            'send_failed' => 'Der Code konnte nicht gesendet werden.',
+            'otp_sent' => 'Der Anmeldecode wurde gesendet. Der aktuelle Testcode lautet :code.',
+            'verify_required' => 'Geben Sie sowohl die Mobilnummer als auch den Anmeldecode ein.',
+            'login_failed' => 'Die Anmeldung ist fehlgeschlagen.',
+        ],
+    ],
+];

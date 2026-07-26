@@ -220,6 +220,9 @@ export default function PanelPage() {
   const panelAccessLocked = tenantMeta?.panelAccessLocked ?? false;
   const panelAccessMessage = tenantMeta?.panelAccessMessage?.trim() || t("panelDashboard.panelLocked.description");
   const irDomain = tenantMeta?.domainRenewal ?? tenantMeta?.irDomain;
+  const irDomainLabel = irDomain?.tld
+    ? t("domainRenewal.labelWithTld", { tld: irDomain.tld })
+    : t("panelDashboard.domain.defaultLabel");
   const supportEndLabel = useMemo(() => {
     if (!tenantMeta?.supportEndsAt) return t("supportRenewal.notSet");
     return format.date(tenantMeta.supportEndsAt);
@@ -450,7 +453,7 @@ export default function PanelPage() {
     },
     ...(isAdmin
       ? [{
-          title: irDomain?.label || t("panelDashboard.managementCards.domain.title"),
+          title: irDomainLabel,
           description: irDomain?.enabled
             ? t("panelDashboard.managementCards.domain.enabledDescription", { tld: irDomain?.tld || t("panelDashboard.domain.defaultLabel") })
             : irDomain?.selfManaged
@@ -1061,7 +1064,7 @@ export default function PanelPage() {
                 <div className="space-y-1">
                   <div className={`text-base font-bold ${irDomain.expired ? "text-destructive" : "text-amber-500"}`}>
                     {t(irDomain.expired ? "panelDashboard.domain.expiredTitle" : "panelDashboard.domain.dueSoonTitle", {
-                      label: irDomain.label || t("panelDashboard.domain.defaultLabel"),
+                      label: irDomainLabel,
                     })}
                   </div>
                   <p className="text-sm leading-7 text-foreground/80">

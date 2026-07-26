@@ -14,6 +14,7 @@ use App\Http\Controllers\Tenant\NutritionLandingSettingsController;
 use App\Http\Controllers\Tenant\OnlineChatSettingsController;
 use App\Services\CustomerClubService;
 use App\Support\AudienceSpecializedCourseSettings;
+use App\Support\TenantAudienceLabels;
 use App\Support\TenantIrDomain;
 use App\Support\TenantLocale;
 use App\Support\TenantSupport;
@@ -32,6 +33,7 @@ class SiteController extends Controller
         $support = TenantSupport::summary($tenant);
         $domainRenewal = TenantIrDomain::summary($tenant);
         $audience = $tenant->audienceType;
+        $audienceLabels = TenantAudienceLabels::for($audience);
         $generalSettings = GeneralSetting::query()->first();
         $rules = $generalSettings?->booking_rules ?? [];
         $localeMeta = TenantLocale::meta($generalSettings, $request);
@@ -140,11 +142,11 @@ class SiteController extends Controller
                     ],
                     'audience' => $audience ? [
                         'id' => (string) $audience->id,
-                        'name' => $audience->name,
+                        'name' => $audienceLabels['name'],
                         'slug' => $audience->slug,
-                        'singularLabel' => $audience->singular_label,
-                        'pluralLabel' => $audience->plural_label,
-                        'businessLabel' => $audience->business_label,
+                        'singularLabel' => $audienceLabels['singular'],
+                        'pluralLabel' => $audienceLabels['plural'],
+                        'businessLabel' => $audienceLabels['business'],
                         'enabledFeatures' => $audience->enabled_features ?? [],
                         'nutritionFeatures' => $audience->nutrition_features ?? [],
                         'futureFeatures' => $audience->future_features ?? [],
@@ -184,9 +186,7 @@ class SiteController extends Controller
                 'id' => '/',
                 'name' => $pwaMeta['appName'],
                 'short_name' => $pwaMeta['shortName'],
-                'description' => $localeMeta['locale'] === 'en'
-                    ? 'Online booking and service management'
-                    : 'نوبت‌دهی آنلاین و مدیریت خدمات',
+                'description' => __('tenant.site_meta.pwa.description'),
                 'dir' => $localeMeta['dir'],
                 'lang' => $localeMeta['htmlLang'],
                 'start_url' => '/?source=pwa',
@@ -274,8 +274,8 @@ class SiteController extends Controller
 
         $meta = [
             'siteName' => $storeName,
-            'title' => $storeName . ' | سیستم نوبت‌دهی',
-            'description' => 'نوبت‌دهی آنلاین و آشنایی با خدمات این مجموعه.',
+            'title' => __('tenant.site_meta.booking.title', ['name' => $storeName]),
+            'description' => __('tenant.site_meta.booking.description'),
             'keywords' => '',
             'robots' => 'index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1',
             'canonical' => $canonical,
@@ -293,8 +293,8 @@ class SiteController extends Controller
                 && (bool) ($aboutSeo['indexable'] ?? true);
             $description = trim((string) ($aboutSeo['description'] ?? '')) ?: $this->excerpt($aboutBody, 160);
 
-            $meta['title'] = trim((string) ($aboutSeo['title'] ?? '')) ?: ($aboutTitle !== '' ? $aboutTitle . ' | ' . $storeName : 'درباره ما | ' . $storeName);
-            $meta['description'] = $description !== '' ? $description : ('معرفی ' . $storeName);
+            $meta['title'] = trim((string) ($aboutSeo['title'] ?? '')) ?: ($aboutTitle !== '' ? $aboutTitle . ' | ' . $storeName : __('tenant.site_meta.about.title', ['name' => $storeName]));
+            $meta['description'] = $description !== '' ? $description : __('tenant.site_meta.about.description', ['name' => $storeName]);
             $meta['keywords'] = trim((string) ($aboutSeo['keywords'] ?? ''));
             $meta['robots'] = $indexable
                 ? 'index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1'
@@ -317,8 +317,10 @@ class SiteController extends Controller
             $location = $contact['location'] ?? [];
             $phones = collect($contact['phones'] ?? [])->pluck('number')->filter()->join(' - ');
 
-            $meta['title'] = 'ارتباط با ما | ' . $storeName;
-            $meta['description'] = trim((string) ($location['address'] ?? '')) ?: ($phones !== '' ? 'راه‌های ارتباط با ' . $storeName . ' شامل شماره تماس و آدرس.' : 'اطلاعات تماس ' . $storeName);
+            $meta['title'] = __('tenant.site_meta.contact.title', ['name' => $storeName]);
+            $meta['description'] = trim((string) ($location['address'] ?? '')) ?: ($phones !== ''
+                ? __('tenant.site_meta.contact.description_with_channels', ['name' => $storeName])
+                : __('tenant.site_meta.contact.description', ['name' => $storeName]));
             $meta['robots'] = (bool) ($contact['enabled'] ?? false)
                 ? 'index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1'
                 : 'noindex,nofollow';
@@ -345,47 +347,47 @@ class SiteController extends Controller
         }
 
         if ($path === '/store') {
-            $meta['title'] = 'فروشگاه | ' . $storeName;
-            $meta['description'] = 'فروشگاه آنلاین ' . $storeName . ' برای مشاهده محصولات منتخب، پرفروش‌ها و محبوب‌ترین‌ها.';
+            $meta['title'] = __('tenant.site_meta.store.title', ['name' => $storeName]);
+            $meta['description'] = __('tenant.site_meta.store.description', ['name' => $storeName]);
         }
 
         if ($path === '/store/bestsellers') {
-            $meta['title'] = 'پرفروش‌ترین محصولات | ' . $storeName;
-            $meta['description'] = 'لیست پرفروش‌ترین محصولات فروشگاه ' . $storeName . ' با صفحه‌بندی مجزا و مسیر اختصاصی.';
+            $meta['title'] = __('tenant.site_meta.bestsellers.title', ['name' => $storeName]);
+            $meta['description'] = __('tenant.site_meta.bestsellers.description', ['name' => $storeName]);
         }
 
         if ($path === '/store/popular') {
-            $meta['title'] = 'محبوب‌ترین محصولات | ' . $storeName;
-            $meta['description'] = 'لیست محبوب‌ترین محصولات فروشگاه ' . $storeName . ' با مسیر اختصاصی برای نمایش و ایندکس بهتر.';
+            $meta['title'] = __('tenant.site_meta.popular.title', ['name' => $storeName]);
+            $meta['description'] = __('tenant.site_meta.popular.description', ['name' => $storeName]);
         }
 
         if ($path === '/store/search') {
-            $meta['title'] = 'جست‌وجوی محصولات | ' . $storeName;
-            $meta['description'] = 'نتایج جست‌وجوی محصولات فروشگاه ' . $storeName . '.';
+            $meta['title'] = __('tenant.site_meta.search.title', ['name' => $storeName]);
+            $meta['description'] = __('tenant.site_meta.search.description', ['name' => $storeName]);
             $meta['robots'] = 'noindex,nofollow';
         }
 
         if ($path === '/store/checkout') {
-            $meta['title'] = 'سبد خرید و تکمیل سفارش | ' . $storeName;
-            $meta['description'] = 'مرور سبد خرید و تکمیل اطلاعات سفارش در فروشگاه ' . $storeName . '.';
+            $meta['title'] = __('tenant.site_meta.checkout.title', ['name' => $storeName]);
+            $meta['description'] = __('tenant.site_meta.checkout.description', ['name' => $storeName]);
             $meta['robots'] = 'noindex,nofollow';
         }
 
         if ($path === '/store/checkout/payment') {
-            $meta['title'] = 'انتخاب روش پرداخت | ' . $storeName;
-            $meta['description'] = 'انتخاب روش پرداخت سفارش در فروشگاه ' . $storeName . '.';
+            $meta['title'] = __('tenant.site_meta.payment.title', ['name' => $storeName]);
+            $meta['description'] = __('tenant.site_meta.payment.description', ['name' => $storeName]);
             $meta['robots'] = 'noindex,nofollow';
         }
 
         if ($path === '/store/checkout/result') {
-            $meta['title'] = 'نتیجه سفارش | ' . $storeName;
-            $meta['description'] = 'نتیجه ثبت سفارش فروشگاه ' . $storeName . '.';
+            $meta['title'] = __('tenant.site_meta.result.title', ['name' => $storeName]);
+            $meta['description'] = __('tenant.site_meta.result.description', ['name' => $storeName]);
             $meta['robots'] = 'noindex,nofollow';
         }
 
         if (str_starts_with($path, '/store/product/')) {
-            $meta['title'] = 'مشاهده محصول | ' . $storeName;
-            $meta['description'] = 'صفحه معرفی محصول در فروشگاه ' . $storeName . '.';
+            $meta['title'] = __('tenant.site_meta.product.title', ['name' => $storeName]);
+            $meta['description'] = __('tenant.site_meta.product.description', ['name' => $storeName]);
             $meta['type'] = 'product';
         }
 
@@ -422,7 +424,7 @@ class SiteController extends Controller
 
         return [
             'appName' => $storeName,
-            'shortName' => $shortName !== '' ? $shortName : 'نوبت‌دهی',
+            'shortName' => $shortName !== '' ? $shortName : __('tenant.site_meta.pwa.short_name'),
             'manifestUrl' => $this->withVersion($this->publicOrigin($request) . '/site.webmanifest', $version),
             'themeColor' => $backgroundColor,
             'backgroundColor' => $backgroundColor,
