@@ -1,11 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import type { ComponentType, SVGProps } from "react";
+import * as CountryFlagIcons from "country-flag-icons/react/3x2";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/lib/auth";
 import { api } from "@/lib/api";
-import { normalizeDigits, normalizePhoneInput } from "@/lib/normalize";
+import { normalizeDigits } from "@/lib/normalize";
 import { Loader2, LockKeyhole, User } from "lucide-react";
 import { UserProfileForm } from "@/components/user-profile-form";
 import {
@@ -21,6 +24,19 @@ import {
 import { useLocation } from "wouter";
 import { useFormat, useLocale, useT } from "@/i18n/locale";
 import { PhoneText } from "@/i18n/ltr-text";
+import {
+  countryDialCode,
+  countryShortCode,
+  countryPhoneExample,
+  normalizeNationalPhoneInput,
+  PHONE_COUNTRIES,
+  phoneForDisplay,
+  phoneForSubmission,
+  resolvePhoneCountry,
+} from "@/lib/international-phone";
+import type { CountryCode } from "libphonenumber-js/max";
+
+const countryFlagIcons = CountryFlagIcons as Record<string, ComponentType<SVGProps<SVGSVGElement>>>;
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -33,10 +49,11 @@ interface LoginModalProps {
 export function LoginModal({ isOpen, onClose, onDismiss, onSuccess, phoneStepDescription }: LoginModalProps) {
   const { sendOtp, login, updateProfile, user } = useAuth();
   const [, setLocation] = useLocation();
-  const { dir } = useLocale();
+  const { country, dir, htmlLang } = useLocale();
   const t = useT();
   const format = useFormat();
   const [step, setStep] = useState<"phone" | "otp" | "profile">("phone");
+  const [phoneCountry, setPhoneCountry] = useState<CountryCode>(() => resolvePhoneCountry(country));
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState("");
   const [demoFixedCodeActive, setDemoFixedCodeActive] = useState(false);
@@ -52,6 +69,20 @@ export function LoginModal({ isOpen, onClose, onDismiss, onSuccess, phoneStepDes
   const resendInFlightRef = useRef(false);
   const phoneRef = useRef("");
   const otpRef = useRef("");
+  const phoneCountryOptions = useMemo(() => {
+    const displayNames = typeof Intl.DisplayNames === "function"
+      ? new Intl.DisplayNames([htmlLang], { type: "region" })
+      : null;
+
+    return PHONE_COUNTRIES
+      .map((code) => ({
+        code,
+        label: displayNames?.of(code) || code,
+      }))
+      .sort((first, second) => first.label.localeCompare(second.label, htmlLang));
+  }, [htmlLang]);
+  const submittedPhone = phoneForSubmission(phone, phoneCountry);
+  const displayedPhone = phoneForDisplay(phone, phoneCountry);
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -102,14 +133,20 @@ export function LoginModal({ isOpen, onClose, onDismiss, onSuccess, phoneStepDes
     }
   }, [isOpen, user, requirements, onClose, onSuccess]);
 
+  useEffect(() => {
+    if (isOpen && phone === "") {
+      setPhoneCountry(resolvePhoneCountry(country));
+    }
+  }, [country, isOpen, phone]);
+
   const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
-    await sendOtpForPhone(phoneRef.current || phone);
+    await sendOtpForPhone(phoneRef.current || submittedPhone);
   };
 
   const sendOtpForPhone = async (targetPhone: string) => {
     if (loading) return;
-    if (targetPhone.length !== 11) return;
+    if (!targetPhone) return;
 
     setLoading(true);
     const success = await sendOtp(targetPhone);
@@ -137,7 +174,7 @@ export function LoginModal({ isOpen, onClose, onDismiss, onSuccess, phoneStepDes
     if (targetOtp.length !== 4) return;
 
     setLoading(true);
-    const success = await login(phoneRef.current || phone, targetOtp);
+    const success = await login(phoneRef.current || submittedPhone, targetOtp);
     setLoading(false);
 
     if (success) {
@@ -160,20 +197,28 @@ export function LoginModal({ isOpen, onClose, onDismiss, onSuccess, phoneStepDes
   };
 
   const handlePhoneChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const nextPhone = normalizePhoneInput(event.target.value);
-    phoneRef.current = nextPhone;
+    const nextPhone = normalizeNationalPhoneInput(event.target.value, phoneCountry);
+    const nextSubmittedPhone = phoneForSubmission(nextPhone, phoneCountry);
+    phoneRef.current = nextSubmittedPhone;
     setPhone(nextPhone);
 
-    if (nextPhone.length < 11) {
+    if (!nextSubmittedPhone) {
       phoneAutoSubmittedRef.current = false;
       return;
     }
 
-    if (nextPhone.length === 11 && !loading && !phoneAutoSubmittedRef.current) {
+    if (!loading && !phoneAutoSubmittedRef.current) {
       phoneAutoSubmittedRef.current = true;
       event.currentTarget.blur();
-      void sendOtpForPhone(nextPhone);
+      void sendOtpForPhone(nextSubmittedPhone);
     }
+  };
+
+  const handlePhoneCountryChange = (nextCountry: string) => {
+    setPhoneCountry(resolvePhoneCountry(nextCountry));
+    setPhone("");
+    phoneRef.current = "";
+    phoneAutoSubmittedRef.current = false;
   };
 
   const handlePhoneFocus = (event: React.FocusEvent<HTMLInputElement>) => {
@@ -239,7 +284,7 @@ export function LoginModal({ isOpen, onClose, onDismiss, onSuccess, phoneStepDes
     setResending(true);
 
     try {
-      const result = await sendOtp(phoneRef.current || phone);
+      const result = await sendOtp(phoneRef.current || submittedPhone);
       if (!result.ok) {
         return;
       }
@@ -271,7 +316,14 @@ export function LoginModal({ isOpen, onClose, onDismiss, onSuccess, phoneStepDes
         }
       }}
     >
-      <DialogContent className="pretty-scrollbar max-h-[88vh] overflow-y-auto sm:max-w-[520px]" dir={dir}>
+      <DialogContent
+        className={`pretty-scrollbar max-h-[88vh] overflow-y-auto sm:max-w-[520px] ${
+          dir === "ltr"
+            ? "[&>button[data-dialog-close]]:!left-auto [&>button[data-dialog-close]]:!right-4"
+            : "[&>button[data-dialog-close]]:!left-4 [&>button[data-dialog-close]]:!right-auto"
+        }`}
+        dir={dir}
+      >
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             {step === "profile" ? <User className="w-5 h-5 text-primary" /> : <LockKeyhole className="w-5 h-5 text-primary" />}
@@ -283,7 +335,7 @@ export function LoginModal({ isOpen, onClose, onDismiss, onSuccess, phoneStepDes
               : step === "otp"
                 ? (
                   <>
-                    {t("auth.login.otpDescription.beforePhone")} <PhoneText>{phone}</PhoneText> {t("auth.login.otpDescription.afterPhone")}
+                    {t("auth.login.otpDescription.beforePhone")} <PhoneText>{displayedPhone}</PhoneText> {t("auth.login.otpDescription.afterPhone")}
                   </>
                 )
                 : profileDescription}
@@ -294,19 +346,53 @@ export function LoginModal({ isOpen, onClose, onDismiss, onSuccess, phoneStepDes
           <form onSubmit={handleSendOtp} className="space-y-4">
             <div className="space-y-2">
               <Label>{t("auth.login.phoneLabel")}</Label>
-              <Input
-                value={phone}
-                onChange={handlePhoneChange}
-                onFocus={handlePhoneFocus}
-                placeholder="0912..."
-                dir="ltr"
-                inputMode="numeric"
-                className="text-start font-mono"
-                style={{ direction: "ltr" }}
-                autoFocus
-              />
+              <div className="flex gap-2" dir="ltr">
+                <Select value={phoneCountry} onValueChange={handlePhoneCountryChange}>
+                  <SelectTrigger
+                    className="h-10 w-[9.5rem] shrink-0 px-2 font-mono [&>span]:w-full"
+                    aria-label={t("auth.login.countryCodeLabel")}
+                    dir="ltr"
+                  >
+                    <SelectValue>
+                      <span className="grid grid-cols-[1.5rem_1.75rem_1fr] items-center gap-1 text-start" dir="ltr">
+                        <CountryFlagIcon country={phoneCountry} />
+                        <span className="text-center font-semibold">{countryShortCode(phoneCountry)}</span>
+                        <span className="justify-self-end text-end tabular-nums">{countryDialCode(phoneCountry)}</span>
+                      </span>
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent className="w-[9.5rem] max-w-[calc(100vw-2rem)]" dir="ltr">
+                    {phoneCountryOptions.map((option) => (
+                      <SelectItem
+                        key={option.code}
+                        value={option.code}
+                        className="font-mono [&>span:last-child]:block [&>span:last-child]:w-full"
+                        aria-label={`${option.label}, ${countryDialCode(option.code)}`}
+                      >
+                        <span className="grid w-full grid-cols-[1.5rem_1.75rem_1fr] items-center gap-1 text-start" dir="ltr">
+                          <CountryFlagIcon country={option.code} />
+                          <span className="text-center font-semibold">{countryShortCode(option.code)}</span>
+                          <span className="justify-self-end text-end tabular-nums">{countryDialCode(option.code)}</span>
+                        </span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Input
+                  value={phone}
+                  onChange={handlePhoneChange}
+                  onFocus={handlePhoneFocus}
+                  placeholder={countryPhoneExample(phoneCountry) || t("auth.login.nationalPhonePlaceholder")}
+                  dir="ltr"
+                  inputMode="tel"
+                  autoComplete="tel-national"
+                  className="min-w-0 flex-1 text-start font-mono"
+                  style={{ direction: "ltr" }}
+                  autoFocus
+                />
+              </div>
             </div>
-            <Button type="submit" className="w-full" disabled={loading || phone.length !== 11}>
+            <Button type="submit" className="w-full" disabled={loading || !submittedPhone}>
               {loading ? <Loader2 className="animate-spin" /> : t("auth.login.sendOtp")}
             </Button>
           </form>
@@ -392,4 +478,18 @@ function readStoredUser() {
 
 function isManagementUser(user: { role?: string | null }) {
   return user.role === "admin" || user.role === "barber";
+}
+
+function CountryFlagIcon({ country }: { country: CountryCode }) {
+  const FlagIcon = countryFlagIcons[country];
+
+  if (!FlagIcon) {
+    return <span className="text-center text-[10px] font-bold">{country}</span>;
+  }
+
+  return (
+    <span className="flex h-4 w-6 justify-self-start items-center justify-center overflow-hidden rounded-[3px] shadow-sm ring-1 ring-border/70" aria-hidden="true">
+      <FlagIcon className="h-full w-full" />
+    </span>
+  );
 }

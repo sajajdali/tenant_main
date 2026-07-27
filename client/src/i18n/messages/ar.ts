@@ -2785,6 +2785,8 @@ export const arMessages = {
   "auth.login.otpDescription.beforePhone": "أدخل الرمز المكون من 4 أرقام المرسل إلى",
   "auth.login.otpDescription.afterPhone": ".",
   "auth.login.phoneLabel": "رقم الهاتف المحمول",
+  "auth.login.countryCodeLabel": "رمز الاتصال الدولي",
+  "auth.login.nationalPhonePlaceholder": "رقم الهاتف المحمول",
   "auth.login.sendOtp": "إرسال رمز التحقق",
   "auth.login.otpLabel": "رمز التحقق",
   "auth.login.submit": "تسجيل الدخول",

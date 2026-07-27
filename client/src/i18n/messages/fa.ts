@@ -2783,6 +2783,8 @@ export const faMessages = {
   "auth.login.otpDescription.beforePhone": "کد ۴ رقمی ارسال شده به",
   "auth.login.otpDescription.afterPhone": "را وارد کنید.",
   "auth.login.phoneLabel": "شماره موبایل",
+  "auth.login.countryCodeLabel": "پیش‌شماره کشور",
+  "auth.login.nationalPhonePlaceholder": "شماره موبایل",
   "auth.login.sendOtp": "ارسال کد تایید",
   "auth.login.otpLabel": "کد تایید",
   "auth.login.submit": "ورود",

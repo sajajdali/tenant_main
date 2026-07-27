@@ -11,7 +11,7 @@ return [
         'login_required' => 'Bitte melden Sie sich an, um fortzufahren.',
         'unauthenticated' => 'Bitte melden Sie sich an, um fortzufahren.',
         'mobile_required' => 'Geben Sie die Mobilnummer ein.',
-        'mobile_regex' => 'Die Mobilnummer muss aus 11 Ziffern bestehen und mit 09 beginnen.',
+        'mobile_regex' => 'Geben Sie eine gueltige Mobilnummer mit Laendervorwahl ein.',
         'code_required' => 'Geben Sie den Anmeldecode ein.',
         'code_digits' => 'Der Anmeldecode muss aus 4 Ziffern bestehen.',
         'email_unique' => 'Diese E-Mail-Adresse ist bereits für einen anderen Benutzer registriert.',

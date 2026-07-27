@@ -2785,6 +2785,8 @@ export const enMessages = {
   "auth.login.otpDescription.beforePhone": "Enter the 4-digit code sent to",
   "auth.login.otpDescription.afterPhone": ".",
   "auth.login.phoneLabel": "Mobile number",
+  "auth.login.countryCodeLabel": "Country calling code",
+  "auth.login.nationalPhonePlaceholder": "Mobile number",
   "auth.login.sendOtp": "Send verification code",
   "auth.login.otpLabel": "Verification code",
   "auth.login.submit": "Sign in",
