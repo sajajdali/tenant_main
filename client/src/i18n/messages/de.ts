@@ -2785,6 +2785,8 @@ export const deMessages = {
   "auth.login.otpDescription.beforePhone": "Geben Sie den 4-stelligen Code ein, der gesendet wurde an",
   "auth.login.otpDescription.afterPhone": ".",
   "auth.login.phoneLabel": "Mobilnummer",
+  "auth.login.countryCodeLabel": "Laendervorwahl",
+  "auth.login.nationalPhonePlaceholder": "Mobilnummer",
   "auth.login.sendOtp": "Bestaetigungscode senden",
   "auth.login.otpLabel": "Bestaetigungscode",
   "auth.login.submit": "Anmelden",

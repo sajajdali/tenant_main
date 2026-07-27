@@ -11,7 +11,7 @@ return [
         'login_required' => 'Please sign in to continue.',
         'unauthenticated' => 'Please sign in to continue.',
         'mobile_required' => 'Enter the mobile number.',
-        'mobile_regex' => 'Mobile number must be 11 digits, numeric only, and start with 09.',
+        'mobile_regex' => 'Enter a valid mobile number with its country calling code.',
         'code_required' => 'Enter the login code.',
         'code_digits' => 'Login code must be 4 digits.',
         'email_unique' => 'This email is already registered for another user.',
