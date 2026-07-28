@@ -36,7 +36,9 @@ return [
     ],
 
     'kavenegar' => [
-        'use_http' => (bool) env('KAVENEGAR_USE_HTTP', false),
+        'use_http' => (bool) env('KAVENEGAR_USE_HTTP', true),
+        'connect_timeout_seconds' => (int) env('KAVENEGAR_CONNECT_TIMEOUT_SECONDS', 5),
+        'timeout_seconds' => (int) env('KAVENEGAR_TIMEOUT_SECONDS', 15),
     ],
 
     'maliart_payment' => [

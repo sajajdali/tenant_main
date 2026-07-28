@@ -23,6 +23,7 @@ return [
         'sms_template_unapproved' => 'The login SMS template has not been approved yet.',
         'sms_not_enabled' => 'The login SMS service is not enabled yet.',
         'sms_api_key_missing' => 'The SMS API key has not been configured in central management.',
+        'sms_provider_invalid_response' => 'The SMS provider returned an invalid response.',
         'otp_queued' => 'Login code has been queued for sending.',
         'default_business_name' => 'Booking system',
     ],

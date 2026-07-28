@@ -23,6 +23,7 @@ return [
         'sms_template_unapproved' => 'Die SMS-Vorlage für die Anmeldung wurde noch nicht genehmigt.',
         'sms_not_enabled' => 'Der SMS-Dienst für die Anmeldung ist noch nicht aktiviert.',
         'sms_api_key_missing' => 'Der SMS-API-Schlüssel wurde in der zentralen Verwaltung nicht konfiguriert.',
+        'sms_provider_invalid_response' => 'Der SMS-Anbieter hat eine ungültige Antwort zurückgegeben.',
         'otp_queued' => 'Der Anmeldecode wurde zum Senden in die Warteschlange gestellt.',
         'default_business_name' => 'Buchungssystem',
     ],
