@@ -6,6 +6,8 @@ namespace App\Support;
 
 class InputNormalizer
 {
+    public const MOBILE_PATTERN = '/^(?:09\d{9}|[1-9]\d{7,14})$/';
+
     public static function digits(?string $value): string
     {
         if (! $value) {
@@ -27,6 +29,39 @@ class InputNormalizer
 
     public static function mobile(?string $value): string
     {
-        return self::digitsOnly($value);
+        $raw = trim(self::digits($value));
+        $normalized = self::digitsOnly($raw);
+
+        if (str_starts_with($normalized, '0098') && strlen($normalized) === 14) {
+            return '0'.substr($normalized, 4);
+        }
+
+        if (str_starts_with($normalized, '98') && strlen($normalized) === 12) {
+            return '0'.substr($normalized, 2);
+        }
+
+        if (str_starts_with($raw, '+')) {
+            return $normalized;
+        }
+
+        if (str_starts_with($normalized, '00')) {
+            return substr($normalized, 2);
+        }
+
+        if (str_starts_with($normalized, '9') && strlen($normalized) === 10) {
+            return '0'.$normalized;
+        }
+
+        return $normalized;
+    }
+
+    public static function mobileRule(): string
+    {
+        return 'regex:'.self::MOBILE_PATTERN;
+    }
+
+    public static function isValidMobile(?string $value): bool
+    {
+        return preg_match(self::MOBILE_PATTERN, self::mobile($value)) === 1;
     }
 }

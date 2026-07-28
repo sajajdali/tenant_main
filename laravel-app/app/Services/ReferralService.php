@@ -19,9 +19,9 @@ class ReferralService
     {
         $normalized = InputNormalizer::mobile($mobile);
 
-        if (! is_string($normalized) || preg_match('/^09\d{9}$/', $normalized) !== 1) {
+        if (! InputNormalizer::isValidMobile($normalized)) {
             throw ValidationException::withMessages([
-                'mobile' => 'شماره موبایل باید ۱۱ رقم، فقط عدد و با ۰۹ شروع شود.',
+                'mobile' => __('api.auth.mobile_regex'),
             ]);
         }
 

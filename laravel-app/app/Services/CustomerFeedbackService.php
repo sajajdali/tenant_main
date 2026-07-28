@@ -15,9 +15,9 @@ use App\Domain\Tenant\Models\SmsSetting;
 use App\Domain\Tenant\Models\Tenant;
 use App\Domain\Tenant\Models\TenantFeatureModule;
 use App\Services\Sms\SmsDispatchService;
+use App\Support\CustomerFeedbackPublicLink;
 use App\Support\InputNormalizer;
 use App\Support\JalaliDate;
-use App\Support\CustomerFeedbackPublicLink;
 use App\Support\SmsTemplateRegistry;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Support\Arr;
@@ -30,8 +30,7 @@ class CustomerFeedbackService
 
     public function __construct(
         private readonly SmsDispatchService $dispatch,
-    ) {
-    }
+    ) {}
 
     public function isModuleActive(?Tenant $tenant = null): bool
     {
@@ -127,6 +126,7 @@ class CustomerFeedbackService
     {
         if (! $this->isModuleActive() || $appointment->status !== 'completed') {
             $this->cancelInvitationForAppointment($appointment);
+
             return;
         }
 
@@ -138,7 +138,7 @@ class CustomerFeedbackService
 
         $mobile = InputNormalizer::mobile((string) $appointment->customer_phone_snapshot);
 
-        if (! is_string($mobile) || preg_match('/^09\d{9}$/', $mobile) !== 1) {
+        if (! InputNormalizer::isValidMobile($mobile)) {
             return;
         }
 
@@ -200,7 +200,7 @@ class CustomerFeedbackService
             ->whereNotNull('next_send_at')
             ->where('next_send_at', '<=', now())
             ->orderBy('next_send_at')
-            ->chunkById(100, function ($items) use (&$count, $smsSetting, $template, $settings): void {
+            ->chunkById(100, function ($items) use (&$count, $smsSetting, $template): void {
                 foreach ($items as $invitation) {
                     $appointment = $invitation->appointment;
 
@@ -209,6 +209,7 @@ class CustomerFeedbackService
                             'status' => 'cancelled',
                             'next_send_at' => null,
                         ]);
+
                         continue;
                     }
 

@@ -23,8 +23,7 @@ class TenantUserController extends Controller
     public function __construct(
         private readonly TenantProvisioningService $tenantProvisioningService,
         private readonly VipFeatureService $vipFeatureService,
-    ) {
-    }
+    ) {}
 
     public function lookup(Request $request): JsonResponse
     {
@@ -35,10 +34,10 @@ class TenantUserController extends Controller
         ]);
 
         $validated = $request->validate([
-            'mobile' => ['required', 'regex:/^09\d{9}$/'],
+            'mobile' => ['required', InputNormalizer::mobileRule()],
         ], [
             'mobile.required' => 'شماره موبایل را وارد کنید.',
-            'mobile.regex' => 'شماره موبایل باید ۱۱ رقم، فقط عدد و با ۰۹ شروع شود.',
+            'mobile.regex' => __('api.auth.mobile_regex'),
         ]);
 
         $tenantUser = TenantUser::query()
@@ -117,7 +116,7 @@ class TenantUserController extends Controller
                 latest_appointment.booked_by_name_snapshot as booked_by_name,
                 latest_appointment.booked_by_phone_snapshot as booked_by_phone,
                 latest_appointment.meta as latest_meta,
-                ' . $appointmentsCountSql . ' as appointments_count
+                '.$appointmentsCountSql.' as appointments_count
             ');
 
         $registeredCustomersQuery = TenantUser::query()
@@ -282,7 +281,7 @@ class TenantUserController extends Controller
         ]);
 
         $validated = $request->validate([
-            'mobile' => ['required', 'regex:/^09\d{9}$/'],
+            'mobile' => ['required', InputNormalizer::mobileRule()],
             'can_book' => ['required', 'boolean'],
         ]);
 
@@ -336,7 +335,7 @@ class TenantUserController extends Controller
         ]);
 
         $validated = $request->validate([
-            'mobile' => ['required', 'regex:/^09\d{9}$/'],
+            'mobile' => ['required', InputNormalizer::mobileRule()],
             'is_vip' => ['required', 'boolean'],
         ]);
 
@@ -390,16 +389,16 @@ class TenantUserController extends Controller
         ]);
 
         $validated = $request->validate([
-            'mobile' => ['required', 'regex:/^09\d{9}$/'],
+            'mobile' => ['required', InputNormalizer::mobileRule()],
             'name' => ['required', 'string', 'min:3', 'max:255'],
-            'next_mobile' => ['required', 'regex:/^09\d{9}$/'],
+            'next_mobile' => ['required', InputNormalizer::mobileRule()],
             'nutrition_profile_fixed_message' => ['nullable', 'string', 'max:3000'],
         ] + TenantMembershipProfile::validationRules(), [
             'mobile.regex' => 'شماره موبایل فعلی معتبر نیست.',
             'name.required' => 'نام کاربر را وارد کنید.',
             'name.min' => 'نام کاربر باید حداقل ۳ حرف باشد.',
             'next_mobile.required' => 'شماره موبایل را وارد کنید.',
-            'next_mobile.regex' => 'شماره موبایل باید ۱۱ رقم، فقط عدد و با ۰۹ شروع شود.',
+            'next_mobile.regex' => __('api.auth.mobile_regex'),
             'nutrition_profile_fixed_message.max' => 'پیغام ثابت پروفایل نباید بیشتر از ۳۰۰۰ کاراکتر باشد.',
         ] + TenantMembershipProfile::validationMessages() + [
             'email.unique' => 'این ایمیل قبلا برای کاربر دیگری ثبت شده است.',
@@ -494,7 +493,7 @@ class TenantUserController extends Controller
         abort_unless($actor?->role === 'admin', 403, 'فقط مدیر سامانه مجاز به حذف کاربر است.');
 
         $normalizedMobile = InputNormalizer::mobile($mobile);
-        abort_unless((bool) preg_match('/^09\d{9}$/', $normalizedMobile), 422, 'شماره موبایل کاربر معتبر نیست.');
+        abort_unless(InputNormalizer::isValidMobile($normalizedMobile), 422, __('api.auth.mobile_regex'));
 
         $tenantUser = TenantUser::query()->where('mobile', $normalizedMobile)->first();
         abort_if(

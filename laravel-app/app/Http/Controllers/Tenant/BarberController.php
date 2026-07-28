@@ -47,7 +47,7 @@ class BarberController extends Controller
 
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'mobile' => ['required', 'regex:/^09\d{9}$/'],
+            'mobile' => ['required', InputNormalizer::mobileRule()],
             'slug' => ['nullable', 'string', 'max:255', 'unique:professionals,slug'],
             'api_code' => ['nullable', 'string', 'max:64'],
             'sort_order' => ['nullable', 'integer', 'min:0'],
@@ -56,7 +56,7 @@ class BarberController extends Controller
         ], [
             'name.required' => __('tenant.barbers.validation.name_required'),
             'mobile.required' => __('tenant.barbers.validation.mobile_required'),
-            'mobile.regex' => __('tenant.barbers.validation.mobile_format'),
+            'mobile.regex' => __('api.auth.mobile_regex'),
         ]);
 
         $tenantUser = $this->resolveTenantUserForProfessional($validated);
@@ -64,7 +64,7 @@ class BarberController extends Controller
         $barber = Barber::query()->create([
             'user_id' => $tenantUser->id,
             'name' => $validated['name'],
-            'slug' => $validated['slug'] ?? Str::slug($validated['name']) . '-' . Str::lower(Str::random(6)),
+            'slug' => $validated['slug'] ?? Str::slug($validated['name']).'-'.Str::lower(Str::random(6)),
             'api_code' => trim((string) ($validated['api_code'] ?? '')) ?: null,
             'sort_order' => $validated['sort_order'] ?? ((int) Barber::query()->max('sort_order') + 10),
             'is_active' => $validated['is_active'] ?? true,
@@ -104,7 +104,7 @@ class BarberController extends Controller
 
         $validated = $request->validate([
             'name' => [$isAdmin ? 'required' : 'nullable', 'string', 'max:255'],
-            'mobile' => [$isAdmin ? 'required' : 'nullable', 'regex:/^09\d{9}$/'],
+            'mobile' => [$isAdmin ? 'required' : 'nullable', InputNormalizer::mobileRule()],
             'api_code' => [$isAdmin ? 'nullable' : 'prohibited', 'string', 'max:64'],
             'sort_order' => [$isAdmin ? 'nullable' : 'prohibited', 'integer', 'min:0'],
             'is_active' => [$isAdmin ? 'required' : 'nullable', 'boolean'],
@@ -126,7 +126,7 @@ class BarberController extends Controller
         ], [
             'name.required' => __('tenant.barbers.validation.name_required'),
             'mobile.required' => __('tenant.barbers.validation.mobile_required'),
-            'mobile.regex' => __('tenant.barbers.validation.mobile_format'),
+            'mobile.regex' => __('api.auth.mobile_regex'),
         ]);
 
         $tenantUser = $barber->user;
