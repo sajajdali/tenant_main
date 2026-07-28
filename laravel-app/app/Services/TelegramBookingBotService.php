@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Services;
 
-use App\Domain\Booking\Models\Barber;
 use App\Domain\Booking\Models\Appointment;
+use App\Domain\Booking\Models\Barber;
 use App\Domain\Booking\Models\Service;
 use App\Domain\Tenant\Models\GeneralSetting;
 use App\Domain\Tenant\Models\NutritionProfile;
@@ -19,6 +19,7 @@ use App\Support\NutritionMedicalConditionSupport;
 use App\Support\NutritionWeightGoalCalculator;
 use App\Support\SmsGatewaySettings;
 use App\Support\TenantSandboxMode;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
@@ -32,20 +33,30 @@ use Illuminate\Validation\ValidationException;
 class TelegramBookingBotService
 {
     private const MESSAGE_UNAVAILABLE = 'هم اکنون دسترسی امکان پذیر نمیباشد';
+
     private const CHANNELS = ['telegram', 'bale'];
+
     private const DEFAULT_API_BASE_URLS = [
         'telegram' => 'https://api.telegram.org/bot',
         'bale' => 'https://tapi.bale.ai/bot',
     ];
 
     private const DATE_LIMIT = 20;
+
     private const LABEL_BOOKING = 'دریافت نوبت';
+
     private const LABEL_NUTRITION_DIET = 'دریافت رژیم';
+
     private const LABEL_APPOINTMENTS = 'لیست نوبت های دریافت';
+
     private const LABEL_CONTACT = 'ارتباط با ما';
+
     private const LABEL_ABOUT = 'درباره ما';
+
     private const LABEL_HOME = 'صفحه اصلی';
+
     private const LABEL_BACK = 'بازگشت';
+
     private const NUTRITION_STEPS = [
         'goal',
         'gender',
@@ -63,6 +74,7 @@ class TelegramBookingBotService
         'disliked_foods',
         'done',
     ];
+
     private string $channel = 'telegram';
 
     public function __construct(
@@ -558,7 +570,7 @@ class TelegramBookingBotService
             return;
         }
 
-        if (! $this->isIranianMobile($phone)) {
+        if (! $this->isValidMobile($phone)) {
             $user = $this->tenantProvisioningService->ensureCustomerExists(tenant(), $phone, $this->displayName($message));
             $this->rememberAuthentication($chatId, $user);
             $afterAuth = (string) ($this->session($chatId)['after_auth'] ?? '');
@@ -575,7 +587,7 @@ class TelegramBookingBotService
     {
         $phone = $this->normalizePhone($text);
 
-        if (! $this->isIranianMobile($phone)) {
+        if (! $this->isValidMobile($phone)) {
             $this->askPhone($chatId, null, 'برای ورود با کد پیامکی، شماره ایران را با 09 وارد کنید.');
 
             return;
@@ -620,7 +632,7 @@ class TelegramBookingBotService
         $session = $this->session($chatId);
         $phone = (string) ($session['phone'] ?? '');
 
-        if (! $this->isIranianMobile($phone)) {
+        if (! $this->isValidMobile($phone)) {
             $this->askPhone($chatId, $messageId, 'برای ارسال مجدد کد، اول شماره موبایل را وارد کنید.');
 
             return;
@@ -649,7 +661,7 @@ class TelegramBookingBotService
         $phone = (string) ($session['phone'] ?? '');
         $code = InputNormalizer::digits($text);
 
-        if (! $this->isIranianMobile($phone) || ! preg_match('/^\d{4}$/', $code)) {
+        if (! $this->isValidMobile($phone) || ! preg_match('/^\d{4}$/', $code)) {
             $this->sendMessage($chatId, 'کد ورود باید ۴ رقم باشد.');
 
             return;
@@ -1499,7 +1511,7 @@ class TelegramBookingBotService
         $this->sendOrEdit($chatId, 'نوبت شما کنسل شد.', $this->appointmentsInlineKeyboard(), $messageId);
     }
 
-    private function futureCancelableAppointments(TenantUser $user): \Illuminate\Database\Eloquent\Builder
+    private function futureCancelableAppointments(TenantUser $user): Builder
     {
         return Appointment::query()
             ->where('customer_phone_snapshot', (string) $user->mobile)
@@ -1929,9 +1941,9 @@ class TelegramBookingBotService
         return $digits;
     }
 
-    private function isIranianMobile(string $phone): bool
+    private function isValidMobile(string $phone): bool
     {
-        return preg_match('/^09\d{9}$/', $phone) === 1;
+        return InputNormalizer::isValidMobile($phone);
     }
 
     private function chatIdFromMessage(array $message): string

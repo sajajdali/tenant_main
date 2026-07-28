@@ -400,14 +400,14 @@ class AppointmentController extends Controller
             'startTime' => ['required', 'date_format:H:i'],
             'endTime' => ['required', 'date_format:H:i'],
             'userName' => ['required', 'string', 'max:255'],
-            'userPhone' => ['required', 'regex:/^09\d{9}$/'],
-            'originalUserPhone' => ['nullable', 'regex:/^09\d{9}$/'],
+            'userPhone' => ['required', InputNormalizer::mobileRule()],
+            'originalUserPhone' => ['nullable', InputNormalizer::mobileRule()],
             'notes' => ['nullable', 'string'],
             'sendSms' => ['nullable', 'boolean'],
             'isForSomeoneElse' => ['nullable', 'boolean'],
             'offQueueBooking' => ['nullable', 'boolean'],
         ], [
-            'userPhone.regex' => 'شماره موبایل مشتری باید ۱۱ رقم، فقط عدد و با ۰۹ شروع شود.',
+            'userPhone.regex' => __('api.auth.mobile_regex'),
         ]);
 
         $appointment = $this->bookingService->book($tenantUser, $validated);
@@ -745,7 +745,7 @@ class AppointmentController extends Controller
             $normalizedMobile = InputNormalizer::mobile((string) $appointment->customer_phone_snapshot);
 
             abort_unless(
-                is_string($normalizedMobile) && preg_match('/^09\d{9}$/', $normalizedMobile) === 1,
+                InputNormalizer::isValidMobile($normalizedMobile),
                 422,
                 'شماره موبایل مشتری معتبر نیست و امکان بستن دسترسی او وجود ندارد.'
             );

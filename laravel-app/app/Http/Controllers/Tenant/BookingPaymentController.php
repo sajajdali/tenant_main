@@ -14,9 +14,7 @@ use Illuminate\Http\Request;
 
 class BookingPaymentController extends Controller
 {
-    public function __construct(private readonly AppointmentPaymentService $paymentService)
-    {
-    }
+    public function __construct(private readonly AppointmentPaymentService $paymentService) {}
 
     public function checkout(Request $request): JsonResponse
     {
@@ -34,13 +32,13 @@ class BookingPaymentController extends Controller
             'startTime' => ['required', 'date_format:H:i'],
             'endTime' => ['required', 'date_format:H:i'],
             'userName' => ['required', 'string', 'max:255'],
-            'userPhone' => ['required', 'regex:/^09\d{9}$/'],
+            'userPhone' => ['required', InputNormalizer::mobileRule()],
             'notes' => ['nullable', 'string'],
             'sendSms' => ['nullable', 'boolean'],
             'isForSomeoneElse' => ['nullable', 'boolean'],
             'gateway' => ['nullable', 'string'],
         ], [
-            'userPhone.regex' => __('payment.appointment.phone_regex'),
+            'userPhone.regex' => __('api.auth.mobile_regex'),
         ]);
 
         $result = $this->paymentService->initiate(

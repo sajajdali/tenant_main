@@ -24,8 +24,7 @@ class StoreOrderController extends Controller
     public function __construct(
         private readonly StoreOrderCheckoutService $service,
         private readonly SmsCampaignSenderService $smsSender,
-    ) {
-    }
+    ) {}
 
     public function checkout(Request $request): JsonResponse
     {
@@ -38,7 +37,7 @@ class StoreOrderController extends Controller
 
         $validated = $request->validate([
             'customerName' => ['required', 'string', 'max:255'],
-            'customerPhone' => ['required', 'regex:/^09\d{9}$/'],
+            'customerPhone' => ['required', InputNormalizer::mobileRule()],
             'shippingMethod' => ['required', 'in:courier,express,pickup'],
             'paymentMethod' => ['required', 'in:online,card,cod'],
             'gateway' => ['nullable', 'string'],
@@ -61,7 +60,7 @@ class StoreOrderController extends Controller
             'address.longitude' => ['nullable', 'numeric'],
             'address.address' => ['nullable', 'string'],
         ], [
-            'customerPhone.regex' => __('store.order.validation.customer_phone_regex'),
+            'customerPhone.regex' => __('api.auth.mobile_regex'),
             'items.min' => __('store.order.validation.items_min'),
         ]);
 
@@ -619,7 +618,7 @@ class StoreOrderController extends Controller
     {
         $businessName = $this->businessName();
         $businessPhone = $this->businessPhone();
-        $orderUrl = url('/store/orders/' . $order->id);
+        $orderUrl = url('/store/orders/'.$order->id);
 
         return strtr($body, [
             '{{customer_name}}' => (string) $order->customer_name,

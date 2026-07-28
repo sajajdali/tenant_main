@@ -13,11 +13,11 @@ use App\Domain\Tenant\Models\NutritionProfile;
 use App\Domain\Tenant\Models\TenantUser;
 use App\Http\Controllers\Controller;
 use App\Jobs\GenerateNutritionAiPrescriptionJob;
-use App\Support\NutritionWeightGoalCalculator;
 use App\Services\NutritionDietRequestSettingsService;
 use App\Services\NutritionPackagePaymentService;
 use App\Support\InputNormalizer;
 use App\Support\NutritionMedicalConditionSupport;
+use App\Support\NutritionWeightGoalCalculator;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -31,8 +31,7 @@ class NutritionAdminUserController extends Controller
     public function __construct(
         private readonly NutritionPackagePaymentService $packageService,
         private readonly NutritionDietRequestSettingsService $settings,
-    ) {
-    }
+    ) {}
 
     public function show(Request $request, string $mobile): JsonResponse
     {
@@ -417,7 +416,7 @@ class NutritionAdminUserController extends Controller
 
         $validated = $request->validate([
             'full_name' => ['required', 'string', 'max:255'],
-            'mobile' => ['required', 'regex:/^09\d{9}$/'],
+            'mobile' => ['required', InputNormalizer::mobileRule()],
             'diet_goal' => ['required', 'in:lose-weight,gain-weight,maintain-weight'],
             'gender' => ['required', 'in:male,female'],
             'athlete_mode' => ['required', 'in:athlete,non-athlete'],
@@ -565,7 +564,7 @@ class NutritionAdminUserController extends Controller
         ]);
 
         $validated = $request->validate([
-            'mobile' => ['required', 'regex:/^09\d{9}$/'],
+            'mobile' => ['required', InputNormalizer::mobileRule()],
             'nutrition_diet_template_id' => ['nullable', 'integer', 'exists:nutrition_diet_templates,id'],
             'request_type' => ['required', 'in:ai,expert'],
             'expert_notes' => ['nullable', 'string'],

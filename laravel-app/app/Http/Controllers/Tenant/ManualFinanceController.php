@@ -129,7 +129,7 @@ class ManualFinanceController extends Controller
             'appointment_id' => ['nullable', 'integer', 'exists:appointments,id'],
             'professional_id' => ['nullable', 'integer', 'exists:professionals,id'],
             'customer_name' => ['required', 'string', 'max:255'],
-            'customer_phone' => ['required', 'regex:/^09\d{9}$/'],
+            'customer_phone' => ['required', InputNormalizer::mobileRule()],
             'entry_date' => ['required', 'date_format:Y-m-d'],
             'paid_amount' => ['required', 'integer', 'min:0'],
             'payment_method' => ['required', Rule::in(['cash', 'card', 'online', 'transfer', 'other'])],
