@@ -63,17 +63,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const sendOtp = async (phone: string) => {
-    const res = await api.auth.sendOtp(phone);
-    if (res.success) {
-      toast({
-        title: t("auth.toast.otpSentTitle"),
-        description: res.data?.codeHint
-          ? t("auth.toast.demoCodeDescription", { code: res.data.codeHint })
-          : t("auth.toast.otpSentDescription"),
-      });
-      return { ok: true, codeHint: res.data?.codeHint ?? null };
+    try {
+      const res = await api.auth.sendOtp(phone);
+      if (res.success) {
+        toast({
+          title: t("auth.toast.otpSentTitle"),
+          description: res.data?.codeHint
+            ? t("auth.toast.demoCodeDescription", { code: res.data.codeHint })
+            : t("auth.toast.otpSentDescription"),
+        });
+        return { ok: true, codeHint: res.data?.codeHint ?? null };
+      }
+      toast({ variant: "destructive", title: t("common.error"), description: res.message });
+    } catch {
+      toast({ variant: "destructive", title: t("common.error"), description: t("api.requestFailed") });
     }
-    toast({ variant: "destructive", title: t("common.error"), description: res.message });
+
     return { ok: false, codeHint: null };
   };
 

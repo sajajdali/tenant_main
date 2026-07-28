@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Services\Sms;
 
-use App\Jobs\SendSmsOutboundJob;
 use App\Domain\Tenant\Models\SmsOutbound;
 use App\Domain\Tenant\Models\SmsSetting;
+use App\Jobs\SendSmsOutboundJob;
 use App\Support\SmsPricing;
 use App\Support\SmsQueue;
 use Illuminate\Support\Arr;
@@ -18,8 +18,7 @@ class SmsDispatchService
         private readonly SmsProviderManager $providers,
         private readonly SmsCreditService $credits,
         private readonly SmsBalanceAlertService $balanceAlerts,
-    ) {
-    }
+    ) {}
 
     public function queue(array $payload): SmsOutbound
     {
@@ -316,8 +315,18 @@ class SmsDispatchService
             $normalized = '0'.substr($normalized, 2);
         } elseif (str_starts_with($normalized, '9') && strlen($normalized) === 10) {
             $normalized = '0'.$normalized;
+        } elseif (str_starts_with($normalized, '+')) {
+            $normalized = substr($normalized, 1);
+        } elseif (str_starts_with($normalized, '00')) {
+            $normalized = substr($normalized, 2);
         }
 
-        return preg_match('/^09\d{9}$/', $normalized) === 1 ? $normalized : null;
+        if (preg_match('/^09\d{9}$/', $normalized) === 1) {
+            return $normalized;
+        }
+
+        // Non-Iranian numbers arrive from the country-aware login field in
+        // canonical E.164 form without the leading plus sign.
+        return preg_match('/^[1-9]\d{7,14}$/', $normalized) === 1 ? $normalized : null;
     }
 }

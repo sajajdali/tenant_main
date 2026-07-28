@@ -23,6 +23,7 @@ return [
         'sms_template_unapproved' => 'قالب پیامک ورود هنوز تایید نشده است.',
         'sms_not_enabled' => 'سرویس پیامک ورود هنوز فعال نشده است.',
         'sms_api_key_missing' => 'کلید API پیامک در مدیریت مرکزی ثبت نشده است.',
+        'sms_provider_invalid_response' => 'پاسخ نامعتبر از سرویس پیامک دریافت شد.',
         'otp_queued' => 'کد ورود در صف ارسال قرار گرفت.',
         'default_business_name' => 'سامانه نوبت‌دهی',
     ],

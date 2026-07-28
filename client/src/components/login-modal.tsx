@@ -149,18 +149,21 @@ export function LoginModal({ isOpen, onClose, onDismiss, onSuccess, phoneStepDes
     if (!targetPhone) return;
 
     setLoading(true);
-    const success = await sendOtp(targetPhone);
-    setLoading(false);
+    try {
+      const success = await sendOtp(targetPhone);
 
-    if (success.ok) {
-      setDemoFixedCodeActive(!!success.codeHint);
-      if (success.codeHint) {
-        setOtp(success.codeHint);
+      if (success.ok) {
+        setDemoFixedCodeActive(!!success.codeHint);
+        if (success.codeHint) {
+          setOtp(success.codeHint);
+        }
+        setStep("otp");
+        setTimer(60);
+      } else {
+        phoneAutoSubmittedRef.current = false;
       }
-      setStep("otp");
-      setTimer(60);
-    } else {
-      phoneAutoSubmittedRef.current = false;
+    } finally {
+      setLoading(false);
     }
   };
 

@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace App\Services\Auth;
 
-use App\Domain\Tenant\Models\Tenant;
+use App\Domain\Landing\Models\LandingCustomer;
 use App\Domain\Tenant\Models\GeneralSetting;
 use App\Domain\Tenant\Models\SmsSetting;
+use App\Domain\Tenant\Models\Tenant;
 use App\Domain\Tenant\Models\TenantUser;
-use App\Domain\Landing\Models\LandingCustomer;
 use App\Models\User as CentralUser;
 use App\Services\Landing\LandingCustomerService;
 use App\Services\Sms\SmsDispatchService;
@@ -19,18 +19,19 @@ use App\Support\SmsSenderRegistry;
 use App\Support\SmsTemplateRegistry;
 use App\Support\TenantSandboxMode;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 
 class OtpLoginService
 {
     private const TTL_SECONDS = 120;
+
     private const RESEND_SECONDS = 60;
 
     public function __construct(
         private readonly TenantProvisioningService $tenantProvisioningService,
         private readonly LandingCustomerService $landingCustomerService,
         private readonly SmsDispatchService $smsDispatchService,
-    ) {
-    }
+    ) {}
 
     public function sendForCentral(string $mobile): array
     {
@@ -64,7 +65,7 @@ class OtpLoginService
         }
 
         $fixedCode = $tenant->demoFixedLoginCode();
-        $otp = $this->issueCode('tenant:' . $tenant->id, $mobile, $fixedCode);
+        $otp = $this->issueCode('tenant:'.$tenant->id, $mobile, $fixedCode);
 
         if (! $otp['ok']) {
             return $otp;
@@ -73,8 +74,8 @@ class OtpLoginService
         $smsResult = $this->sendTenantOtpMessage($tenant, $mobile, (string) ($otp['code'] ?? ''), $user->role === 'admin');
 
         if (! $smsResult['ok']) {
-            Cache::forget($this->otpKey('tenant:' . $tenant->id, $mobile));
-            Cache::forget($this->cooldownKey('tenant:' . $tenant->id, $mobile));
+            Cache::forget($this->otpKey('tenant:'.$tenant->id, $mobile));
+            Cache::forget($this->cooldownKey('tenant:'.$tenant->id, $mobile));
 
             return $smsResult;
         }
@@ -103,7 +104,7 @@ class OtpLoginService
 
     public function verifyForTenant(string $mobile, string $code, ?Tenant $tenant): ?TenantUser
     {
-        if (! $tenant || ! $this->hasValidCode('tenant:' . $tenant->id, $mobile, $code)) {
+        if (! $tenant || ! $this->hasValidCode('tenant:'.$tenant->id, $mobile, $code)) {
             return null;
         }
 
@@ -237,7 +238,7 @@ class OtpLoginService
         ]);
 
         if ($webOtpSignature !== '' && ! str_contains($body, '{{web_otp}}')) {
-            $message = rtrim($message) . PHP_EOL . $webOtpSignature;
+            $message = rtrim($message).PHP_EOL.$webOtpSignature;
         }
 
         $smsSandboxEnabled = TenantSandboxMode::smsEnabled($tenant, SmsGatewaySettings::sandboxEnabled());
@@ -288,7 +289,7 @@ class OtpLoginService
             return '';
         }
 
-        return '@' . $host . ' #' . $code;
+        return '@'.$host.' #'.$code;
     }
 
     private function webOtpHost(): string
