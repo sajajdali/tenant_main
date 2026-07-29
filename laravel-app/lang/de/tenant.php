@@ -259,7 +259,7 @@ return [
         'validation' => [
             'name_required' => 'Geben Sie den Namen des Spezialisten ein.',
             'mobile_required' => 'Geben Sie die Mobilnummer des Spezialisten ein.',
-            'mobile_format' => 'Die Mobilnummer muss aus 11 Ziffern bestehen und mit 09 beginnen.',
+            'mobile_format' => 'Geben Sie eine gültige Mobilnummer mit Ländervorwahl ein.',
             'mobile_already_assigned' => 'Diese Mobilnummer ist bereits einem Spezialisten zugewiesen.',
             'blocked_range_order' => 'Das Ende des Sperrzeitraums muss nach dessen Beginn liegen.',
             'package_limit' => 'Ihr Konto unterstützt :limit Benutzer. Daher kann kein weiterer :professional hinzugefügt werden. Erneuern oder aktualisieren Sie Ihr Paket, um die Kapazität zu erhöhen.',

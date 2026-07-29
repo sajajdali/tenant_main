@@ -61,6 +61,7 @@ class GeneralSettingsController extends Controller
             'offQueueBookingEnabled' => ['nullable', 'boolean'],
             'serviceFirstBookingEnabled' => ['nullable', 'boolean'],
             'customerMobileConfirmationEnabled' => ['nullable', 'boolean'],
+            'showCountryPrefixInAuthenticationForm' => ['nullable', 'boolean'],
             'hourlyBookingLimit' => ['nullable', 'integer', 'min:1', 'max:100'],
             'customerCancellationCutoffHours' => ['nullable', 'integer', 'min:1', 'max:720'],
             'appointmentAlertSound' => ['nullable', 'in:silent,classic,bright,soft,glass,alert,warm'],
@@ -198,6 +199,7 @@ class GeneralSettingsController extends Controller
             : (bool) ($bookingRules['off_queue_booking_enabled'] ?? true);
         $bookingRules['service_first_booking_enabled'] = (bool) ($validated['serviceFirstBookingEnabled'] ?? false);
         $bookingRules['customer_mobile_confirmation_enabled'] = (bool) ($validated['customerMobileConfirmationEnabled'] ?? false);
+        $bookingRules['show_country_prefix_in_authentication_form'] = (bool) ($validated['showCountryPrefixInAuthenticationForm'] ?? false);
         $bookingRules['hourly_booking_limit'] = (int) ($validated['hourlyBookingLimit'] ?? ($bookingRules['hourly_booking_limit'] ?? 4));
         $bookingRules['customer_cancellation_cutoff_hours'] = (int) ($validated['customerCancellationCutoffHours'] ?? ($bookingRules['customer_cancellation_cutoff_hours'] ?? 2));
         $bookingRules['appointment_alert_sound'] = (string) ($validated['appointmentAlertSound'] ?? ($bookingRules['appointment_alert_sound'] ?? 'classic'));
@@ -373,6 +375,7 @@ class GeneralSettingsController extends Controller
             'offQueueBookingEnabled' => (bool) ($bookingRules['off_queue_booking_enabled'] ?? true),
             'serviceFirstBookingEnabled' => (bool) ($bookingRules['service_first_booking_enabled'] ?? false),
             'customerMobileConfirmationEnabled' => (bool) ($bookingRules['customer_mobile_confirmation_enabled'] ?? false),
+            'showCountryPrefixInAuthenticationForm' => (bool) ($bookingRules['show_country_prefix_in_authentication_form'] ?? false),
             'hourlyBookingLimit' => max(1, (int) ($bookingRules['hourly_booking_limit'] ?? 4)),
             'customerCancellationCutoffHours' => max(1, (int) ($bookingRules['customer_cancellation_cutoff_hours'] ?? 2)),
             'appointmentAlertSound' => (string) ($bookingRules['appointment_alert_sound'] ?? 'classic'),

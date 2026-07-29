@@ -259,7 +259,7 @@ return [
         'validation' => [
             'name_required' => 'Enter the specialist name.',
             'mobile_required' => 'Enter the specialist mobile number.',
-            'mobile_format' => 'The mobile number must contain 11 digits and start with 09.',
+            'mobile_format' => 'Enter a valid mobile number with its country calling code.',
             'mobile_already_assigned' => 'This mobile number is already assigned to a specialist.',
             'blocked_range_order' => 'The blocked range end time must be after its start time.',
             'package_limit' => 'Your account supports :limit users, so another :professional cannot be added. Renew or upgrade your package to increase capacity.',

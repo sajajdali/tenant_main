@@ -41,7 +41,7 @@ class TenantOtpAuthApiController extends Controller
         ]);
 
         $validated = $request->validate([
-            'mobile' => ['required', 'regex:/^(?:09\d{9}|[1-9]\d{7,14})$/'],
+            'mobile' => ['required', InputNormalizer::mobileRule()],
         ], [
             'mobile.required' => __('api.auth.mobile_required'),
             'mobile.regex' => __('api.auth.mobile_regex'),
@@ -82,7 +82,7 @@ class TenantOtpAuthApiController extends Controller
         ]);
 
         $validated = $request->validate([
-            'mobile' => ['required', 'regex:/^(?:09\d{9}|[1-9]\d{7,14})$/'],
+            'mobile' => ['required', InputNormalizer::mobileRule()],
             'code' => ['required', 'digits:4'],
             'remember' => ['nullable', 'boolean'],
         ], [

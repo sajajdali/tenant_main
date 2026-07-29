@@ -1245,6 +1245,7 @@ export interface PaymentSettings {
   offQueueBookingEnabled?: boolean;
   serviceFirstBookingEnabled?: boolean;
   customerMobileConfirmationEnabled?: boolean;
+  showCountryPrefixInAuthenticationForm?: boolean;
   hourlyBookingLimit?: number;
   customerCancellationCutoffHours?: number;
   appointmentAlertSound?: AppointmentAlertSoundKey;

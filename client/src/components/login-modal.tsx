@@ -61,6 +61,10 @@ export function LoginModal({ isOpen, onClose, onDismiss, onSuccess, phoneStepDes
   const [resending, setResending] = useState(false);
   const [timer, setTimer] = useState(0);
   const [requirements, setRequirements] = useState<RegistrationRequirements>(getDefaultRegistrationRequirements());
+  const [showCountryPrefix, setShowCountryPrefix] = useState(false);
+  const [configuredPhoneCountry, setConfiguredPhoneCountry] = useState<CountryCode>(() => resolvePhoneCountry(country));
+  const [authenticationSettingsLoaded, setAuthenticationSettingsLoaded] = useState(false);
+  const [phoneTouched, setPhoneTouched] = useState(false);
   const [profileForm, setProfileForm] = useState<UserProfileFormValues>(getUserProfileFormDefaults());
   const [profileErrors, setProfileErrors] = useState<Partial<Record<keyof UserProfileFormValues, string>>>({});
   const initializedProfileUserRef = useRef<string | null>(null);
@@ -81,8 +85,18 @@ export function LoginModal({ isOpen, onClose, onDismiss, onSuccess, phoneStepDes
       }))
       .sort((first, second) => first.label.localeCompare(second.label, htmlLang));
   }, [htmlLang]);
-  const submittedPhone = phoneForSubmission(phone, phoneCountry);
-  const displayedPhone = phoneForDisplay(phone, phoneCountry);
+  const validationPhoneCountry = showCountryPrefix ? phoneCountry : configuredPhoneCountry;
+  const submittedPhone = phoneForSubmission(phone, validationPhoneCountry);
+  const displayedPhone = phoneForDisplay(phone, validationPhoneCountry);
+  const validationCountryLabel = useMemo(() => {
+    if (typeof Intl.DisplayNames !== "function") {
+      return validationPhoneCountry;
+    }
+
+    return new Intl.DisplayNames([htmlLang], { type: "region" }).of(validationPhoneCountry)
+      || validationPhoneCountry;
+  }, [htmlLang, validationPhoneCountry]);
+  const showPhoneValidationError = phoneTouched && phone.length > 0 && !submittedPhone;
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -95,12 +109,39 @@ export function LoginModal({ isOpen, onClose, onDismiss, onSuccess, phoneStepDes
   useEffect(() => {
     if (!isOpen) return;
 
+    let cancelled = false;
+    const fallbackCountry = resolvePhoneCountry(country);
+
+    setAuthenticationSettingsLoaded(false);
+    setShowCountryPrefix(false);
+    setConfiguredPhoneCountry(fallbackCountry);
+    setPhoneCountry(fallbackCountry);
+    setPhone("");
+    setPhoneTouched(false);
+    phoneRef.current = "";
+    phoneAutoSubmittedRef.current = false;
+
     api.payment.getSettings().then((res) => {
-      if (res.success) {
+      if (!cancelled && res.success) {
+        const settingsCountry = resolvePhoneCountry(
+          res.data.country ?? res.data.localization?.country ?? country,
+        );
+
         setRequirements(normalizeRegistrationRequirements(res.data.registrationRequirements));
+        setConfiguredPhoneCountry(settingsCountry);
+        setPhoneCountry(settingsCountry);
+        setShowCountryPrefix(res.data.showCountryPrefixInAuthenticationForm === true);
+      }
+    }).finally(() => {
+      if (!cancelled) {
+        setAuthenticationSettingsLoaded(true);
       }
     });
-  }, [isOpen]);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [country, isOpen]);
 
   useEffect(() => {
     if (!isOpen) {
@@ -133,14 +174,9 @@ export function LoginModal({ isOpen, onClose, onDismiss, onSuccess, phoneStepDes
     }
   }, [isOpen, user, requirements, onClose, onSuccess]);
 
-  useEffect(() => {
-    if (isOpen && phone === "") {
-      setPhoneCountry(resolvePhoneCountry(country));
-    }
-  }, [country, isOpen, phone]);
-
   const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
+    setPhoneTouched(true);
     await sendOtpForPhone(phoneRef.current || submittedPhone);
   };
 
@@ -200,10 +236,13 @@ export function LoginModal({ isOpen, onClose, onDismiss, onSuccess, phoneStepDes
   };
 
   const handlePhoneChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const nextPhone = normalizeNationalPhoneInput(event.target.value, phoneCountry);
-    const nextSubmittedPhone = phoneForSubmission(nextPhone, phoneCountry);
+    if (!authenticationSettingsLoaded) return;
+
+    const nextPhone = normalizeNationalPhoneInput(event.target.value, validationPhoneCountry);
+    const nextSubmittedPhone = phoneForSubmission(nextPhone, validationPhoneCountry);
     phoneRef.current = nextSubmittedPhone;
     setPhone(nextPhone);
+    setPhoneTouched(nextPhone.length > 0);
 
     if (!nextSubmittedPhone) {
       phoneAutoSubmittedRef.current = false;
@@ -220,6 +259,7 @@ export function LoginModal({ isOpen, onClose, onDismiss, onSuccess, phoneStepDes
   const handlePhoneCountryChange = (nextCountry: string) => {
     setPhoneCountry(resolvePhoneCountry(nextCountry));
     setPhone("");
+    setPhoneTouched(false);
     phoneRef.current = "";
     phoneAutoSubmittedRef.current = false;
   };
@@ -350,52 +390,64 @@ export function LoginModal({ isOpen, onClose, onDismiss, onSuccess, phoneStepDes
             <div className="space-y-2">
               <Label>{t("auth.login.phoneLabel")}</Label>
               <div className="flex gap-2" dir="ltr">
-                <Select value={phoneCountry} onValueChange={handlePhoneCountryChange}>
-                  <SelectTrigger
-                    className="h-10 w-[9.5rem] shrink-0 px-2 font-mono [&>span]:w-full"
-                    aria-label={t("auth.login.countryCodeLabel")}
-                    dir="ltr"
-                  >
-                    <SelectValue>
-                      <span className="grid grid-cols-[1.5rem_1.75rem_1fr] items-center gap-1 text-start" dir="ltr">
-                        <CountryFlagIcon country={phoneCountry} />
-                        <span className="text-center font-semibold">{countryShortCode(phoneCountry)}</span>
-                        <span className="justify-self-end text-end tabular-nums">{countryDialCode(phoneCountry)}</span>
-                      </span>
-                    </SelectValue>
-                  </SelectTrigger>
-                  <SelectContent className="w-[9.5rem] max-w-[calc(100vw-2rem)]" dir="ltr">
-                    {phoneCountryOptions.map((option) => (
-                      <SelectItem
-                        key={option.code}
-                        value={option.code}
-                        className="font-mono [&>span:last-child]:block [&>span:last-child]:w-full"
-                        aria-label={`${option.label}, ${countryDialCode(option.code)}`}
-                      >
-                        <span className="grid w-full grid-cols-[1.5rem_1.75rem_1fr] items-center gap-1 text-start" dir="ltr">
-                          <CountryFlagIcon country={option.code} />
-                          <span className="text-center font-semibold">{countryShortCode(option.code)}</span>
-                          <span className="justify-self-end text-end tabular-nums">{countryDialCode(option.code)}</span>
+                {showCountryPrefix && (
+                  <Select value={phoneCountry} onValueChange={handlePhoneCountryChange}>
+                    <SelectTrigger
+                      className="h-10 w-24 shrink-0 px-2 font-mono [&>span]:w-full"
+                      aria-label={t("auth.login.countryCodeLabel")}
+                      dir="ltr"
+                    >
+                      <SelectValue>
+                        <span className="grid grid-cols-[1.5rem_1fr] items-center gap-1 text-start" dir="ltr">
+                          <CountryFlagIcon country={phoneCountry} />
+                          <span className="justify-self-end text-end tabular-nums">{countryDialCode(phoneCountry)}</span>
                         </span>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent className="w-32 max-w-[calc(100vw-2rem)]" dir="ltr">
+                      {phoneCountryOptions.map((option) => (
+                        <SelectItem
+                          key={option.code}
+                          value={option.code}
+                          className="font-mono [&>span:last-child]:block [&>span:last-child]:w-full"
+                          aria-label={`${option.label}, ${countryDialCode(option.code)}`}
+                        >
+                          <span className="grid w-full grid-cols-[1.5rem_1.75rem_1fr] items-center gap-1 text-start" dir="ltr">
+                            <CountryFlagIcon country={option.code} />
+                            <span className="text-center font-semibold">{countryShortCode(option.code)}</span>
+                            <span className="justify-self-end text-end tabular-nums">{countryDialCode(option.code)}</span>
+                          </span>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
                 <Input
                   value={phone}
                   onChange={handlePhoneChange}
                   onFocus={handlePhoneFocus}
-                  placeholder={countryPhoneExample(phoneCountry) || t("auth.login.nationalPhonePlaceholder")}
+                  onBlur={() => setPhoneTouched(phone.length > 0)}
+                  placeholder={countryPhoneExample(validationPhoneCountry) || t("auth.login.nationalPhonePlaceholder")}
                   dir="ltr"
                   inputMode="tel"
                   autoComplete="tel-national"
                   className="min-w-0 flex-1 text-start font-mono"
                   style={{ direction: "ltr" }}
+                  disabled={!authenticationSettingsLoaded}
                   autoFocus
                 />
               </div>
+              {showPhoneValidationError && (
+                <p className="text-sm text-destructive">
+                  {t("auth.login.invalidPhoneForCountry", { country: validationCountryLabel })}
+                </p>
+              )}
             </div>
-            <Button type="submit" className="w-full" disabled={loading || !submittedPhone}>
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={loading || !authenticationSettingsLoaded || !submittedPhone}
+            >
               {loading ? <Loader2 className="animate-spin" /> : t("auth.login.sendOtp")}
             </Button>
           </form>
