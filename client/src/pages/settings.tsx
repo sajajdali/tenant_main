@@ -401,6 +401,7 @@ export default function SettingsPage({ forcedTab }: SettingsPageProps) {
       offQueueBookingEnabled: true,
       serviceFirstBookingEnabled: false,
       customerMobileConfirmationEnabled: false,
+      showCountryPrefixInAuthenticationForm: false,
       hourlyBookingLimit: 4,
       customerCancellationCutoffHours: 2,
       appointmentAlertSound: DEFAULT_APPOINTMENT_ALERT_SOUND,
@@ -3183,6 +3184,7 @@ export default function SettingsPage({ forcedTab }: SettingsPageProps) {
                                         </SettingsSelect>
                                     </div>
                                 </div>
+
                             </div>
 
                             <div className="rounded-lg border bg-card/40 p-4 space-y-4">
@@ -3375,6 +3377,28 @@ export default function SettingsPage({ forcedTab }: SettingsPageProps) {
                                             setPaymentSettings((current) => ({
                                                 ...current,
                                                 customerMobileConfirmationEnabled: checked,
+                                            }))
+                                        }
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="rounded-lg border bg-card/40 p-4 space-y-4">
+                                <div className="flex items-center justify-between gap-4">
+                                    <div className="space-y-1">
+                                        <Label className="font-bold">
+                                            {t("settings.authenticationCountryPrefix.title")}
+                                        </Label>
+                                        <p className="text-sm leading-7 text-muted-foreground">
+                                            {t("settings.authenticationCountryPrefix.description")}
+                                        </p>
+                                    </div>
+                                    <Switch
+                                        checked={paymentSettings.showCountryPrefixInAuthenticationForm ?? false}
+                                        onCheckedChange={(checked) =>
+                                            setPaymentSettings((current) => ({
+                                                ...current,
+                                                showCountryPrefixInAuthenticationForm: checked,
                                             }))
                                         }
                                     />
