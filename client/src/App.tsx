@@ -190,7 +190,6 @@ function Router() {
   }, []);
 
   const isLandingDomain = bootstrapMeta?.isLandingDomain === true;
-  const usePellehStaticLanding = bootstrapMeta?.primaryDomain === "barber44.test";
   const isNutritionAudience = ["nutritionists", "nutrition-doctors"].includes(bootstrapMeta?.audience?.slug || "");
   const appointmentBookingDisabled = isAppointmentBookingDisabled(bootstrapMeta);
   const useNutritionLandingAsDefault = isNutritionAudience && isNutritionLandingDefaultEnabled(bootstrapMeta);
@@ -199,12 +198,12 @@ function Router() {
   if (isLandingDomain) {
     return (
       <Switch>
-        <Route path="/" component={usePellehStaticLanding ? PellehStaticLandingPage : LandingPreviewPage} />
+        <Route path="/" component={PellehStaticLandingPage} />
         <Route path="/barbers" component={LandingPreviewPage} />
-        <Route path="/features/:slug" component={usePellehStaticLanding ? PellehFeatureDetailPage : LandingFeaturesPage} />
+        <Route path="/features/:slug" component={PellehFeatureDetailPage} />
         <Route path="/features" component={LandingFeaturesPage} />
-        <Route path="/plans" component={usePellehStaticLanding ? PellehPricingPage : LandingPlansPage} />
-        <Route path="/plans/duration" component={usePellehStaticLanding ? PellehPlanDurationPage : LandingPlansPage} />
+        <Route path="/plans" component={PellehPricingPage} />
+        <Route path="/plans/duration" component={PellehPlanDurationPage} />
         <Route path="/about" component={LandingAboutPage} />
         <Route path="/contact" component={LandingContactPage} />
         <Route path="/faq" component={LandingFaqPage} />

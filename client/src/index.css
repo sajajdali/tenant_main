@@ -66,6 +66,10 @@ body[data-tenant-panel="true"] [data-radix-portal] .booking-finance-money-input 
 
 @custom-variant dark (&:is(.dark *));
 
+@theme {
+  --font-sans: "Vazirmatn", system-ui, sans-serif;
+}
+
 @font-face {
   font-family: "Vazirmatn";
   font-style: normal;

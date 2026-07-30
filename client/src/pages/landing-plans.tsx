@@ -363,7 +363,7 @@ export default function LandingPlansPage() {
     window.location.assign(`${getLandingPath("/orders")}?status=success&order=${encodeURIComponent(result.data.order.orderNumber)}&oid=${encodeURIComponent(result.data.order.id)}&tracking=${encodeURIComponent(result.data.payment.referenceId || result.data.payment.invoiceNumber)}`);
   };
 
-  if (bootstrapMeta?.primaryDomain === "barber44.test" && selectedPackage) {
+  if (bootstrapMeta?.isLandingDomain === true && selectedPackage) {
     const total = quote?.totalAmount ?? selectedPackage.payableAmount;
     const formatToman = (amount?: number | null) => `تومان ${new Intl.NumberFormat("fa-IR").format(Math.round((amount ?? 0) / 10))}`;
     const amountClass = "shrink-0 whitespace-nowrap text-left [direction:ltr]";
