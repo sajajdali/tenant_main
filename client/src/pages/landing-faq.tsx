@@ -100,7 +100,7 @@ export default function LandingFaqPage() {
     descriptionTag.setAttribute("content", t("landingFaq.metaDescription"));
   }, [landingSiteSettings.siteTitle, t]);
 
-  if (bootstrapMeta?.primaryDomain === "barber44.test") {
+  if (bootstrapMeta?.isLandingDomain === true) {
     return <div dir="rtl" className="flex min-h-screen flex-col bg-[#0e0d0b] text-[#f4f2ee] [font-family:Vazirmatn,system-ui,sans-serif]">
       <header className="border-b border-white/10 bg-[#0e0d0b]/90 backdrop-blur-xl"><div className="mx-auto flex max-w-[1200px] items-center justify-between px-5 py-4 sm:px-8"><a href="/" className="flex items-center gap-2.5"><span className="flex size-9 items-center justify-center rounded-full border border-[#c9a24a] text-[#e0c06e]">پ</span><strong>پلـه</strong></a><a href="/plans" className="rounded-full border border-[#c9a24a] px-4 py-2 text-xs font-bold text-[#e0c06e] sm:px-5 sm:text-sm">مشاهده پلن‌ها</a></div></header>
       <main className="mx-auto w-full max-w-[900px] flex-1 px-4 pb-16 pt-10 sm:px-8 sm:pt-14">

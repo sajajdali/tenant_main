@@ -2004,6 +2004,7 @@ export interface TenantMeta {
   currency?: string;
   tenant_domains: string[];
   name?: string;
+  slug?: string;
   landingSiteId?: number;
   primaryDomain?: string;
   isLandingDomain?: boolean;

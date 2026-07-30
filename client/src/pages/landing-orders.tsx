@@ -296,7 +296,7 @@ export default function LandingOrdersPage() {
     setSuccessModalOpen(true);
   };
 
-  if (bootstrapMeta?.primaryDomain === "barber44.test" && (feedback?.status === "success" || completionRequested)) {
+  if (bootstrapMeta?.isLandingDomain === true && (feedback?.status === "success" || completionRequested)) {
     const fieldClass = "mt-2 h-12 w-full rounded-xl border border-white/10 bg-white/[.025] px-4 text-sm text-white outline-none transition focus:border-[#c9a24a]";
     const error = (key: keyof CompletionFormState) => formErrors[key] ? <p className="mt-1 text-xs text-red-300">{formErrors[key]}</p> : null;
     const domainReady = domainStepReady;
@@ -342,7 +342,7 @@ export default function LandingOrdersPage() {
     </div>;
   }
 
-  if (bootstrapMeta?.primaryDomain === "barber44.test") {
+  if (bootstrapMeta?.isLandingDomain === true) {
     const toman = (amount: number) => `تومان ${new Intl.NumberFormat("fa-IR").format(Math.round(amount / 10))}`;
     const orderDate = (value?: string | null) => value ? format.date(value) : "—";
     const statusClass = (status: string) => {
