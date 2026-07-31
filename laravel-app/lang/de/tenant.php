@@ -218,6 +218,11 @@ return [
                 'description' => 'Veröffentlichen und verwalten Sie eigene Kochrezepte für Ihre Kunden.',
                 'cta_note' => 'Nach der Aktivierung können Sie eigene Kochrezepte veröffentlichen und verwalten.',
             ],
+            'custom-landing' => [
+                'name' => 'Eigene Landingpage',
+                'description' => 'Verwalten Sie eigene Links, geworbene Nutzer, Zahlungsanteile und Partnerabrechnungen.',
+                'cta_note' => 'Dieses Modul wird nur durch die zentrale Verwaltung für ausgewählte Sites aktiviert.',
+            ],
         ],
     ],
     'file_manager' => [

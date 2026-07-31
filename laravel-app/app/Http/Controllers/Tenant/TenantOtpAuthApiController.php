@@ -12,6 +12,7 @@ use App\Support\TenantMembershipProfile;
 use App\Support\TenantSandboxMode;
 use App\Services\Auth\OtpLoginService;
 use App\Services\CustomerClubService;
+use App\Services\CustomLandingService;
 use App\Services\TenantProvisioningService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -24,6 +25,7 @@ class TenantOtpAuthApiController extends Controller
         private readonly OtpLoginService $otpLoginService,
         private readonly TenantProvisioningService $tenantProvisioningService,
         private readonly CustomerClubService $customerClubService,
+        private readonly CustomLandingService $customLanding,
     ) {
     }
 
@@ -107,6 +109,7 @@ class TenantOtpAuthApiController extends Controller
         $request->session()->regenerate();
         $this->customerClubService->applyWelcomeBonus($user);
         $this->customerClubService->applyBirthdayBonus($user);
+        $this->customLanding->attributeSessionUser($request, $user);
 
         return response()->json([
             'success' => true,

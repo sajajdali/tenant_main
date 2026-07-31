@@ -1809,6 +1809,79 @@ export interface ApiResponse<T> {
   errors?: Record<string, string[]>;
 }
 
+export interface CustomLandingPartner {
+  id: string;
+  name: string;
+  mobile: string;
+  status: string;
+  publicToken: string;
+  url: string;
+  firstPaymentPercent: number;
+  recurringPaymentPercent: number;
+  attributionsCount: number;
+  creditedAmount: number;
+  settledAmount: number;
+  availableAmount: number;
+  notes?: string | null;
+}
+
+export interface CustomLandingCommission {
+  id: string;
+  partnerName?: string | null;
+  userName?: string | null;
+  userMobile?: string | null;
+  paymentKind: string;
+  grossAmount: number;
+  percent: number;
+  amount: number;
+  status: string;
+  paidAt?: string | null;
+  reversalNote?: string | null;
+}
+
+export interface CustomLandingSettlement {
+  id: string;
+  partnerName?: string | null;
+  amount: number;
+  paymentMethod?: string | null;
+  paymentReference?: string | null;
+  paidAt?: string | null;
+  note?: string | null;
+}
+
+export interface CustomLandingReferredUser {
+  id: string;
+  userId: string;
+  name?: string | null;
+  mobile?: string | null;
+  registeredAt?: string | null;
+  firstPaidAt?: string | null;
+}
+
+export interface CustomLandingPartnerDashboard {
+  partner: CustomLandingPartner;
+  stats: {
+    availableAmount: number;
+    totalIncome: number;
+    firstPaymentIncome: number;
+    recurringPaymentIncome: number;
+    referredUsers: number;
+    dietUsers: number;
+    settledAmount: number;
+    reversedAmount: number;
+  };
+  users: CustomLandingReferredUser[];
+  commissions: CustomLandingCommission[];
+  settlements: CustomLandingSettlement[];
+}
+
+export interface CustomLandingOverview {
+  stats: { partners: number; attributions: number; firstPayments: number; creditedAmount: number; settledAmount: number; availableAmount: number };
+  partners: CustomLandingPartner[];
+  commissions: CustomLandingCommission[];
+  settlements: CustomLandingSettlement[];
+}
+
 export interface SpecializedCoursePageStat {
   id: string;
   value: string;

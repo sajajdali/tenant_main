@@ -109,13 +109,15 @@ class TenantFeatureModuleManager
     {
         $metadata = $tenantModule->metadata ?? [];
 
-        if (($metadata['installed'] ?? false) === true) {
+        $migrationPath = $definition['migration_path'] ?? null;
+        $seeder = $definition['seeder'] ?? null;
+
+        if (($metadata['installed'] ?? false) === true
+            && (! is_string($migrationPath) || $migrationPath === '' || ! File::isDirectory($migrationPath))) {
             return $tenantModule;
         }
 
         try {
-            $migrationPath = $definition['migration_path'] ?? null;
-
             if (is_string($migrationPath) && $migrationPath !== '' && File::isDirectory($migrationPath)) {
                 $tenant->run(function () use ($migrationPath): void {
                     Artisan::call('migrate', [
@@ -132,9 +134,7 @@ class TenantFeatureModuleManager
                 ];
             }
 
-            $seeder = $definition['seeder'] ?? null;
-
-            if (is_string($seeder) && $seeder !== '') {
+            if (($metadata['installed'] ?? false) !== true && is_string($seeder) && $seeder !== '') {
                 $tenant->run(function () use ($seeder): void {
                     Artisan::call('db:seed', [
                         '--class' => $seeder,

@@ -218,6 +218,11 @@ return [
                 'description' => 'Publish and manage your own cooking recipes for customers.',
                 'cta_note' => 'After activation, you can publish and manage your own cooking recipes.',
             ],
+            'custom-landing' => [
+                'name' => 'Custom landing',
+                'description' => 'Manage dedicated links, referred users, payment shares, and partner settlements.',
+                'cta_note' => 'This module is enabled only by central management for selected sites.',
+            ],
         ],
     ],
     'file_manager' => [

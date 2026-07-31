@@ -36,5 +36,14 @@ return [
             'migration_path' => database_path('migrations/tenant/modules/cooking-recipes'),
             'seeder' => CookingRecipesSeeder::class,
         ],
+        'custom-landing' => [
+            'label' => 'لندینگ اختصاصی',
+            'meta_key' => 'customLanding',
+            'route_prefix' => 'custom-landing',
+            // This nested path is intentionally excluded from tenants:migrate.
+            // TenantFeatureModuleManager runs it only when this module is activated.
+            'migration_path' => database_path('migrations/tenant/modules/custom-landing'),
+            'seeder' => null,
+        ],
     ],
 ];
