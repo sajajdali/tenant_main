@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useRoute } from "wouter";
-import { ArrowRight, CheckCircle2, Coins, ExternalLink, Gem, HeartHandshake, Loader2, Lock, MessageCircleMore, Settings2, ShieldCheck, ShoppingCart, Sparkles } from "lucide-react";
+import { ArrowRight, CheckCircle2, Coins, ExternalLink, Gem, HeartHandshake, Link2, Loader2, Lock, MessageCircleMore, Settings2, ShieldCheck, ShoppingCart, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -9,6 +9,7 @@ import { useAuth } from "@/lib/auth";
 import { api } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 import type { FeatureModuleActivationPreview, FeatureModuleSummary } from "@/lib/types";
+import { getInitialTenantMeta } from "@/lib/bootstrap";
 import { useFormat, useLocale, useT } from "@/i18n/locale";
 import type { MessageKey } from "@/i18n/messages";
 
@@ -18,6 +19,7 @@ const MODULE_ICONS: Record<string, typeof ShoppingCart> = {
   "customer-club": Coins,
   "customer-feedback": HeartHandshake,
   "online-chat": MessageCircleMore,
+  "custom-landing": Link2,
 };
 
 type SpecialFeaturesTranslate = (key: MessageKey, params?: Record<string, string | number>) => string;
@@ -53,6 +55,11 @@ const MODULE_COPY_KEYS = {
     description: "panelSpecialFeatures.catalog.cookingRecipes.description",
     ctaNote: "panelSpecialFeatures.catalog.cookingRecipes.ctaNote",
   },
+  "custom-landing": {
+    name: "panelSpecialFeatures.catalog.customLanding.name",
+    description: "panelSpecialFeatures.catalog.customLanding.description",
+    ctaNote: "panelSpecialFeatures.catalog.customLanding.ctaNote",
+  },
 } satisfies Record<string, Record<"name" | "description" | "ctaNote", MessageKey>>;
 
 const getModuleCopy = (module: FeatureModuleSummary, t: SpecialFeaturesTranslate) => {
@@ -80,6 +87,16 @@ const moduleActiveUntil = (module: FeatureModuleSummary, t: SpecialFeaturesTrans
   module.expiresAt ? t("panelSpecialFeatures.module.activeUntil", { date: formatDate(module.expiresAt) }) : "";
 
 const getModuleActionConfig = (module: FeatureModuleSummary, t: SpecialFeaturesTranslate, formatDate: (value?: string | null) => string) => {
+  if (module.slug === "custom-landing") {
+    return {
+      activeHref: "/panel/custom-landing",
+      activeButtonLabel: "مدیریت لندینگ اختصاصی",
+      inactiveButtonLabel: "فعال سازی مرکزی",
+      activeStatusLabel: "فعال سازی مرکزی",
+      activeDescription: "لینک های اختصاصی، کاربران جذب شده، سهم پرداخت و تسویه را از این بخش مدیریت کنید.",
+    };
+  }
+
   if (module.slug === "customer-club") {
     return {
       activeHref: "/panel/customer-club",
@@ -151,9 +168,29 @@ export default function PanelSpecialFeaturesPage() {
 
   const reloadModules = async () => {
     setLoading(true);
-    const res = await api.featureModules.list();
+    const [res, metaRes] = await Promise.all([
+      api.featureModules.list(),
+      api.meta.get(),
+    ]);
     if (res.success) {
-      setModules(res.data.items);
+      const activeCustomLanding = (metaRes.success ? metaRes.data : getInitialTenantMeta())?.activeFeatureModules?.find((module) => module.slug === "custom-landing");
+      const items = [...res.data.items];
+
+      if (activeCustomLanding && !items.some((module) => module.slug === "custom-landing")) {
+        items.push({
+          id: activeCustomLanding.id,
+          slug: "custom-landing",
+          name: activeCustomLanding.name || "لندینگ اختصاصی",
+          description: "لینک اختصاصی، سهم پرداخت و تسویه همکاران را مدیریت کنید.",
+          monthlyPriceAmount: 0,
+          isActive: true,
+          expiresAt: activeCustomLanding.expiresAt,
+          status: "active",
+          ctaNote: "این ماژول از مدیریت مرکزی فعال شده است.",
+        });
+      }
+
+      setModules(items);
     }
     setLoading(false);
   };

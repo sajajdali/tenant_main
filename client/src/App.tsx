@@ -58,6 +58,8 @@ import PanelSupportRenewalPage from "@/pages/panel-support-renewal";
 import PanelSupportRenewalInvoicePage from "@/pages/panel-support-renewal-invoice";
 import PanelSupportRenewalHistoryPage from "@/pages/panel-support-renewal-history";
 import PanelReferralsPage from "@/pages/panel-referrals";
+import PanelCustomLandingPage from "@/pages/panel-custom-landing";
+import CustomLandingWelcomePage from "@/pages/custom-landing-welcome";
 import PanelAboutPage from "@/pages/panel-about";
 import PanelContactPage from "@/pages/panel-contact";
 import PanelSpecialFeaturesPage from "@/pages/panel-special-features";
@@ -246,6 +248,7 @@ function Router() {
       <Route path="/articles" component={ArticlesPage} />
       <Route path="/articles/:id" component={ArticleDetailPage} />
       <Route path="/feedback/:token" component={CustomerFeedbackPublicPage} />
+      <Route path="/join/:token" component={CustomLandingWelcomePage} />
       <Route path="/store/collection/:slug" component={StoreListingPage} />
       <Route path="/landing-preview" component={LandingPreviewPage} />
       <Route path="/landing-preview/barbers" component={LandingPreviewPage} />
@@ -307,6 +310,7 @@ function Router() {
       <Route path="/panel/support-renewal/invoice" component={PanelSupportRenewalInvoicePage} />
       <Route path="/panel/support-renewal/history" component={PanelSupportRenewalHistoryPage} />
       <Route path="/panel/referrals" component={PanelReferralsPage} />
+      <Route path="/panel/custom-landing" component={PanelCustomLandingPage} />
       <Route path="/panel/latest-bookings" component={appointmentBookingDisabled ? PanelPage : PanelLatestBookingsPage} />
       <Route path="/panel/daily-report" component={appointmentBookingDisabled ? PanelPage : PanelDailyReportPage} />
       <Route path="/panel/professionals" component={PanelBarbersPage} />

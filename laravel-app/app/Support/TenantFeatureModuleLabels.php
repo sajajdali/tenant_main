@@ -15,6 +15,7 @@ class TenantFeatureModuleLabels
         'customer-feedback',
         'online-chat',
         'cooking-recipes',
+        'custom-landing',
     ];
 
     public static function for(FeatureModule $module): array

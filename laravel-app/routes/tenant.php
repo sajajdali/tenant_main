@@ -19,6 +19,8 @@ use App\Http\Controllers\Tenant\ArticleSettingsController;
 use App\Http\Controllers\Tenant\BarberController;
 use App\Http\Controllers\Tenant\BookingPaymentController;
 use App\Http\Controllers\Tenant\ContactSettingsController;
+use App\Http\Controllers\Tenant\CustomLandingController;
+use App\Http\Controllers\Tenant\CustomLandingPublicController;
 use App\Http\Controllers\Tenant\CookingRecipeController;
 use App\Http\Controllers\Tenant\CustomerClubController;
 use App\Http\Controllers\Tenant\CustomerFeedbackController;
@@ -267,6 +269,7 @@ Route::middleware([
     Route::get('/nutrition/{any}', SiteController::class)->where('any', '.*');
     Route::get('/store', SiteController::class)->name('tenant.store');
     Route::get('/store/{any}', SiteController::class)->where('any', '.*');
+    Route::middleware('tenant.module:custom-landing')->get('/join/{token}', CustomLandingPublicController::class)->where('token', '[A-Za-z0-9]+')->name('tenant.custom-landing.join');
     Route::middleware('tenant.module:customer-club')->get('/club', SiteController::class)->name('tenant.customer-club');
     Route::get('/support/chat', SiteController::class)->name('tenant.support-chat');
     Route::get('/feedback/{token}', SiteController::class)->name('tenant.customer-feedback');
@@ -433,6 +436,16 @@ Route::middleware([
             Route::get('/cooking-recipes/admin', [CookingRecipeController::class, 'adminIndex']);
             Route::get('/cooking-recipes/admin/{cookingRecipe}', [CookingRecipeController::class, 'adminShow']);
             Route::put('/cooking-recipes/admin/{cookingRecipe}', [CookingRecipeController::class, 'adminUpdate']);
+        });
+        Route::middleware('tenant.module:custom-landing')->group(function () {
+            Route::get('/custom-landing', [CustomLandingController::class, 'overview']);
+            Route::post('/custom-landing/partners', [CustomLandingController::class, 'storePartner']);
+            Route::get('/custom-landing/partners/{partner}', [CustomLandingController::class, 'showPartner']);
+            Route::put('/custom-landing/partners/{partner}', [CustomLandingController::class, 'updatePartner']);
+            Route::post('/custom-landing/partners/{partner}/settlements', [CustomLandingController::class, 'settle']);
+            Route::delete('/custom-landing/commissions/{commission}', [CustomLandingController::class, 'reverseCommission']);
+            Route::delete('/custom-landing/settlements/{settlement}', [CustomLandingController::class, 'destroySettlement']);
+            Route::delete('/custom-landing/attributions/{attribution}', [CustomLandingController::class, 'destroyAttribution']);
         });
         Route::get('/nutrition/diet-requests/admin', [NutritionDietRequestController::class, 'adminIndex']);
         Route::get('/nutrition/diet-requests/admin/settings', [NutritionDietRequestController::class, 'adminSettings']);

@@ -27,6 +27,8 @@ class NutritionPackagePaymentService
     public function __construct(
         private readonly NutritionDiscountCodeService $discountCodes,
         private readonly TenantMaliartGateway $maliart,
+        private readonly TenantFeatureModuleManager $featureModules,
+        private readonly CustomLandingService $customLanding,
     ) {
     }
 
@@ -383,6 +385,10 @@ class NutritionPackagePaymentService
                     'selected_nutrition_package_id' => $package->id,
                     'package_selected_at' => now(),
                 ]);
+
+            if ($this->featureModules->isActive(tenant(), 'custom-landing')) {
+                $this->customLanding->recordNutritionPackagePayment($locked->fresh());
+            }
 
             $locked->subscription()->save($subscription);
 

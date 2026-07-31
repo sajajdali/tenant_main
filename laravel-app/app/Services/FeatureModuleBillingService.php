@@ -29,6 +29,7 @@ class FeatureModuleBillingService
             ->orderBy('sort_order')
             ->orderBy('name')
             ->get()
+            ->filter(fn (FeatureModule $module): bool => $this->isTenantSelfServiceModule($module) || $activeModules->has($module->id))
             ->map(fn (FeatureModule $module): array => $this->serializeModule($tenant, $module, $activeModules->get($module->id)))
             ->values()
             ->all();
@@ -49,6 +50,7 @@ class FeatureModuleBillingService
             ->orderBy('sort_order')
             ->orderBy('name')
             ->get()
+            ->filter(fn (FeatureModule $module): bool => $this->isTenantSelfServiceModule($module))
             ->map(function (FeatureModule $module) use ($tenant, $durationDays, $selectedLookup, $tenantModules): array {
                 /** @var TenantFeatureModule|null $tenantModule */
                 $tenantModule = $tenantModules->get($module->id);
@@ -131,6 +133,11 @@ class FeatureModuleBillingService
     private function normalizeDays(int|float $days): int
     {
         return max(1, (int) ceil($days));
+    }
+
+    private function isTenantSelfServiceModule(FeatureModule $module): bool
+    {
+        return ($module->metadata['tenant_self_service'] ?? true) !== false;
     }
 
     private function serializeModule(Tenant $tenant, FeatureModule $module, ?TenantFeatureModule $tenantModule): array

@@ -1,6 +1,6 @@
 import { Link } from "wouter";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { AlertTriangle, ArrowRight, BookOpenText, Bot, BriefcaseBusiness, CalendarDays, CalendarX2, ChefHat, ClipboardList, ClipboardPlus, Coins, CreditCard, DatabaseBackup, Dumbbell, FileArchive, FileText, FolderOpen, Gem, Gift, Globe, HardDrive, Headset, HeartHandshake, ImageIcon, Info, Lock, LockOpen, Megaphone, MessageCircleMore, MonitorSmartphone, Paintbrush, Percent, PhoneCall, Salad, Settings, Settings2, ShieldAlert, ShoppingBag, ShoppingCart, Sparkles, Star, Stethoscope, TicketPercent, Users, WalletCards } from "lucide-react";
+import { AlertTriangle, ArrowRight, BookOpenText, Bot, BriefcaseBusiness, CalendarDays, CalendarX2, ChefHat, ClipboardList, ClipboardPlus, Coins, CreditCard, DatabaseBackup, Dumbbell, FileArchive, FileText, FolderOpen, Gem, Gift, Globe, HardDrive, Headset, HeartHandshake, ImageIcon, Info, Link2, Lock, LockOpen, Megaphone, MessageCircleMore, MonitorSmartphone, Paintbrush, Percent, PhoneCall, Salad, Settings, Settings2, ShieldAlert, ShoppingBag, ShoppingCart, Sparkles, Star, Stethoscope, TicketPercent, Users, WalletCards } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -727,6 +727,7 @@ export default function PanelPage() {
   const customerClubModuleActive = tenantMeta?.activeFeatureModules?.some((item) => item.slug === "customer-club") ?? false;
   const customerFeedbackModuleActive = tenantMeta?.activeFeatureModules?.some((item) => item.slug === "customer-feedback") ?? false;
   const cookingRecipesModuleActive = tenantMeta?.activeFeatureModules?.some((item) => item.slug === "cooking-recipes") ?? false;
+  const customLandingModuleActive = tenantMeta?.activeFeatureModules?.some((item) => item.slug === "custom-landing") ?? false;
   const specialCards: PanelCard[] = isPrimaryAdmin
     ? [
         {
@@ -795,6 +796,15 @@ export default function PanelPage() {
           disabled: supportExpired,
           featureKey: "cooking_recipes",
         }] : []),
+        ...(customLandingModuleActive ? [{
+          title: t("panelDashboard.specialCards.customLanding.title"),
+          description: t("panelDashboard.specialCards.customLanding.description"),
+          href: "/panel/custom-landing",
+          icon: Link2,
+          badge: t("panelDashboard.module.active"),
+          disabled: supportExpired,
+          featureKey: "custom_landing",
+        }] : []),
       ]
     : [];
 
@@ -812,13 +822,15 @@ export default function PanelPage() {
         return onlineChatModuleActive;
       case "cooking_recipes":
         return cookingRecipesModuleActive;
+      case "custom_landing":
+        return customLandingModuleActive;
       default:
         return false;
     }
   };
 
   const filteredSpecialCards = specialCards.filter((item) => {
-    if (item.featureKey === "cooking_recipes" && cookingRecipesModuleActive) {
+    if (isSpecialModuleActive(item.featureKey)) {
       return true;
     }
 

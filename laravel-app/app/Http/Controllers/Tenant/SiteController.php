@@ -7,12 +7,12 @@ namespace App\Http\Controllers\Tenant;
 use App\Domain\Booking\Models\Barber;
 use App\Domain\Booking\Models\Service;
 use App\Domain\Tenant\Models\GeneralSetting;
-use App\Domain\Tenant\Models\TenantFeatureModule;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Tenant\ArticleSettingsController;
 use App\Http\Controllers\Tenant\NutritionLandingSettingsController;
 use App\Http\Controllers\Tenant\OnlineChatSettingsController;
 use App\Services\CustomerClubService;
+use App\Services\TenantFeatureModuleManager;
 use App\Support\AudienceSpecializedCourseSettings;
 use App\Support\TenantAudienceLabels;
 use App\Support\TenantIrDomain;
@@ -25,6 +25,11 @@ use Illuminate\Support\Str;
 
 class SiteController extends Controller
 {
+    public function __construct(
+        private readonly TenantFeatureModuleManager $featureModules,
+    ) {
+    }
+
     public function __invoke(Request $request): Response
     {
         $tenant = tenant()->loadMissing(['audienceType', 'subscriptionPackage']);
@@ -40,23 +45,7 @@ class SiteController extends Controller
         $pwaMeta = $this->buildPwaMeta($request, $tenant->name, $rules, $generalSettings?->updated_at?->timestamp);
         $isNutritionAudience = in_array($audience?->slug, ['nutritionists', 'nutrition-doctors'], true);
         $appointmentBookingDisabled = $isNutritionAudience && (bool) ($rules['appointment_booking_disabled'] ?? false);
-        $activeFeatureModules = TenantFeatureModule::query()
-            ->with('featureModule')
-            ->where('tenant_id', $tenant->id)
-            ->where('status', 'active')
-            ->where(function ($query): void {
-                $query->whereNull('expires_at')
-                    ->orWhereDate('expires_at', '>=', now()->toDateString());
-            })
-            ->get()
-            ->filter(fn (TenantFeatureModule $item) => $item->featureModule !== null)
-            ->map(fn (TenantFeatureModule $item): array => [
-                'id' => (string) $item->featureModule->id,
-                'slug' => $item->featureModule->slug,
-                'name' => $item->featureModule->name,
-                'expiresAt' => $item->expires_at?->toDateString(),
-            ])
-            ->values();
+        $activeFeatureModules = $this->featureModules->activeForMeta($tenant);
         $customerClubStatus = app(CustomerClubService::class)->publicStatusForTenant($tenant);
         $pageMeta = $this->buildPageMeta($request, $tenant->name, $rules);
 
