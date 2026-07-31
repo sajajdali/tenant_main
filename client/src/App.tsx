@@ -310,6 +310,7 @@ function Router() {
       <Route path="/panel/support-renewal/invoice" component={PanelSupportRenewalInvoicePage} />
       <Route path="/panel/support-renewal/history" component={PanelSupportRenewalHistoryPage} />
       <Route path="/panel/referrals" component={PanelReferralsPage} />
+      <Route path="/panel/custom-landing/:partnerId" component={PanelCustomLandingPage} />
       <Route path="/panel/custom-landing" component={PanelCustomLandingPage} />
       <Route path="/panel/latest-bookings" component={appointmentBookingDisabled ? PanelPage : PanelLatestBookingsPage} />
       <Route path="/panel/daily-report" component={appointmentBookingDisabled ? PanelPage : PanelDailyReportPage} />

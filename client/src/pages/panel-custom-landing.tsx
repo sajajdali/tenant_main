@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
-import { Link } from "wouter";
+import { Link, useLocation, useRoute } from "wouter";
 import { ArrowRight, Copy, CreditCard, Link2, NotebookPen, Plus, Search, Trash2, Users, WalletCards } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,9 @@ const emptyPartner = { name: "", mobile: "", first_payment_percent: "90", recurr
 const emptySettlement = { amount: "", payment_method: "", payment_reference: "", paid_at: new Date().toISOString().slice(0, 10), note: "" };
 
 export default function PanelCustomLandingPage() {
+  const [, routeParams] = useRoute("/panel/custom-landing/:partnerId");
+  const [, setLocation] = useLocation();
+  const routePartnerId = routeParams?.partnerId ?? "";
   const { isPrimaryAdmin } = useAuth();
   const { toast } = useToast();
   const [data, setData] = useState<CustomLandingOverview | null>(null);
@@ -55,6 +58,15 @@ export default function PanelCustomLandingPage() {
   };
 
   useEffect(() => { if (isPrimaryAdmin) void load(); }, [isPrimaryAdmin]);
+  useEffect(() => {
+    if (!isPrimaryAdmin) return;
+    if (routePartnerId) {
+      void loadDashboard(routePartnerId, "");
+      return;
+    }
+    setSelectedId("");
+    setDashboard(null);
+  }, [isPrimaryAdmin, routePartnerId]);
 
   const filteredPartners = useMemo(() => {
     const term = search.trim();
@@ -114,6 +126,8 @@ export default function PanelCustomLandingPage() {
     ["کاربرانی که رژیم گرفتند", dashboard?.stats.dietUsers ?? data?.stats.firstPayments ?? 0, NotebookPen],
   ];
 
+  const reportUrl = dashboard && typeof window !== "undefined" ? `${window.location.origin}/panel/custom-landing/${dashboard.partner.id}` : "";
+
   return (
     <main className="min-h-screen bg-background pb-10 text-foreground" dir="rtl">
       <header className="border-b bg-card">
@@ -123,7 +137,7 @@ export default function PanelCustomLandingPage() {
             <p className="mt-1 text-sm text-muted-foreground">{dashboard ? "گزارش درآمد، کاربران، تراکنش‌ها و تسویه‌های همکار" : "لیست همکاران، ایجاد لینک اختصاصی و دسترسی به گزارش هر همکار"}</p>
           </div>
           {dashboard ? (
-            <Button variant="outline" onClick={() => { setDashboard(null); setSelectedId(""); }}>بازگشت به لیست</Button>
+            <Button variant="outline" onClick={() => setLocation("/panel/custom-landing")}>بازگشت به لیست</Button>
           ) : (
             <Link href="/panel"><Button variant="outline" size="icon" title="بازگشت"><ArrowRight className="h-5 w-5" /></Button></Link>
           )}
@@ -179,7 +193,7 @@ export default function PanelCustomLandingPage() {
                 {filteredPartners.length === 0 ? (
                   <div className="rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground">هنوز همکاری ثبت نشده است.</div>
                 ) : filteredPartners.map((partner) => (
-                  <button key={partner.id} onClick={() => void loadDashboard(partner.id, "")} className="grid w-full gap-3 rounded-lg border bg-card p-4 text-start transition hover:border-primary/50 hover:bg-muted/40 md:grid-cols-[1.3fr_1fr_1fr_auto] md:items-center">
+                  <button key={partner.id} onClick={() => setLocation(`/panel/custom-landing/${partner.id}`)} className="grid w-full gap-3 rounded-lg border bg-card p-4 text-start transition hover:border-primary/50 hover:bg-muted/40 md:grid-cols-[1.3fr_1fr_1fr_auto] md:items-center">
                     <div>
                       <div className="flex items-center gap-2">
                         <strong>{partner.name}</strong>
@@ -213,6 +227,7 @@ export default function PanelCustomLandingPage() {
                     <option value="inactive">غیرفعال</option>
                   </select>
                   <div className="flex gap-2">
+                    <Button variant="outline" size="icon" title="کپی آدرس پرونده" onClick={() => { void navigator.clipboard.writeText(reportUrl); toast({ title: "آدرس پرونده کپی شد" }); }}><Copy className="h-4 w-4" /></Button>
                     <Button variant="outline" size="icon" title="کپی لینک" onClick={() => { void navigator.clipboard.writeText(dashboard.partner.url); toast({ title: "لینک کپی شد" }); }}><Copy className="h-4 w-4" /></Button>
                     <a href={dashboard.partner.url} target="_blank" rel="noreferrer"><Button variant="outline" size="icon" title="باز کردن لینک"><Link2 className="h-4 w-4" /></Button></a>
                     <Button className="flex-1" disabled={updating} onClick={updatePartner}>{updating ? "در حال ذخیره..." : "ذخیره تغییرات"}</Button>
