@@ -140,6 +140,14 @@
                                     <input type="text" id="modal_title" name="modal_title" class="form-control" value="{{ old('modal_title', $videoIntroContent['modalTitle'] ?? '') }}">
                                 </div>
                                 <div class="col-md-6">
+                                    <label class="form-label" for="demo_modal_title">عنوان پنجره دمو</label>
+                                    <input type="text" id="demo_modal_title" name="demo_modal_title" class="form-control" value="{{ old('demo_modal_title', $videoIntroContent['demoModalTitle'] ?? '') }}">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label" for="demo_modal_description">توضیح پنجره دمو</label>
+                                    <input type="text" id="demo_modal_description" name="demo_modal_description" class="form-control" value="{{ old('demo_modal_description', $videoIntroContent['demoModalDescription'] ?? '') }}">
+                                </div>
+                                <div class="col-md-6">
                                     <label class="form-label" for="video_url">آدرس فایل ویدئوی داخلی</label>
                                     <input type="text" id="video_url" name="video_url" class="form-control" dir="ltr" value="{{ old('video_url', $videoIntroContent['videoUrl'] ?? '') }}">
                                     <small class="text-muted d-block mt-1">پیشنهاد می‌شود فایل را از بخش مقابل آپلود کنید. لینک YouTube در لندینگ پخش نمی‌شود.</small>
