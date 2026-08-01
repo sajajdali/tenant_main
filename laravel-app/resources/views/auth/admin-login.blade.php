@@ -12,7 +12,6 @@
     <title>{{ $panelTitle ?? __('auth.admin_login.fallback_panel_title') }} | {{ __('auth.admin_login.brand_name') }}</title>
     <meta name="theme-color" content="#0f172a">
     <link rel="manifest" href="{{ asset('manifest.webmanifest') }}">
-    <link rel="icon" href="{{ asset('favicon.svg') }}" type="image/svg+xml">
     <link rel="icon" href="{{ asset('favicon.png') }}" type="image/png">
     <link rel="alternate icon" href="{{ asset('favicon.ico') }}" type="image/x-icon">
     <link rel="apple-touch-icon" href="{{ asset('apple-touch-icon.png') }}">
