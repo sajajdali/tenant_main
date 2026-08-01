@@ -396,8 +396,8 @@ export default function PellehStaticLandingPage() {
           <div className="w-full max-w-2xl overflow-hidden rounded-[26px] border border-white/10 bg-[#171512] shadow-[0_30px_100px_-35px_rgba(0,0,0,.9)]" onClick={(event) => event.stopPropagation()}>
             <div className="flex items-center justify-between gap-4 border-b border-white/10 px-5 py-4 sm:px-6">
               <div>
-                <strong className="block text-base font-black sm:text-lg">انتخاب دموی واقعی</strong>
-                <span className="mt-1 block text-xs leading-6 text-[#9c988d]">نسخه مناسب سالن خودتان را باز کنید و تجربه مشتری را ببینید.</span>
+                <strong className="block text-base font-black sm:text-lg">{text(video.demoModalTitle, "انتخاب دموی واقعی")}</strong>
+                <span className="mt-1 block text-xs leading-6 text-[#9c988d]">{text(video.demoModalDescription, "نسخه مناسب سالن خودتان را باز کنید و تجربه مشتری را ببینید.")}</span>
               </div>
               <button type="button" aria-label="بستن" className="flex size-9 shrink-0 items-center justify-center rounded-full border border-white/10 bg-black/30 text-xl text-[#aaa59b] transition hover:text-white" onClick={() => setVideoOpen(false)}>×</button>
             </div>

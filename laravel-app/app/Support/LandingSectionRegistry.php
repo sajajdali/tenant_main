@@ -76,6 +76,8 @@ class LandingSectionRegistry
                     'buttonLabel' => 'مشاهده ویدئو',
                     'modalTitle' => 'ویدئوی معرفی سیستم',
                     'modalDescription' => 'ویدئوی معرفی امکانات و نحوه کار سیستم',
+                    'demoModalTitle' => 'انتخاب دموی واقعی',
+                    'demoModalDescription' => 'نسخه مناسب سالن خودتان را باز کنید و تجربه مشتری را ببینید.',
                     'videoUrl' => '',
                     'demoLinks' => [
                         [
