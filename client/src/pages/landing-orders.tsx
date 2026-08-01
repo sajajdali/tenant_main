@@ -20,6 +20,25 @@ import { useFormat, useLocale, useT } from "@/i18n/locale";
 import type { LandingOrderSummary } from "@/lib/types";
 import { getInitialTenantMeta } from "@/lib/bootstrap";
 import { PellehCheckoutSteps } from "@/components/pelleh-checkout-steps";
+import { PellehBrandLogo } from "@/components/pelleh-brand-logo";
+
+const submitGatewayForm = (redirectForm: { action: string; method: string; inputs: Record<string, string> }) => {
+  const form = document.createElement("form");
+  form.action = redirectForm.action;
+  form.method = (redirectForm.method || "POST").toUpperCase();
+  form.style.display = "none";
+
+  Object.entries(redirectForm.inputs || {}).forEach(([key, value]) => {
+    const input = document.createElement("input");
+    input.type = "hidden";
+    input.name = key;
+    input.value = value;
+    form.appendChild(input);
+  });
+
+  document.body.appendChild(form);
+  form.submit();
+};
 
 type CompletionFormState = {
   requestedDomain: string;
@@ -47,6 +66,7 @@ export default function LandingOrdersPage() {
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [lastPage, setLastPage] = useState(1);
+  const [payingOrderId, setPayingOrderId] = useState<string | null>(null);
   const [completionOpen, setCompletionOpen] = useState(false);
   const [completionSubmitting, setCompletionSubmitting] = useState(false);
   const [completionMessage, setCompletionMessage] = useState<string | null>(null);
@@ -92,6 +112,29 @@ export default function LandingOrdersPage() {
       message,
     };
   }, []);
+
+  const handlePayOrder = async (orderId: string) => {
+    setPayingOrderId(orderId);
+    const result = await api.landingOrders.pay(orderId);
+    setPayingOrderId(null);
+
+    if (!result.success) {
+      setCompletionMessage(result.message || "پرداخت آنلاین برای این سفارش آماده نشد. لطفا دوباره تلاش کنید.");
+      return;
+    }
+
+    if (result.data.mode === "gateway" && result.data.redirectForm) {
+      submitGatewayForm(result.data.redirectForm);
+      return;
+    }
+
+    if (result.data.mode === "gateway" && result.data.paymentUrl) {
+      window.location.assign(result.data.paymentUrl);
+      return;
+    }
+
+    window.location.assign(`${getLandingPath("/orders")}?status=success&order=${encodeURIComponent(result.data.order.orderNumber)}&oid=${encodeURIComponent(result.data.order.id)}&tracking=${encodeURIComponent(result.data.payment.referenceId || result.data.payment.invoiceNumber)}`);
+  };
   const completionRequested = useMemo(() => new URLSearchParams(window.location.search).get("complete") === "1", []);
 
   const selectedOrder = useMemo(
@@ -352,17 +395,21 @@ export default function LandingOrdersPage() {
       if (["setup", "processing"].includes(key)) return "bg-blue-400/10 text-blue-300";
       return "bg-[#c9a24a]/10 text-[#e0c06e]";
     };
+    const paidStatuses = ["paid", "awaiting_admin_approval", "approved", "provisioning", "provisioned"];
+    const closedStatuses = ["cancelled", "failed", "rejected"];
+    const isOrderPaid = (order: LandingOrderSummary) => paidStatuses.includes(order.status.toLowerCase()) || Boolean(order.paidAt || order.payment?.paidAt);
+    const canPayOrder = (order: LandingOrderSummary) => order.status.toLowerCase() === "pending_payment" && !isOrderPaid(order);
     return <div dir="rtl" className="flex min-h-screen flex-col bg-[#0e0d0b] text-[#f4f2ee] [font-family:Vazirmatn,system-ui,sans-serif]">
-      <header className="border-b border-white/10 bg-[#0e0d0b]/90 backdrop-blur-xl"><div className="mx-auto flex max-w-[1200px] items-center justify-between px-5 py-4 sm:px-8"><a href="/" className="flex items-center gap-2.5"><span className="flex size-9 items-center justify-center rounded-full border border-[#c9a24a] text-[#e0c06e]">پ</span><strong>پلـه</strong></a><a href="/plans" className="rounded-full border border-[#c9a24a] px-4 py-2 text-xs font-bold text-[#e0c06e] sm:px-5 sm:text-sm">شروع خرید پکیج</a></div></header>
+      <header className="border-b border-white/10 bg-[#0e0d0b]/90 backdrop-blur-xl"><div className="mx-auto flex max-w-[1200px] items-center justify-between px-5 py-4 sm:px-8"><PellehBrandLogo imageClassName="h-14 w-auto max-w-[230px] object-contain sm:h-16 sm:max-w-[280px]" /><a href="/plans" className="rounded-full border border-[#c9a24a] px-4 py-2 text-xs font-bold text-[#e0c06e] sm:px-5 sm:text-sm">شروع خرید پکیج</a></div></header>
       <main className="mx-auto w-full max-w-[900px] flex-1 px-4 pb-16 pt-8 sm:px-8 sm:pt-11">
         <div className="mb-7"><span className="text-xs font-bold tracking-[1px] text-[#e0c06e]">پیگیری خرید</span><h1 className="mt-2 text-2xl font-black sm:text-[26px]">سوابق سفارش‌های من</h1></div>
-        {!customer ? <section className="rounded-[20px] border border-white/10 bg-[#171512] p-8 text-center"><p className="text-sm text-[#9c988d]">برای مشاهده سفارش‌ها وارد حساب کاربری شوید.</p><button onClick={() => setLoginOpen(true)} className="mt-5 rounded-full bg-[#c9a24a] px-7 py-3 text-sm font-black text-[#0e0d0b]">ورود به حساب</button></section> : loading ? <div className="py-20 text-center text-sm text-[#9c988d]">در حال دریافت سفارش‌ها...</div> : orders.length === 0 ? <section className="rounded-[20px] border border-dashed border-white/10 py-16 text-center text-sm text-[#9c988d]">هنوز سفارشی ثبت نکرده‌اید.</section> : <div className="space-y-4">{orders.map((order) => { const incomplete = !order.completionSubmittedAt; return <article key={order.id} className={`rounded-[18px] border bg-[#171512] p-5 transition sm:p-6 ${incomplete ? "border-amber-400/30" : "border-white/10 hover:border-[#c9a24a]/25"}`}><div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+        {!customer ? <section className="rounded-[20px] border border-white/10 bg-[#171512] p-8 text-center"><p className="text-sm text-[#9c988d]">برای مشاهده سفارش‌ها وارد حساب کاربری شوید.</p><button onClick={() => setLoginOpen(true)} className="mt-5 rounded-full bg-[#c9a24a] px-7 py-3 text-sm font-black text-[#0e0d0b]">ورود به حساب</button></section> : loading ? <div className="py-20 text-center text-sm text-[#9c988d]">در حال دریافت سفارش‌ها...</div> : orders.length === 0 ? <section className="rounded-[20px] border border-dashed border-white/10 py-16 text-center text-sm text-[#9c988d]">هنوز سفارشی ثبت نکرده‌اید.</section> : <div className="space-y-4">{orders.map((order) => { const paid = isOrderPaid(order); const payable = canPayOrder(order); const needsCompletion = paid && !order.completionSubmittedAt; return <article key={order.id} className={`rounded-[18px] border bg-[#171512] p-5 transition sm:p-6 ${needsCompletion || payable ? "border-amber-400/30" : "border-white/10 hover:border-[#c9a24a]/25"}`}><div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0"><div className="flex flex-wrap items-center gap-2.5"><strong className="text-sm" dir="ltr">{order.orderNumber}</strong><span className={`rounded-full px-3 py-1 text-[11px] font-bold ${statusClass(order.status)}`}>{order.statusLabel}</span></div><p className="mt-3 text-xs leading-6 text-[#9c988d]">پلن: <span className="text-[#c7c2b8]">{order.package.name || "—"}</span> — {new Intl.NumberFormat("fa-IR").format(order.package.durationDays)} روزه</p><p className="text-xs leading-6 text-[#9c988d]">دامنه: <span dir="ltr" className="inline-block text-[#c7c2b8]">{order.requestedDomain || (order.usesOwnDomain ? "دامنه شخصی / تعیین نشده" : "—")}</span></p></div>
           <div className="shrink-0 border-t border-white/10 pt-4 text-start sm:border-0 sm:pt-0"><strong className="block whitespace-nowrap text-base text-[#e0c06e] [direction:ltr]">{toman(order.totalAmount)}</strong><span className="mt-1.5 block text-xs text-[#817d74]">{orderDate(order.createdAt)}</span></div>
-        </div>{incomplete && <div className="mt-5 flex flex-col gap-3 border-t border-amber-400/15 pt-4 sm:flex-row sm:items-center sm:justify-between"><p className="text-xs leading-6 text-amber-200/80">پرداخت انجام شده، اما اطلاعات موردنیاز برای راه‌اندازی سیستم هنوز تکمیل نشده است.</p><a href={`/orders?complete=1&oid=${encodeURIComponent(order.id)}`} className="shrink-0 rounded-full bg-[#c9a24a] px-5 py-2.5 text-center text-xs font-black text-[#0e0d0b]">تکمیل اطلاعات سفارش</a></div>}{order.siteUrl && (order.provisionedAt || order.status === "provisioned") && <div className="mt-5 flex flex-col gap-3 border-t border-emerald-400/15 pt-4 sm:flex-row sm:items-center sm:justify-between"><div><strong className="block text-sm text-emerald-300">سایت شما نصب و راه‌اندازی شد ✓</strong><p className="mt-1 text-xs leading-6 text-[#9c988d]">وب‌سایت شما آماده استفاده است و می‌توانید وارد آن شوید.</p></div><a href={order.siteUrl} target="_blank" rel="noreferrer" className="shrink-0 rounded-full bg-emerald-400 px-5 py-2.5 text-center text-xs font-black text-[#07130c] transition hover:bg-emerald-300">ورود به سایت</a></div>}</article>; })}</div>}
+        </div>{payable && <div className="mt-5 flex flex-col gap-3 border-t border-amber-400/15 pt-4 sm:flex-row sm:items-center sm:justify-between"><p className="text-xs leading-6 text-amber-200/80">این سفارش هنوز پرداخت نشده است. برای ادامه راه‌اندازی، ابتدا پرداخت آنلاین را انجام دهید.</p><button type="button" disabled={payingOrderId === order.id} onClick={() => handlePayOrder(order.id)} className="shrink-0 rounded-full bg-[#c9a24a] px-5 py-2.5 text-center text-xs font-black text-[#0e0d0b] transition hover:bg-[#e0c06e] disabled:cursor-wait disabled:opacity-60">{payingOrderId === order.id ? "در حال انتقال..." : "پرداخت آنلاین"}</button></div>}{needsCompletion && <div className="mt-5 flex flex-col gap-3 border-t border-amber-400/15 pt-4 sm:flex-row sm:items-center sm:justify-between"><p className="text-xs leading-6 text-amber-200/80">پرداخت انجام شده، اما اطلاعات موردنیاز برای راه‌اندازی سیستم هنوز تکمیل نشده است.</p><a href={`/orders?complete=1&oid=${encodeURIComponent(order.id)}`} className="shrink-0 rounded-full bg-[#c9a24a] px-5 py-2.5 text-center text-xs font-black text-[#0e0d0b]">تکمیل اطلاعات سفارش</a></div>}{!payable && !needsCompletion && closedStatuses.includes(order.status.toLowerCase()) && <div className="mt-5 border-t border-red-400/10 pt-4"><p className="text-xs leading-6 text-red-200/80">این سفارش قابل پرداخت یا تکمیل نیست.</p></div>}{order.siteUrl && (order.provisionedAt || order.status === "provisioned") && <div className="mt-5 flex flex-col gap-3 border-t border-emerald-400/15 pt-4 sm:flex-row sm:items-center sm:justify-between"><div><strong className="block text-sm text-emerald-300">سایت شما نصب و راه‌اندازی شد ✓</strong><p className="mt-1 text-xs leading-6 text-[#9c988d]">وب‌سایت شما آماده استفاده است و می‌توانید وارد آن شوید.</p></div><a href={order.siteUrl} target="_blank" rel="noreferrer" className="shrink-0 rounded-full bg-emerald-400 px-5 py-2.5 text-center text-xs font-black text-[#07130c] transition hover:bg-emerald-300">ورود به سایت</a></div>}</article>; })}</div>}
         {lastPage > 1 && <div className="mt-7 flex items-center justify-center gap-3"><button disabled={currentPage <= 1} onClick={() => setCurrentPage((page) => page - 1)} className="rounded-full border border-white/10 px-4 py-2 text-xs disabled:opacity-40">قبلی</button><span className="text-xs text-[#9c988d]">صفحه {new Intl.NumberFormat("fa-IR").format(currentPage)} از {new Intl.NumberFormat("fa-IR").format(lastPage)}</span><button disabled={currentPage >= lastPage} onClick={() => setCurrentPage((page) => page + 1)} className="rounded-full border border-white/10 px-4 py-2 text-xs disabled:opacity-40">بعدی</button></div>}
       </main>
-      <footer className="border-t border-white/10 px-5 py-8 text-center text-xs text-[#817d74]">© پله — تمامی حقوق محفوظ است.</footer>
+      <footer className="border-t border-white/10 px-5 py-8 text-center text-xs text-[#817d74]">© استپ — تمامی حقوق محفوظ است.</footer>
       <LandingAuthDialog open={loginOpen} onOpenChange={setLoginOpen} />
     </div>;
   }
@@ -372,7 +419,7 @@ export default function LandingOrdersPage() {
       <header className="sticky top-0 z-20 border-b border-border/70 bg-card/70 backdrop-blur-md">
         <div className="container mx-auto flex items-center justify-between px-4 py-4">
           <div className="flex items-center gap-3">
-            <img src={landingSiteSettings.logoUrl} alt={landingSiteSettings.siteTitle} className="h-10 w-10 rounded-xl border border-border/70 object-cover" />
+            <img src={landingSiteSettings.logoUrl} alt={landingSiteSettings.siteTitle} className="h-10 w-auto max-w-[170px] object-contain" />
             <div>
               <div className="text-sm text-primary">{landingSiteSettings.headerLabel}</div>
               <h2 className="text-base font-black sm:text-lg">{landingSiteSettings.siteTitle}</h2>

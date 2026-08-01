@@ -61,7 +61,7 @@ export function getLandingSiteSettings() {
   return {
     siteTitle: typeof settings.siteTitle === "string" && settings.siteTitle.trim() !== "" ? settings.siteTitle : (meta?.name ?? landingText("landing.defaultSiteTitle")),
     headerLabel: typeof settings.headerLabel === "string" && settings.headerLabel.trim() !== "" ? settings.headerLabel : "Landing",
-    logoUrl: typeof settings.logoUrl === "string" && settings.logoUrl.trim() !== "" ? settings.logoUrl : "/icon-192.png",
+    logoUrl: typeof settings.logoUrl === "string" && settings.logoUrl.trim() !== "" ? settings.logoUrl : "",
     faviconUrl: typeof settings.faviconUrl === "string" && settings.faviconUrl.trim() !== "" ? settings.faviconUrl : "/booking-app/favicon.png",
     contactPhones: Array.isArray(settings.contactPhones)
       ? settings.contactPhones.filter((item): item is string => typeof item === "string" && item.trim() !== "")

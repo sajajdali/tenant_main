@@ -17,6 +17,7 @@ import { DiscountCodeDialog } from "@/components/discount-code-dialog";
 import { CodeText, PhoneText } from "@/i18n/ltr-text";
 import { useFormat, useLocale, useT } from "@/i18n/locale";
 import { PellehCheckoutSteps } from "@/components/pelleh-checkout-steps";
+import { PellehBrandLogo } from "@/components/pelleh-brand-logo";
 
 const submitGatewayForm = (redirectForm: { action: string; method: string; inputs: Record<string, string> }) => {
   const form = document.createElement("form");
@@ -102,6 +103,7 @@ export default function LandingPlansPage() {
     () => packages.find((item) => item.id === selectedPackageId) ?? null,
     [packages, selectedPackageId],
   );
+  const selectedPackageIncludesDomain = selectedPackage?.userLimit !== 1;
   const profileCompleted = !!customer?.firstName?.trim() && !!customer?.lastName?.trim();
 
   const matrixDurations = useMemo(() => {
@@ -254,7 +256,7 @@ export default function LandingPlansPage() {
     setQuoteLoading(true);
     api.landingOrders.preview({
       subscriptionPackageId: selectedPackage.id,
-      useOwnDomain,
+      useOwnDomain: selectedPackageIncludesDomain ? useOwnDomain : false,
       discountCode: discountCode || undefined,
     }).then((res) => {
       if (res.success) {
@@ -268,7 +270,13 @@ export default function LandingPlansPage() {
       }
       setQuoteLoading(false);
     });
-  }, [customer, profileCompleted, selectedPackage, useOwnDomain]);
+  }, [customer, profileCompleted, selectedPackage, selectedPackageIncludesDomain, useOwnDomain]);
+
+  useEffect(() => {
+    if (!selectedPackageIncludesDomain && useOwnDomain) {
+      setUseOwnDomain(false);
+    }
+  }, [selectedPackageIncludesDomain, useOwnDomain]);
 
   const handleApplyDiscountCode = async (nextCode: string) => {
     const normalized = nextCode.trim().toUpperCase();
@@ -282,7 +290,7 @@ export default function LandingPlansPage() {
 
     const res = await api.landingOrders.preview({
       subscriptionPackageId: selectedPackage.id,
-      useOwnDomain,
+      useOwnDomain: selectedPackageIncludesDomain ? useOwnDomain : false,
       discountCode: normalized,
     });
 
@@ -309,7 +317,7 @@ export default function LandingPlansPage() {
 
     const res = await api.landingOrders.preview({
       subscriptionPackageId: selectedPackage.id,
-      useOwnDomain,
+      useOwnDomain: selectedPackageIncludesDomain ? useOwnDomain : false,
     });
 
     if (res.success) {
@@ -340,7 +348,7 @@ export default function LandingPlansPage() {
     setCheckoutLoading(true);
     const result = await api.landingOrders.checkout({
       subscriptionPackageId: selectedPackage.id,
-      useOwnDomain,
+      useOwnDomain: selectedPackageIncludesDomain ? useOwnDomain : false,
       discountCode: discountCode || undefined,
     });
     setCheckoutLoading(false);
@@ -364,15 +372,21 @@ export default function LandingPlansPage() {
   };
 
   if (bootstrapMeta?.isLandingDomain === true && selectedPackage) {
-    const total = quote?.totalAmount ?? selectedPackage.payableAmount;
-    const formatToman = (amount?: number | null) => `تومان ${new Intl.NumberFormat("fa-IR").format(Math.round((amount ?? 0) / 10))}`;
+    const setupAmount = quote?.setupFee.amount ?? 400000;
+    const domainAmount = selectedPackageIncludesDomain && !useOwnDomain ? (quote?.domain.amount ?? 89000) : 0;
+    const total = quote?.totalAmount ?? (selectedPackage.payableAmount + setupAmount + domainAmount);
+    const formatToman = (amount?: number | null) => `تومان ${new Intl.NumberFormat("fa-IR").format(Math.round(amount ?? 0))}`;
     const amountClass = "shrink-0 whitespace-nowrap text-left [direction:ltr]";
     const setupFeeLabel = quote?.setupFee.label && /[A-Za-z\u0600-\u06FF]/.test(quote.setupFee.label)
-      ? quote.setupFee.label
+      ? quote.setupFee.label.replace(/\s*یک‌بار\s*$/, "")
       : "هزینه نصب و راه‌اندازی";
+    const periodBadgeClass = "rounded-full border border-[#c9a24a]/25 bg-[#c9a24a]/10 px-2 py-0.5 text-[10px] font-black leading-5 text-[#e0c06e]";
     return <div dir="rtl" className="min-h-screen bg-[#0e0d0b] text-[#f4f2ee] [font-family:Vazirmatn,system-ui,sans-serif]">
       <div className="border-t border-white/10" />
       <main className="mx-auto max-w-[1050px] px-4 pb-14 pt-8 sm:px-6 sm:pt-12">
+        <div className="mb-7 flex justify-center">
+          <PellehBrandLogo imageClassName="h-16 w-auto max-w-[280px] object-contain sm:h-20 sm:max-w-[340px]" />
+        </div>
         <PellehCheckoutSteps current={2} />
         <div className="mb-8 mt-9 text-center sm:mb-10 sm:mt-12">
           <h1 className="text-2xl font-black sm:text-3xl">خلاصه انتخاب شما</h1>
@@ -384,8 +398,8 @@ export default function LandingPlansPage() {
             <div className="flex items-center justify-between border-b border-[#c9a24a]/25 bg-[#c9a24a]/10 px-5 py-4"><strong className="text-[#e0c06e]">پیش‌فاکتور</strong><ReceiptText className="size-5 text-[#e0c06e]" /></div>
             <div className="space-y-4 p-5 text-sm sm:p-6">
               <div className="flex justify-between gap-4 border-b border-dashed border-white/10 pb-4"><span className="text-[#9c988d]">اشتراک {selectedPackage.name}</span><strong className={amountClass}>{formatToman(quote?.package.payableAmount ?? selectedPackage.payableAmount)}</strong></div>
-              <div className="flex justify-between gap-4 border-b border-dashed border-white/10 pb-4"><span className="text-[#9c988d]">{setupFeeLabel}</span><strong className={amountClass}>{formatToman(quote?.setupFee.amount)}</strong></div>
-              {!useOwnDomain && <div className="flex justify-between gap-4 border-b border-dashed border-white/10 pb-4"><span className="text-[#9c988d]">هزینه ثبت دامنه</span><strong className={amountClass}>{formatToman(quote?.domain.amount)}</strong></div>}
+              <div className="flex justify-between gap-4 border-b border-dashed border-white/10 pb-4"><span className="flex flex-wrap items-center gap-2 text-[#9c988d]">{setupFeeLabel}<span className={periodBadgeClass}>یک‌بار</span></span><strong className={amountClass}>{formatToman(setupAmount)}</strong></div>
+              {selectedPackageIncludesDomain && !useOwnDomain && <div className="flex justify-between gap-4 border-b border-dashed border-white/10 pb-4"><span className="flex flex-wrap items-center gap-2 text-[#9c988d]">هزینه ثبت دامنه<span className={periodBadgeClass}>سالانه</span></span><strong className={amountClass}>{formatToman(domainAmount)}</strong></div>}
               {quote?.discountCode && <div className="flex justify-between gap-4 text-emerald-300"><span>تخفیف {quote.discountCode.code}</span><strong className={amountClass}>− {formatToman(quote.discountCode.discountAmount)}</strong></div>}
               <div className="flex items-end justify-between gap-4 pt-1"><strong>مبلغ قابل پرداخت</strong><strong className={`${amountClass} text-xl text-[#e0c06e] sm:text-2xl`}>{formatToman(total)}</strong></div>
               <button type="button" onClick={() => void handleCheckout()} disabled={checkoutLoading || quoteLoading} className="mt-2 w-full rounded-full bg-[#c9a24a] px-5 py-3.5 font-black text-[#0e0d0b] transition hover:bg-[#e0c06e] disabled:opacity-60">{checkoutLoading ? "در حال اتصال..." : customer && profileCompleted ? "پرداخت آنلاین" : "ورود و ادامه خرید"}</button>
@@ -406,10 +420,12 @@ export default function LandingPlansPage() {
               </div>
             </section>
 
-            <label className="flex cursor-pointer items-start gap-3 rounded-[22px] border border-white/10 bg-[#15130f] p-5 sm:p-6">
-              <input type="checkbox" checked={useOwnDomain} onChange={(event) => setUseOwnDomain(event.target.checked)} className="mt-1 size-5 accent-[#c9a24a]" />
-              <span><strong className="block text-sm">من دامنه دارم و از دامنه خودم استفاده می‌کنم</strong><small className="mt-2 block leading-6 text-[#8f8a80]">اگر قبلاً دامنه خریده‌اید، این گزینه را فعال کنید تا هزینه ثبت دامنه حذف شود.</small></span>
-            </label>
+            {selectedPackageIncludesDomain && (
+              <label className="flex cursor-pointer items-start gap-3 rounded-[22px] border border-white/10 bg-[#15130f] p-5 sm:p-6">
+                <input type="checkbox" checked={useOwnDomain} onChange={(event) => setUseOwnDomain(event.target.checked)} className="mt-1 size-5 accent-[#c9a24a]" />
+                <span><strong className="block text-sm">من دامنه دارم و از دامنه خودم استفاده می‌کنم</strong><small className="mt-2 block leading-6 text-[#8f8a80]">اگر قبلاً دامنه خریده‌اید، این گزینه را فعال کنید تا هزینه ثبت دامنه حذف شود.</small></span>
+              </label>
+            )}
 
             <section className="rounded-[22px] border border-white/10 bg-[#15130f] p-5 sm:p-6">
               <h2 className="font-black">کد تخفیف دارید؟</h2>
@@ -419,7 +435,7 @@ export default function LandingPlansPage() {
             </section>
           </div>
         </div>
-        <p className="mt-12 text-center text-xs text-[#777269]">© پله — تمامی حقوق محفوظ است.</p>
+        <p className="mt-12 text-center text-xs text-[#777269]">© استپ — تمامی حقوق محفوظ است.</p>
       </main>
       <LandingAuthDialog open={loginOpen} onOpenChange={setLoginOpen} />
     </div>;
@@ -430,7 +446,7 @@ export default function LandingPlansPage() {
       <header className="sticky top-0 z-20 border-b border-border/70 bg-card/70 backdrop-blur-md">
         <div className="container mx-auto flex items-center justify-between px-4 py-4">
           <div className="flex items-center gap-3">
-            <img src={landingSiteSettings.logoUrl} alt={landingSiteSettings.siteTitle} className="h-10 w-10 rounded-xl border border-border/70 object-cover" />
+            <img src={landingSiteSettings.logoUrl} alt={landingSiteSettings.siteTitle} className="h-10 w-auto max-w-[170px] object-contain" />
             <div>
               <div className="text-sm text-primary">{landingSiteSettings.headerLabel}</div>
               <h2 className="text-base font-black sm:text-lg">{landingSiteSettings.siteTitle}</h2>

@@ -16,7 +16,7 @@ class LandingSectionRegistry
                 'sort_order' => 10,
                 'content_json' => [
                     'badgeText' => 'ویژه آرایشگران و سالن‌های زیبایی',
-                    'titleLine1' => 'یک پله بالاتر باشید',
+                    'titleLine1' => 'یک استپ بالاتر باشید',
                     'titleHighlight' => 'برای آرایشگران با سایت شخصی',
                     'titleLine3' => 'و پنل کامل',
                     'typingPrefix' => 'شده بخوای',
@@ -77,6 +77,20 @@ class LandingSectionRegistry
                     'modalTitle' => 'ویدئوی معرفی سیستم',
                     'modalDescription' => 'ویدئوی معرفی امکانات و نحوه کار سیستم',
                     'videoUrl' => '',
+                    'demoLinks' => [
+                        [
+                            'title' => 'دموی نسخه سالن مردانه',
+                            'description' => 'نمونه تجربه رزرو و سایت مخصوص آرایشگاه مردانه.',
+                            'url' => 'http://barber44.test:8000',
+                            'icon' => 'scissors',
+                        ],
+                        [
+                            'title' => 'دموی نسخه سالن زنانه',
+                            'description' => 'نمونه تجربه رزرو و سایت مخصوص سالن زیبایی زنانه.',
+                            'url' => 'http://barber44.test:8000',
+                            'icon' => 'sparkles',
+                        ],
+                    ],
                     'coverUrl' => '',
                     'coverPath' => '',
                 ],
@@ -217,10 +231,10 @@ class LandingSectionRegistry
                 'name' => 'فوتر دعوت به اقدام',
                 'sort_order' => 100,
                 'content_json' => [
-                    'title' => 'یک پله بالاتر باشید',
+                    'title' => 'یک استپ بالاتر باشید',
                     'buttonText' => 'شروع خرید پکیج',
                     'buttonUrl' => '/plans',
-                    'copyrightText' => '© پله — تمامی حقوق محفوظ است.',
+                    'copyrightText' => '© استپ — تمامی حقوق محفوظ است.',
                 ],
             ],
         ];

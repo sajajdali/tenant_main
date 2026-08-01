@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class SubscriptionPackage extends Model
 {
-    public const CUSTOMER_MIN_DURATION_DAYS = 15;
+    public const CUSTOMER_MIN_DURATION_DAYS = 30;
     public const CUSTOMER_MAX_RENEWAL_DURATION_DAYS = 365;
 
     protected $connection = 'central';

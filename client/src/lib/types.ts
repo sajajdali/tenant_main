@@ -1816,6 +1816,7 @@ export interface CustomLandingPartner {
   status: string;
   publicToken: string;
   url: string;
+  isDirect?: boolean;
   firstPaymentPercent: number;
   recurringPaymentPercent: number;
   attributionsCount: number;
@@ -1875,11 +1876,26 @@ export interface CustomLandingPartnerDashboard {
   settlements: CustomLandingSettlement[];
 }
 
+export interface CustomLandingSettings {
+  title: string;
+  headline: string;
+  description: string;
+  buttonLabel: string;
+  autoTokenEnabled: boolean;
+  redirectHomeEnabled: boolean;
+  logoUrl?: string | null;
+  appViewUrl: string;
+  webAppUrl: string;
+  androidUrl: string;
+  iosUrl: string;
+}
+
 export interface CustomLandingOverview {
   stats: { partners: number; attributions: number; firstPayments: number; creditedAmount: number; settledAmount: number; availableAmount: number };
   partners: CustomLandingPartner[];
   commissions: CustomLandingCommission[];
   settlements: CustomLandingSettlement[];
+  settings?: CustomLandingSettings;
 }
 
 export interface SpecializedCoursePageStat {
@@ -2216,6 +2232,7 @@ export interface TenantMeta {
     isEnabled: boolean;
     isPublicActive: boolean;
   };
+  customLandingSettings?: CustomLandingSettings;
   onlineChatSettings?: {
     moduleActive: boolean;
     showOnBookingPage: boolean;

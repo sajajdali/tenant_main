@@ -79,6 +79,25 @@ class LandingOrderPaymentService
             $landingSite,
         );
 
+        return $this->createPaymentForOrder($order, $callbackUrlTemplate, $gateway);
+    }
+
+    public function createPaymentForOrder(
+        LandingOrder $order,
+        string $callbackUrlTemplate,
+        ?string $gateway = null,
+    ): array {
+        $order->loadMissing(['customer', 'landingSite', 'subscriptionPackage']);
+        $customer = $order->customer()->firstOrFail();
+        $landingSite = $order->landingSite()->firstOrFail();
+        $subscriptionPackage = $order->subscriptionPackage()->firstOrFail();
+        $settings = $this->settings();
+
+        $useMaliart = $this->maliart->enabled();
+        if (! $useMaliart && ! $settings['enabled'] && ! $settings['sandbox_enabled']) {
+            throw new RuntimeException('پرداخت آنلاین برای سفارش لندینگ در حال حاضر فعال نیست.');
+        }
+
         $selectedGateway = $useMaliart
             ? 'maliart'
             : ($settings['sandbox_enabled'] ? 'sandbox' : $this->resolveGatewaySelection($settings, $gateway));
@@ -94,8 +113,8 @@ class LandingOrderPaymentService
                 'landingSiteId' => $landingSite->id,
                 'customerId' => $customer->id,
                 'subscriptionPackageId' => $subscriptionPackage->id,
-                'requestedPayload' => $payload,
-                'discount' => $payload['discount'] ?? null,
+                'requestedPayload' => data_get($order->meta_json, 'requested_payload', []),
+                'discount' => data_get($order->meta_json, 'discount'),
             ],
         ]);
 

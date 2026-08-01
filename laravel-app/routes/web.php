@@ -46,11 +46,14 @@ use App\Http\Controllers\Auth\CentralOtpAuthApiController;
 use App\Http\Controllers\Landing\LandingCustomerAuthController;
 use App\Http\Controllers\Landing\LandingContactSubmissionController as PublicLandingContactSubmissionController;
 use App\Http\Controllers\Landing\LandingOrderController;
+use App\Http\Controllers\Landing\LandingSitePublicController;
 use App\Http\Controllers\SupportTicketAttachmentController;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/landing/contact-submissions', [PublicLandingContactSubmissionController::class, 'store'])
     ->name('landing.contact-submissions.store');
+
+Route::get('/orders', LandingSitePublicController::class)->name('landing.public.orders');
 
 Route::prefix('/landing-api/v1')->group(function () {
     Route::prefix('/auth/otp')->group(function () {
@@ -65,6 +68,7 @@ Route::prefix('/landing-api/v1')->group(function () {
     Route::post('/orders/checkout', [LandingOrderController::class, 'checkout'])->name('landing.orders.checkout');
     Route::get('/orders', [LandingOrderController::class, 'history'])->name('landing.orders.index');
     Route::get('/orders/{order}', [LandingOrderController::class, 'show'])->name('landing.orders.show');
+    Route::post('/orders/{order}/pay', [LandingOrderController::class, 'pay'])->name('landing.orders.pay');
     Route::get('/orders/{order}/domain-availability', [LandingOrderController::class, 'domainAvailability'])->name('landing.orders.domain-availability');
     Route::post('/orders/{order}/complete', [LandingOrderController::class, 'complete'])->name('landing.orders.complete');
     Route::get('/orders/payments/{payment}/callback', [LandingOrderController::class, 'callback'])->name('landing.orders.payments.callback');

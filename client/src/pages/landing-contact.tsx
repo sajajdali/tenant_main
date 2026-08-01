@@ -1,5 +1,4 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
-import { Link } from "wouter";
 import {
   CircleHelp,
   Headset,
@@ -14,22 +13,19 @@ import {
   PhoneCall,
   ReceiptText,
   Send,
-  SmilePlus,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { getInitialTenantMeta } from "@/lib/bootstrap";
 import { api } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 import { getLandingHeaderMenuItems, getLandingSiteSettings } from "@/lib/landing-site";
 import { LandingAuthDialog } from "@/components/landing-auth-dialog";
-import { LandingAuthButton } from "@/components/landing-auth-button";
+import { PellehBrandLogo } from "@/components/pelleh-brand-logo";
 import { CodeText, PhoneText } from "@/i18n/ltr-text";
 import { useLocale, useT } from "@/i18n/locale";
 
@@ -49,7 +45,7 @@ const defaultFormState: ContactFormState = {
 
 export default function LandingContactPage() {
   const t = useT();
-  const { dir, isRtl } = useLocale();
+  const { dir } = useLocale();
   const bootstrapMeta = getInitialTenantMeta();
   const landingSiteSettings = getLandingSiteSettings();
   const { toast } = useToast();
@@ -191,199 +187,85 @@ export default function LandingContactPage() {
   };
 
   const locationParts = [dynamicTexts.provinceName, dynamicTexts.cityName].filter(Boolean).join(t("landingContact.locationSeparator"));
+  const primaryPhone = dynamicTexts.phones[0] || landingSiteSettings.contactPhones[0] || "";
 
   return (
-    <div className="flex min-h-screen flex-col bg-background text-foreground" dir={dir}>
-      <header className="sticky top-0 z-20 border-b border-border/70 bg-card/70 backdrop-blur-md">
-        <div className="container mx-auto flex items-center justify-between px-4 py-4">
-          <div className="flex items-center gap-3">
-            <img src={landingSiteSettings.logoUrl} alt={landingSiteSettings.siteTitle} className="h-10 w-10 rounded-xl border border-border/70 object-cover" />
-            <div>
-              <div className="text-sm text-primary">{landingSiteSettings.headerLabel}</div>
-              <h2 className="text-base font-black sm:text-lg">{landingSiteSettings.siteTitle}</h2>
-            </div>
+    <div className="flex min-h-screen flex-col bg-[#0e0d0b] text-[#f4f2ee] [font-family:Vazirmatn,system-ui,sans-serif]" dir={dir}>
+      <header className="sticky top-0 z-40 border-b border-white/10 bg-[#0e0d0bd9] backdrop-blur-xl">
+        <div className="relative mx-auto flex max-w-[1200px] items-center justify-between gap-4 px-[clamp(20px,4vw,32px)] py-[clamp(14px,2.5vw,20px)]">
+          <PellehBrandLogo imageClassName="h-14 w-auto max-w-[230px] object-contain sm:h-16 sm:max-w-[280px]" />
+          <div className="flex items-center gap-3 [direction:ltr]">
+            <button type="button" onClick={() => setMenuOpen((open) => !open)} aria-label="منو" className="flex size-10 items-center justify-center rounded-xl border border-white/10 text-white transition hover:border-[#c9a24a]/60 sm:size-11">{menuOpen ? <X className="size-5" /> : <Menu className="size-5" />}</button>
+            {primaryPhone ? <button type="button" onClick={() => setPhoneModalOpen(true)} className="hidden flex-row items-center gap-2.5 text-[#e0c06e] sm:flex"><Phone className="size-5 shrink-0" /><span className="flex flex-col items-start"><b className="text-sm text-white" dir="ltr">{primaryPhone}</b><small className="mt-0.5 whitespace-nowrap rounded-full bg-[#c9a24a]/15 px-2 py-0.5 text-[11px] font-black text-[#e0c06e]">مشاوره رایگان</small></span></button> : null}
           </div>
 
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-10 w-10 rounded-2xl border-border bg-background/40"
-              onClick={() => setPhoneModalOpen(true)}
-            >
-              <Phone className="h-5 w-5" />
-            </Button>
-
-            <LandingAuthButton onLoginClick={() => setLoginOpen(true)} />
-
-            <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
-              <SheetTrigger asChild>
-                <Button variant="outline" size="icon" className="h-10 w-10 rounded-2xl border-border bg-background/40">
-                  <Menu className="h-5 w-5" />
-                </Button>
-              </SheetTrigger>
-              <SheetContent side={isRtl ? "right" : "left"} className="border-border bg-card/95 pt-12" closeClassName="end-4 start-auto" dir={dir}>
-                <div className="grid gap-2 pt-2">
-                  {headerMenuItems.map((item) => (
-                    <Link key={item.label} href={item.href}>
-                      <a
-                        onClick={() => setMenuOpen(false)}
-                        className="block w-full rounded-xl border border-border/70 bg-background/35 px-4 py-4 text-sm font-semibold text-foreground transition hover:border-primary/30"
-                      >
-                        <span className="flex items-center justify-between">
-                          <span>{item.label}</span>
-                          <item.icon className="h-4 w-4 text-primary" />
-                        </span>
-                      </a>
-                    </Link>
-                  ))}
-                </div>
-              </SheetContent>
-            </Sheet>
-          </div>
+          {menuOpen && <><button type="button" aria-label="بستن منو" onClick={() => setMenuOpen(false)} className="fixed inset-0 top-full z-[-1] bg-black/20" /><div className="absolute end-[clamp(20px,4vw,32px)] top-[calc(100%+8px)] z-50 w-[min(280px,calc(100vw-40px))] rounded-2xl border border-white/10 bg-[#171512] p-2 shadow-2xl">
+            {headerMenuItems.map((item) => <a key={item.label} href={item.href} onClick={() => setMenuOpen(false)} className="flex items-center justify-between rounded-xl px-4 py-3 text-sm hover:bg-white/5"><span>{item.label}</span><item.icon className="size-4 text-[#e0c06e]" /></a>)}
+            <button type="button" onClick={() => { setMenuOpen(false); setLoginOpen(true); }} className="mt-2 block w-full rounded-xl bg-[#c9a24a] px-4 py-3 text-start text-sm font-bold text-[#0e0d0b]">ورود به حساب</button>
+          </div></>}
         </div>
       </header>
 
-      <main className="container mx-auto max-w-6xl flex-1 space-y-6 px-4 py-8">
-        <section className="rounded-3xl border border-primary/20 bg-gradient-to-br from-[#0f1b38] via-[#0d1a35] to-[#12224a] p-6 sm:p-8">
-          <Badge className="rounded-full bg-primary/90 px-4 py-1 text-sm text-primary-foreground">{dynamicTexts.badgeText}</Badge>
-          <h1 className="mt-4 text-3xl font-black leading-tight sm:text-4xl">{dynamicTexts.pageTitle}</h1>
-          <div className="mt-4 space-y-1 text-sm leading-8 text-slate-300 sm:text-base">
-            {dynamicTexts.introLines.map((line) => (
-              <p key={line}>{line}</p>
-            ))}
-          </div>
-        </section>
-
-        <section className="grid gap-4 lg:grid-cols-[1fr_1.2fr]">
-          <Card className="border-border/70 bg-card/60">
-            <CardHeader>
-              <CardTitle className="text-lg">{dynamicTexts.contactCardTitle}</CardTitle>
-              <CardDescription>{dynamicTexts.contactCardDescription}</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {dynamicTexts.phones.map((phone) => (
-                <a
-                  key={`contact-page-${phone}`}
-                  href={`tel:${phone.replace(/[^\d+]/g, "")}`}
-                  className="flex items-center justify-between rounded-xl border border-border/70 bg-background/35 px-4 py-3 transition hover:border-primary/30"
-                >
-                  <PhoneText className="font-semibold">{phone}</PhoneText>
-                  <Phone className="h-4 w-4 text-primary" />
-                </a>
-              ))}
-              {dynamicTexts.email ? (
-                <a
-                  href={`mailto:${dynamicTexts.email}`}
-                  className="flex items-center justify-between rounded-xl border border-border/70 bg-background/35 px-4 py-3 transition hover:border-primary/30"
-                >
-                  <CodeText className="font-semibold">{dynamicTexts.email}</CodeText>
-                  <Mail className="h-4 w-4 text-primary" />
-                </a>
-              ) : null}
-              {(locationParts || dynamicTexts.addressLine) ? (
-                <div className="flex items-start justify-between rounded-xl border border-border/70 bg-background/35 px-4 py-3">
-                  <div className="space-y-1 text-start">
-                    {locationParts ? <div className="text-sm font-semibold">{locationParts}</div> : null}
-                    {dynamicTexts.addressLine ? (
-                      <div className="text-sm leading-7 text-muted-foreground">{dynamicTexts.addressLine}</div>
-                    ) : null}
-                  </div>
-                  <MapPin className="mt-1 h-4 w-4 text-primary" />
-                </div>
-              ) : null}
-            </CardContent>
-          </Card>
-
-          <Card className="border-border/70 bg-card/60">
-            <CardHeader>
-              <CardTitle className="text-lg">{dynamicTexts.formTitle}</CardTitle>
-              <CardDescription>{dynamicTexts.formDescription}</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <form className="space-y-4" onSubmit={handleSubmit}>
-                <div className="space-y-2">
-                  <Label htmlFor="contact-name">{dynamicTexts.nameLabel}</Label>
-                  <Input
-                    id="contact-name"
-                    placeholder={dynamicTexts.namePlaceholder}
-                    value={form.fullName}
-                    onChange={(event) => setForm((prev) => ({ ...prev, fullName: event.target.value }))}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="contact-mobile">{dynamicTexts.mobileLabel}</Label>
-                  <Input
-                    id="contact-mobile"
-                    placeholder={dynamicTexts.mobilePlaceholder}
-                    value={form.mobile}
-                    onChange={(event) => setForm((prev) => ({ ...prev, mobile: event.target.value }))}
-                    dir="ltr"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="contact-email">{dynamicTexts.emailLabel}</Label>
-                  <Input
-                    id="contact-email"
-                    placeholder={dynamicTexts.emailPlaceholder}
-                    value={form.email}
-                    onChange={(event) => setForm((prev) => ({ ...prev, email: event.target.value }))}
-                    dir="ltr"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="contact-message">{dynamicTexts.messageLabel}</Label>
-                  <Textarea
-                    id="contact-message"
-                    rows={5}
-                    placeholder={dynamicTexts.messagePlaceholder}
-                    value={form.message}
-                    onChange={(event) => setForm((prev) => ({ ...prev, message: event.target.value }))}
-                  />
-                </div>
-                {isSubmitted ? (
-                  <div className="rounded-xl border border-primary/25 bg-primary/10 px-4 py-3 text-sm text-primary">
-                    {dynamicTexts.successText}
-                  </div>
-                ) : null}
-                <Button className="w-full rounded-2xl" disabled={isSubmitting}>
-                  <Send className="me-2 h-4 w-4" />
-                  {isSubmitting ? t("landingContact.form.submitting") : dynamicTexts.submitText}
-                </Button>
-              </form>
-              <div className="flex items-center gap-2 rounded-xl border border-border/70 bg-background/35 px-3 py-2 text-xs text-muted-foreground">
-                <Headset className="h-4 w-4 text-primary" />
-                {dynamicTexts.helperText}
+      <main className="mx-auto w-full max-w-[1200px] flex-1 px-[clamp(20px,4vw,32px)] py-[clamp(28px,5vw,56px)]">
+        <section className="grid items-start gap-7 lg:grid-cols-[0.92fr_1.08fr]">
+          <div className="space-y-5">
+            <div className="rounded-[26px] border border-white/10 bg-[#15130f] p-6 sm:p-8">
+              <span className="text-xs font-bold tracking-[1px] text-[#e0c06e]">{dynamicTexts.badgeText}</span>
+              <h1 className="mt-4 text-[clamp(26px,4.5vw,40px)] font-black leading-[1.35]">{dynamicTexts.pageTitle}</h1>
+              <div className="mt-5 space-y-2 text-sm leading-8 text-[#aaa59b] sm:text-base">
+                {dynamicTexts.introLines.map((line) => <p key={line}>{line}</p>)}
               </div>
-            </CardContent>
-          </Card>
+            </div>
+
+            <div className="rounded-[26px] border border-white/10 bg-[#15130f] p-5 sm:p-6">
+              <h2 className="text-lg font-black">{dynamicTexts.contactCardTitle}</h2>
+              <p className="mt-2 text-sm leading-7 text-[#9c988d]">{dynamicTexts.contactCardDescription}</p>
+              <div className="mt-5 space-y-3">
+                {dynamicTexts.phones.map((phone) => (
+                  <a key={`contact-page-${phone}`} href={`tel:${phone.replace(/[^\d+]/g, "")}`} className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/[.035] px-4 py-3 transition hover:border-[#c9a24a]/45">
+                    <PhoneText className="font-semibold text-white">{phone}</PhoneText>
+                    <Phone className="h-4 w-4 text-[#e0c06e]" />
+                  </a>
+                ))}
+                {dynamicTexts.email ? <a href={`mailto:${dynamicTexts.email}`} className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/[.035] px-4 py-3 transition hover:border-[#c9a24a]/45"><CodeText className="font-semibold text-white">{dynamicTexts.email}</CodeText><Mail className="h-4 w-4 text-[#e0c06e]" /></a> : null}
+                {(locationParts || dynamicTexts.addressLine) ? <div className="flex items-start justify-between gap-4 rounded-2xl border border-white/10 bg-white/[.035] px-4 py-3"><div className="space-y-1 text-start">{locationParts ? <div className="text-sm font-semibold text-white">{locationParts}</div> : null}{dynamicTexts.addressLine ? <div className="text-sm leading-7 text-[#9c988d]">{dynamicTexts.addressLine}</div> : null}</div><MapPin className="mt-1 h-4 w-4 shrink-0 text-[#e0c06e]" /></div> : null}
+              </div>
+            </div>
+          </div>
+
+          <section className="rounded-[26px] border border-[#c9a24a]/25 bg-[linear-gradient(145deg,rgba(201,162,74,.11),rgba(255,255,255,.035))] p-5 shadow-[0_28px_80px_-55px_rgba(0,0,0,.9)] sm:p-7">
+            <h2 className="text-xl font-black">{dynamicTexts.formTitle}</h2>
+            <p className="mt-2 text-sm leading-7 text-[#9c988d]">{dynamicTexts.formDescription}</p>
+            <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
+              <div className="space-y-2"><Label htmlFor="contact-name" className="text-[#d7d2c8]">{dynamicTexts.nameLabel}</Label><Input id="contact-name" placeholder={dynamicTexts.namePlaceholder} value={form.fullName} onChange={(event) => setForm((prev) => ({ ...prev, fullName: event.target.value }))} className="h-12 rounded-2xl border-white/10 bg-[#0e0d0b]/55 text-white placeholder:text-[#817d74] focus-visible:ring-[#c9a24a]" /></div>
+              <div className="space-y-2"><Label htmlFor="contact-mobile" className="text-[#d7d2c8]">{dynamicTexts.mobileLabel}</Label><Input id="contact-mobile" placeholder={dynamicTexts.mobilePlaceholder} value={form.mobile} onChange={(event) => setForm((prev) => ({ ...prev, mobile: event.target.value }))} dir="ltr" className="h-12 rounded-2xl border-white/10 bg-[#0e0d0b]/55 text-white placeholder:text-[#817d74] focus-visible:ring-[#c9a24a]" /></div>
+              <div className="space-y-2"><Label htmlFor="contact-email" className="text-[#d7d2c8]">{dynamicTexts.emailLabel}</Label><Input id="contact-email" placeholder={dynamicTexts.emailPlaceholder} value={form.email} onChange={(event) => setForm((prev) => ({ ...prev, email: event.target.value }))} dir="ltr" className="h-12 rounded-2xl border-white/10 bg-[#0e0d0b]/55 text-white placeholder:text-[#817d74] focus-visible:ring-[#c9a24a]" /></div>
+              <div className="space-y-2"><Label htmlFor="contact-message" className="text-[#d7d2c8]">{dynamicTexts.messageLabel}</Label><Textarea id="contact-message" rows={5} placeholder={dynamicTexts.messagePlaceholder} value={form.message} onChange={(event) => setForm((prev) => ({ ...prev, message: event.target.value }))} className="rounded-2xl border-white/10 bg-[#0e0d0b]/55 text-white placeholder:text-[#817d74] focus-visible:ring-[#c9a24a]" /></div>
+              {isSubmitted ? <div className="rounded-2xl border border-emerald-400/25 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-300">{dynamicTexts.successText}</div> : null}
+              <Button className="h-12 w-full rounded-2xl bg-[#c9a24a] font-black text-[#0e0d0b] hover:bg-[#e0c06e]" disabled={isSubmitting}><Send className="me-2 h-4 w-4" />{isSubmitting ? t("landingContact.form.submitting") : dynamicTexts.submitText}</Button>
+            </form>
+            <div className="mt-4 flex items-center gap-2 rounded-2xl border border-white/10 bg-black/20 px-3 py-3 text-xs leading-6 text-[#9c988d]"><Headset className="h-4 w-4 shrink-0 text-[#e0c06e]" />{dynamicTexts.helperText}</div>
+          </section>
         </section>
       </main>
 
-      <footer className="border-t border-border/70 bg-card/70 backdrop-blur-md">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-center gap-2 text-sm sm:text-base">
-            <SmilePlus className="h-4 w-4 text-primary" />
-            <span className="font-semibold text-foreground">{dynamicTexts.footerText}</span>
-          </div>
-        </div>
-      </footer>
+      <footer className="border-t border-white/10 px-5 py-8 text-center text-xs text-[#817d74]">© استپ — تمامی حقوق محفوظ است.</footer>
 
       <Dialog open={phoneModalOpen} onOpenChange={setPhoneModalOpen}>
-        <DialogContent className="max-w-md border-border/70 bg-card/95" dir={dir}>
+        <DialogContent className="max-w-md border-white/10 bg-[#171512] text-[#f4f2ee]" dir={dir}>
           <DialogHeader>
             <DialogTitle>{dynamicTexts.phoneModalTitle}</DialogTitle>
-            <DialogDescription>{dynamicTexts.phoneModalDescription}</DialogDescription>
+            <DialogDescription className="text-[#9c988d]">{dynamicTexts.phoneModalDescription}</DialogDescription>
           </DialogHeader>
           <div className="space-y-2">
             {dynamicTexts.phones.map((phone) => (
               <a
                 key={phone}
                 href={`tel:${phone.replace(/[^\d+]/g, "")}`}
-                className="flex items-center justify-between rounded-xl border border-border/70 bg-background/35 px-4 py-3 transition hover:border-primary/30"
+                className="flex items-center justify-between rounded-xl border border-white/10 bg-white/[.035] px-4 py-3 transition hover:border-[#c9a24a]/45"
               >
-                <PhoneText className="font-semibold">{phone}</PhoneText>
-                <Phone className="h-4 w-4 text-primary" />
+                <PhoneText className="font-semibold text-white">{phone}</PhoneText>
+                <Phone className="h-4 w-4 text-[#e0c06e]" />
               </a>
             ))}
           </div>

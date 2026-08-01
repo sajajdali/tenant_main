@@ -58,8 +58,11 @@ class LandingOrderController extends Controller
             ->customerPurchasable()
             ->findOrFail($validated['subscription_package_id']);
 
-        $useOwnDomain = (bool) ($validated['use_own_domain'] ?? false);
-        $requestedDomain = $this->domains->normalizeDomain((string) ($validated['requested_domain'] ?? ''));
+        $packageIncludesDomain = $this->packageIncludesDomain($package);
+        $useOwnDomain = $packageIncludesDomain && (bool) ($validated['use_own_domain'] ?? false);
+        $requestedDomain = $packageIncludesDomain
+            ? $this->domains->normalizeDomain((string) ($validated['requested_domain'] ?? ''))
+            : '';
         $domainInspection = null;
 
         if (! $useOwnDomain && $requestedDomain !== '') {
@@ -159,13 +162,16 @@ class LandingOrderController extends Controller
             ->customerPurchasable()
             ->findOrFail($validated['subscription_package_id']);
 
+        $packageIncludesDomain = $this->packageIncludesDomain($package);
+        $useOwnDomain = $packageIncludesDomain && (bool) ($validated['use_own_domain'] ?? false);
+
         $pricing = $this->pricing->quote(
             $landingSite->audienceType()->firstOrFail(),
             $package,
-            (bool) ($validated['use_own_domain'] ?? false) ? null : ($validated['requested_domain'] ?? null),
+            $useOwnDomain || ! $packageIncludesDomain ? null : ($validated['requested_domain'] ?? null),
             $landingSite,
         );
-        if ((bool) ($validated['use_own_domain'] ?? false)) {
+        if ($useOwnDomain || ! $packageIncludesDomain) {
             $pricing['domainAmount'] = 0;
             $pricing['subtotalAmount'] = (int) $pricing['packageAmount'] + (int) $pricing['setupAmount'];
             $pricing['totalAmount'] = max(0, (int) $pricing['subtotalAmount']);
@@ -180,7 +186,11 @@ class LandingOrderController extends Controller
             $landingSite,
             $customer,
             $package,
-            array_merge($validated, ['discount' => $discount['code'] ? array_merge($discount['code'], ['baseAmount' => $discount['baseAmount'], 'payableAmount' => $discount['payableAmount']]) : null]),
+            array_merge($validated, [
+                'requested_domain' => $packageIncludesDomain ? ($validated['requested_domain'] ?? null) : null,
+                'use_own_domain' => $useOwnDomain,
+                'discount' => $discount['code'] ? array_merge($discount['code'], ['baseAmount' => $discount['baseAmount'], 'payableAmount' => $discount['payableAmount']]) : null,
+            ]),
             $callback,
             isset($validated['gateway']) ? (string) $validated['gateway'] : null,
         );
@@ -244,6 +254,49 @@ class LandingOrderController extends Controller
         return response()->json([
             'success' => true,
             'data' => $this->serializeOrder($order),
+        ]);
+    }
+
+    public function pay(Request $request, LandingOrder $order): JsonResponse
+    {
+        $landingSite = $this->resolveLandingSite($request);
+        $customer = $this->resolveCustomerOrFail($request);
+
+        abort_unless(
+            (int) $order->landing_customer_id === (int) $customer->id
+            && (int) $order->landing_site_id === (int) $landingSite->id,
+            404,
+        );
+
+        $validated = $request->validate([
+            'gateway' => ['nullable', 'in:'.implode(',', \App\Support\TenantPaymentGateways::supportedKeys())],
+        ]);
+
+        if ($order->status !== LandingOrder::STATUS_PENDING_PAYMENT) {
+            throw ValidationException::withMessages([
+                'order' => 'این سفارش در وضعیت پرداخت آنلاین نیست.',
+            ]);
+        }
+
+        $callback = $request->getSchemeAndHttpHost().route('landing.orders.payments.callback', ['payment' => '__PAYMENT__'], false);
+        $result = $this->payments->createPaymentForOrder(
+            $order,
+            $callback,
+            isset($validated['gateway']) ? (string) $validated['gateway'] : null,
+        );
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'mode' => $result['mode'],
+                'order' => $this->serializeOrder($result['order']),
+                'payment' => $this->payments->serializePayment($result['payment']),
+                'paymentUrl' => $result['paymentUrl'] ?? null,
+                'redirectForm' => $result['redirectForm'] ?? null,
+            ],
+            'message' => $result['mode'] === 'sandbox'
+                ? 'پرداخت سفارش در حالت تست تایید شد.'
+                : 'درگاه پرداخت آماده شد.',
         ]);
     }
 
@@ -381,6 +434,11 @@ class LandingOrderController extends Controller
         abort_unless($domain !== null && $domain->landingSite !== null, 404);
 
         return $domain->landingSite;
+    }
+
+    private function packageIncludesDomain(SubscriptionPackage $package): bool
+    {
+        return (int) ($package->user_limit ?? 0) !== 1;
     }
 
     private function resolveCustomerOrFail(Request $request): LandingCustomer

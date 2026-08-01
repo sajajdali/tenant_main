@@ -135,6 +135,11 @@ function PanelSpecializedCoursesDemoRoute() {
   return <PanelSpecializedCoursesPage demoMode />;
 }
 
+function PanelCustomLandingRoute() {
+  const [location] = useLocation();
+  return <PanelCustomLandingPage key={location} />;
+}
+
 function extractIsoDate(value?: string | null) {
   if (!value) {
     return null;
@@ -195,6 +200,7 @@ function Router() {
   const isNutritionAudience = ["nutritionists", "nutrition-doctors"].includes(bootstrapMeta?.audience?.slug || "");
   const appointmentBookingDisabled = isAppointmentBookingDisabled(bootstrapMeta);
   const useNutritionLandingAsDefault = isNutritionAudience && isNutritionLandingDefaultEnabled(bootstrapMeta);
+  const useCustomLandingAsDefault = bootstrapMeta?.customLandingSettings?.redirectHomeEnabled === true;
   const nutritionRoutesEnabled = isNutritionAudience || true;
 
   if (isLandingDomain) {
@@ -225,7 +231,8 @@ function Router() {
 
   return (
     <Switch>
-      <Route path="/" component={useNutritionLandingAsDefault || appointmentBookingDisabled ? NutritionEntryRoute : Home} />
+      <Route path="/" component={useCustomLandingAsDefault ? CustomLandingWelcomePage : useNutritionLandingAsDefault || appointmentBookingDisabled ? NutritionEntryRoute : Home} />
+      <Route path="/admin_login" component={useNutritionLandingAsDefault || appointmentBookingDisabled ? NutritionEntryRoute : Home} />
       <Route path="/s/:code" component={AppointmentPublicPage} />
       <Route path="/f/:token" component={CustomerFeedbackPublicPage} />
       <Route path="/booking" component={appointmentBookingDisabled ? NutritionEntryRoute : Home} />
@@ -310,8 +317,7 @@ function Router() {
       <Route path="/panel/support-renewal/invoice" component={PanelSupportRenewalInvoicePage} />
       <Route path="/panel/support-renewal/history" component={PanelSupportRenewalHistoryPage} />
       <Route path="/panel/referrals" component={PanelReferralsPage} />
-      <Route path="/panel/custom-landing/:partnerId" component={PanelCustomLandingPage} />
-      <Route path="/panel/custom-landing" component={PanelCustomLandingPage} />
+      <Route path={/^\/panel\/custom-landing(?:\/.*)?$/} component={PanelCustomLandingRoute} />
       <Route path="/panel/latest-bookings" component={appointmentBookingDisabled ? PanelPage : PanelLatestBookingsPage} />
       <Route path="/panel/daily-report" component={appointmentBookingDisabled ? PanelPage : PanelDailyReportPage} />
       <Route path="/panel/professionals" component={PanelBarbersPage} />

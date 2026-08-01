@@ -25,6 +25,7 @@ import { LandingAuthDialog } from "@/components/landing-auth-dialog";
 import { LandingAuthButton } from "@/components/landing-auth-button";
 import { PhoneText } from "@/i18n/ltr-text";
 import { useLocale, useT } from "@/i18n/locale";
+import { PellehBrandLogo } from "@/components/pelleh-brand-logo";
 
 type FaqItem = { q: string; a: string; sortOrder: number };
 
@@ -102,7 +103,7 @@ export default function LandingFaqPage() {
 
   if (bootstrapMeta?.isLandingDomain === true) {
     return <div dir="rtl" className="flex min-h-screen flex-col bg-[#0e0d0b] text-[#f4f2ee] [font-family:Vazirmatn,system-ui,sans-serif]">
-      <header className="border-b border-white/10 bg-[#0e0d0b]/90 backdrop-blur-xl"><div className="mx-auto flex max-w-[1200px] items-center justify-between px-5 py-4 sm:px-8"><a href="/" className="flex items-center gap-2.5"><span className="flex size-9 items-center justify-center rounded-full border border-[#c9a24a] text-[#e0c06e]">پ</span><strong>پلـه</strong></a><a href="/plans" className="rounded-full border border-[#c9a24a] px-4 py-2 text-xs font-bold text-[#e0c06e] sm:px-5 sm:text-sm">مشاهده پلن‌ها</a></div></header>
+      <header className="border-b border-white/10 bg-[#0e0d0b]/90 backdrop-blur-xl"><div className="mx-auto flex max-w-[1200px] items-center justify-between px-5 py-4 sm:px-8"><PellehBrandLogo imageClassName="h-14 w-auto max-w-[230px] object-contain sm:h-16 sm:max-w-[280px]" /><a href="/plans" className="rounded-full border border-[#c9a24a] px-4 py-2 text-xs font-bold text-[#e0c06e] sm:px-5 sm:text-sm">مشاهده پلن‌ها</a></div></header>
       <main className="mx-auto w-full max-w-[900px] flex-1 px-4 pb-16 pt-10 sm:px-8 sm:pt-14">
         <div className="mb-8 text-center sm:mb-10"><span className="text-[11px] font-bold tracking-[1.5px] text-[#e0c06e]">راهنما</span><h1 className="mt-3 text-[clamp(22px,4vw,28px)] font-black">سوالات متداول</h1><p className="mx-auto mt-3 max-w-xl text-sm leading-7 text-[#9c988d]">پاسخ پرسش‌های رایج درباره پلن‌ها، ثبت سفارش و راه‌اندازی سیستم.</p></div>
         <section className="overflow-hidden rounded-[22px] border border-white/10 bg-[#171512]">
@@ -112,7 +113,7 @@ export default function LandingFaqPage() {
           </article>; })}
         </section>
       </main>
-      <footer className="border-t border-white/10 px-5 py-8 text-center text-xs text-[#817d74]">© پله — تمامی حقوق محفوظ است.</footer>
+      <footer className="border-t border-white/10 px-5 py-8 text-center text-xs text-[#817d74]">© استپ — تمامی حقوق محفوظ است.</footer>
     </div>;
   }
 
@@ -121,7 +122,7 @@ export default function LandingFaqPage() {
       <header className="sticky top-0 z-20 border-b border-border/70 bg-card/70 backdrop-blur-md">
         <div className="container mx-auto flex items-center justify-between px-4 py-4">
           <div className="flex items-center gap-3">
-            <img src={landingSiteSettings.logoUrl} alt={landingSiteSettings.siteTitle} className="h-10 w-10 rounded-xl border border-border/70 object-cover" />
+            <img src={landingSiteSettings.logoUrl} alt={landingSiteSettings.siteTitle} className="h-10 w-auto max-w-[170px] object-contain" />
             <div>
               <div className="text-sm text-primary">{landingSiteSettings.headerLabel}</div>
               <h2 className="text-base font-black sm:text-lg">{landingSiteSettings.siteTitle}</h2>
