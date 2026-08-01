@@ -46,7 +46,6 @@
     <meta name="twitter:description" content="{{ $pageMeta['description'] }}" />
     <meta name="twitter:image" content="{{ $pageMeta['image'] }}" />
 
-    <link rel="icon" type="image/svg+xml" href="{{ global_asset('favicon.svg') }}" />
     <link rel="icon" type="image/png" href="{{ global_asset('favicon.png') }}" />
     <link rel="alternate icon" type="image/x-icon" href="{{ global_asset('favicon.ico') }}" />
     @if ($cssFile)
