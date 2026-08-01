@@ -256,7 +256,7 @@ Route::middleware([
         Route::get('/package-checkout/summary', [NutritionPackagePurchaseController::class, 'mySummary'])->name('tenant.api.nutrition.package-checkout.summary');
     });
 
-    Route::get('/', SiteController::class)->name('tenant.home');
+    Route::get('/', [CustomLandingPublicController::class, 'home'])->name('tenant.home');
     Route::get('/s/{code}', SiteController::class)->name('tenant.appointments.public')->where('code', '[A-Za-z0-9]{4}');
     Route::get('/f/{code}', SiteController::class)->name('tenant.customer-feedback.short')->where('code', '[A-Za-z0-9]{4}');
     Route::get('/booking', SiteController::class)->name('tenant.booking');
@@ -287,6 +287,8 @@ Route::middleware([
     Route::get('/sms-top-up/callback', [SmsTopUpPaymentController::class, 'callback'])->name('tenant.sms-top-up.callback');
     Route::get('/booking-payments/{payment}/callback', [BookingPaymentController::class, 'callback'])->name('tenant.booking-payments.callback');
     Route::get('/store-payments/{payment}/callback', [StoreOrderController::class, 'callback'])->name('tenant.store-payments.callback');
+
+    Route::get('/admin_login', SiteController::class)->name('tenant.admin.login.alias');
 
     Route::middleware('guest:tenant_web')->group(function () {
         Route::get('/admin/login', [TenantAdminAuthController::class, 'create'])->name('tenant.admin.login');
@@ -326,6 +328,7 @@ Route::middleware([
     Route::post('/messaging-bots/{channel}/webhook', TelegramBotWebhookController::class)->whereIn('channel', ['telegram', 'bale']);
     Route::get('/customer-feedback/public/{token}', [CustomerFeedbackController::class, 'publicShow']);
     Route::post('/customer-feedback/public/{token}/submit', [CustomerFeedbackController::class, 'publicSubmit']);
+    Route::middleware(['auth:tenant_web', 'tenant.module:custom-landing'])->post('/custom-landing/app-token', [CustomLandingController::class, 'issueAppToken']);
     Route::middleware('tenant.module:cooking-recipes')->group(function () {
         Route::get('/cooking-recipes', [CookingRecipeController::class, 'index']);
         Route::get('/cooking-recipes/{recipe}', [CookingRecipeController::class, 'show'])
@@ -439,9 +442,13 @@ Route::middleware([
         });
         Route::middleware('tenant.module:custom-landing')->group(function () {
             Route::get('/custom-landing', [CustomLandingController::class, 'overview']);
+            Route::get('/custom-landing/settings', [CustomLandingController::class, 'settings']);
+            Route::put('/custom-landing/settings', [CustomLandingController::class, 'updateSettings']);
+            Route::post('/custom-landing/settings/logo', [CustomLandingController::class, 'updateLogo']);
             Route::post('/custom-landing/partners', [CustomLandingController::class, 'storePartner']);
             Route::get('/custom-landing/partners/{partner}', [CustomLandingController::class, 'showPartner']);
             Route::put('/custom-landing/partners/{partner}', [CustomLandingController::class, 'updatePartner']);
+            Route::delete('/custom-landing/partners/{partner}', [CustomLandingController::class, 'destroyPartner']);
             Route::post('/custom-landing/partners/{partner}/settlements', [CustomLandingController::class, 'settle']);
             Route::delete('/custom-landing/commissions/{commission}', [CustomLandingController::class, 'reverseCommission']);
             Route::delete('/custom-landing/settlements/{settlement}', [CustomLandingController::class, 'destroySettlement']);

@@ -1,6 +1,7 @@
 import { ArrowRight, Check, Clock3, Sparkles } from "lucide-react";
 import { getInitialTenantMeta } from "@/lib/bootstrap";
 import { PellehCheckoutSteps } from "@/components/pelleh-checkout-steps";
+import { PellehBrandLogo } from "@/components/pelleh-brand-logo";
 
 const userLimitKey = (value?: number | null) => value == null ? "unlimited" : String(value);
 
@@ -29,7 +30,7 @@ export default function PellehPlanDurationPage() {
       <header className="relative border-b border-white/10 bg-[#0e0d0b]/80 backdrop-blur-xl">
         <div className="mx-auto flex max-w-[1100px] items-center justify-between px-5 py-5 sm:px-8">
           <a href="/plans" className="inline-flex items-center gap-2 text-sm text-[#d7d2c8] transition hover:text-white"><ArrowRight className="size-4" /> بازگشت به پلن‌ها</a>
-          <a href="/" className="flex items-center gap-2.5 text-white"><span className="flex size-9 items-center justify-center rounded-full border border-[#c9a24a] text-[#e0c06e]">پ</span><strong>پلـه</strong></a>
+          <PellehBrandLogo imageClassName="h-14 w-auto max-w-[230px] object-contain sm:h-16 sm:max-w-[280px]" />
         </div>
       </header>
 
@@ -61,10 +62,10 @@ export default function PellehPlanDurationPage() {
                   </div>
 
                   <div>
-                    {hasDiscount ? <><div className="flex flex-nowrap items-center gap-1.5 whitespace-nowrap"><span className="text-[11px] text-[#817d74] line-through sm:text-xs">{number.format(pkg.priceAmount)} ریال</span>{discountPercent > 0 && <span className="rounded-full bg-emerald-400/15 px-1.5 py-0.5 text-[9px] font-bold text-emerald-300 sm:px-2 sm:text-[10px]">{number.format(discountPercent)}٪ تخفیف</span>}</div><div className="mt-1 flex items-center gap-1 text-[11px] text-emerald-300"><Check className="size-3" /> {number.format(pkg.discountAmount)} ریال صرفه‌جویی</div></> : <span className="text-xs text-[#817d74]">بدون تخفیف</span>}
+                    {hasDiscount ? <><div className="flex flex-nowrap items-center gap-1.5 whitespace-nowrap"><span className="text-[11px] text-[#817d74] line-through sm:text-xs">{number.format(pkg.priceAmount)} تومان</span>{discountPercent > 0 && <span className="rounded-full bg-emerald-400/15 px-1.5 py-0.5 text-[9px] font-bold text-emerald-300 sm:px-2 sm:text-[10px]">{number.format(discountPercent)}٪ تخفیف</span>}</div><div className="mt-1 flex items-center gap-1 text-[11px] text-emerald-300"><Check className="size-3" /> {number.format(pkg.discountAmount)} تومان صرفه‌جویی</div></> : <span className="text-xs text-[#817d74]">بدون تخفیف</span>}
                   </div>
 
-                  <div><div className="text-xl font-black text-[#e0c06e]">{number.format(pkg.payableAmount)} <small className="text-xs font-normal text-[#9c988d]">ریال</small></div><div className="mt-1 text-[11px] text-[#817d74]">پرداخت نهایی</div></div>
+                  <div><div className="text-xl font-black text-[#e0c06e]">{number.format(pkg.payableAmount)} <small className="text-xs font-normal text-[#9c988d]">تومان</small></div><div className="mt-1 text-[11px] text-[#817d74]">پرداخت نهایی</div></div>
 
                   <a href={href} className={`block whitespace-nowrap rounded-full px-4 py-2.5 text-center text-sm font-black transition ${featured ? "bg-[#c9a24a] text-[#0e0d0b] hover:bg-[#e0c06e]" : "border border-white/15 text-white hover:border-[#c9a24a] hover:text-[#e0c06e]"}`}>خرید و سفارش</a>
                 </article>

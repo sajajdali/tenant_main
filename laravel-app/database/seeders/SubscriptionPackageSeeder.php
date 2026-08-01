@@ -13,18 +13,26 @@ class SubscriptionPackageSeeder extends Seeder
     public function run(): void
     {
         $baseDurations = [
-            ['name' => 'بسته ۱ روزه', 'duration_days' => 1, 'sort_order' => 10],
-            ['name' => 'بسته ۱۵ روزه', 'duration_days' => 15, 'sort_order' => 20],
             ['name' => 'بسته ۱ ماهه', 'duration_days' => 30, 'sort_order' => 30],
-            ['name' => 'بسته ۲ ماهه', 'duration_days' => 60, 'sort_order' => 40],
             ['name' => 'بسته ۳ ماهه', 'duration_days' => 90, 'sort_order' => 50],
-            ['name' => 'بسته ۴ ماهه', 'duration_days' => 120, 'sort_order' => 60],
-            ['name' => 'بسته ۵ ماهه', 'duration_days' => 150, 'sort_order' => 70],
             ['name' => 'بسته ۶ ماهه', 'duration_days' => 180, 'sort_order' => 80],
             ['name' => 'بسته ۱ ساله', 'duration_days' => 365, 'sort_order' => 90],
-            ['name' => 'بسته ۲ ساله', 'duration_days' => 730, 'sort_order' => 100],
         ];
         $userLimits = [1, 2, 3, 5, 10, null];
+        $monthlyPayableAmounts = [
+            1 => 1100000,
+            2 => 1700000,
+            3 => 2300000,
+            5 => 3800000,
+            10 => 6900000,
+            'unlimited' => 9900000,
+        ];
+        $durationMultipliers = [
+            30 => 1.0,
+            90 => 2.7,
+            180 => 4.92,
+            365 => 8.4,
+        ];
 
         SubscriptionPackage::query()->update(['is_active' => false]);
 
@@ -40,6 +48,8 @@ class SubscriptionPackageSeeder extends Seeder
                         'name' => $name,
                         'duration_days' => $base['duration_days'],
                         'user_limit' => $userLimit,
+                        'price_amount' => $this->priceAmount($monthlyPayableAmounts, $durationMultipliers, $userLimit, $base['duration_days']),
+                        'discounted_price_amount' => $this->discountedPriceAmount($monthlyPayableAmounts, $durationMultipliers, $userLimit, $base['duration_days']),
                         'sms_credit_gift_amount' => 15000,
                         'sort_order' => ($base['sort_order'] * 10) + $index,
                         'is_active' => true,
@@ -47,5 +57,22 @@ class SubscriptionPackageSeeder extends Seeder
                 );
             }
         }
+    }
+
+    private function discountedPriceAmount(array $monthlyPayableAmounts, array $durationMultipliers, ?int $userLimit, int $durationDays): ?int
+    {
+        $limitKey = $userLimit ?? 'unlimited';
+        if (! isset($monthlyPayableAmounts[$limitKey], $durationMultipliers[$durationDays])) {
+            return null;
+        }
+
+        return (int) round(($monthlyPayableAmounts[$limitKey] * $durationMultipliers[$durationDays]) / 10000) * 10000;
+    }
+
+    private function priceAmount(array $monthlyPayableAmounts, array $durationMultipliers, ?int $userLimit, int $durationDays): int
+    {
+        $discounted = $this->discountedPriceAmount($monthlyPayableAmounts, $durationMultipliers, $userLimit, $durationDays);
+
+        return $discounted ? (int) round(($discounted * 1.3) / 10000) * 10000 : 0;
     }
 }

@@ -12,6 +12,7 @@ use App\Http\Controllers\Tenant\ArticleSettingsController;
 use App\Http\Controllers\Tenant\NutritionLandingSettingsController;
 use App\Http\Controllers\Tenant\OnlineChatSettingsController;
 use App\Services\CustomerClubService;
+use App\Services\CustomLandingService;
 use App\Services\TenantFeatureModuleManager;
 use App\Support\AudienceSpecializedCourseSettings;
 use App\Support\TenantAudienceLabels;
@@ -151,6 +152,7 @@ class SiteController extends Controller
                     ] : null,
                     'activeFeatureModules' => $activeFeatureModules,
                     'customerClubSettings' => $customerClubStatus,
+                    'customLandingSettings' => app(CustomLandingService::class)->settings(),
                     'onlineChatSettings' => OnlineChatSettingsController::dataFromRules($rules, $tenant),
                     'nutritionLanding' => $isNutritionAudience
                         ? NutritionLandingSettingsController::dataFromRules($rules)

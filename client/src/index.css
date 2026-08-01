@@ -703,6 +703,11 @@ body[data-tenant-panel="true"] [data-radix-portal] .booking-finance-money-input 
     box-shadow: 0 20px 50px rgba(2, 6, 23, 0.42) !important;
   }
 
+  .rmdp-wrapper :where(div, span, button),
+  .rmdp-container .rmdp-calendar :where(div, span, button) {
+    text-align: center !important;
+  }
+
   .rmdp-header {
     padding: 0.75rem 0.75rem 0.5rem;
     background: hsl(var(--card)) !important;
@@ -735,11 +740,21 @@ body[data-tenant-panel="true"] [data-radix-portal] .booking-finance-money-input 
   .rmdp-week-day {
     width: 2.5rem;
     height: 2.5rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .rmdp-day span {
+    inset: auto !important;
+    display: inline-flex !important;
+    width: 2.15rem !important;
+    height: 2.15rem !important;
+    align-items: center;
+    justify-content: center;
     border-radius: 0.85rem;
     color: hsl(var(--foreground)) !important;
+    line-height: 1 !important;
     transition: background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
   }
 

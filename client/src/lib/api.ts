@@ -1,6 +1,6 @@
 import { Appointment, Section, User, Barber, ApiResponse, PaymentSettings, TenantMeta, PaginatedAppointments, PaginatedTenantUsers, PaginatedSmsCampaigns, SmsCampaign, SmsCampaignDetails, SmsCampaignFilters, SmsCampaignPreview, PaginatedSupportTickets, SupportTicket, SupportTicketDetails, GalleryAdminPayload, GalleryImage, GalleryPublicPayload, AppearanceSettings, HelpTopic, HelpTopicListPayload, SupportRenewalPackage, SupportRenewalPreview, SupportRenewalPayment, PaginatedSupportRenewalPayments, SupportRenewalSettings, SupportRenewalPublicPackagesPayload, StorageAddonPreview, AppointmentPaymentCheckout, PaymentProvider, PaginatedReferralLeads, ReferralLead, AboutSettings, ContactSettings, FeatureModuleSummary, FeatureModuleActivationPreview, CookingRecipeItem, StoreCheckoutResponse, StoreDashboardPayload, StoreGeneralSettings, StoreHomeSettings, StoreFaqSettings, StoreShippingSettings, StoreCategoryListPayload, StoreCategoryItem, StoreProductItem, StoreProductListPayload, StoreProductReviewItem, StoreProductReviewListPayload, PaginatedStoreAdminOrders, PaginatedStoreOrders, StoreOrderSummary, PaginatedUserNotifications, UserNotificationItem, NotificationCampaignFilters, NotificationCampaignPreview, NotificationCampaign, PaginatedNotificationCampaigns, NotificationCampaignDetails, UserLookupResult, TenantPanelUser, LandingContactSubmissionPayload, LandingCustomer, LandingCheckoutQuote, LandingOrderSummary, PaginatedLandingOrders, LandingOrderPaymentSummary, PaginatedSmsOutbounds, SmsOutboundItem, SmsBulkRecipientInput, PublicAppointmentDetails, SmsTopUpCheckoutResponse, CustomerClubAdminOverview, CustomerClubMePayload, PaginatedCustomerClubMembers, CustomerClubSettings, CustomerClubTier, CustomerClubReward, CustomerClubAccountSummary, CustomerClubRedemption, PanelFinanceDashboardPayload, ManualFinanceDashboardPayload, ManualFinanceEntry, ManualFinanceCategory, ManualFinanceCustomerSummary, ManualFinanceDebtorsPayload, ManualFinanceCommissionReportPayload, CustomerFeedbackSettings, CustomerFeedbackQuestion, CustomerFeedbackPublicPayload, CustomerFeedbackPublicAnswerInput, CustomerFeedbackReportPayload, CustomerFeedbackReportResponseDetail, SpecializedCourseHomePayload, DomainRenewalOverview, PaginatedDomainRenewalPayments, DomainRenewalPayment, TenantFileManagerPayload, TenantFileCategory, NutritionDietTemplateItem, NutritionDietTemplateListPayload, NutritionPackageItem, NutritionPackageListPayload, NutritionProfile, NutritionProfileDashboardPayload, NutritionWeightRecommendation, NutritionDiscountCodeItem, NutritionPackageCheckoutPreview, NutritionPackageOrder, NutritionPackageCheckoutSummaryPayload, NutritionDietRequest, NutritionDietRequestAdminSettings, NutritionDietRequestAdminStats, NutritionTokenDashboardPayload, NutritionTokenHistoryPayload, NutritionLandingSettings, NutritionLandingVariant, NutritionDietPrescription, NutritionAudioGuidanceAsset, NutritionAiPromptPreset, NutritionAdminUserProfilePayload, OnlineChatConversationDetails, OnlineChatAdminDashboardPayload, OnlineChatConversationSummary, NutritionDietFileGroup, NutritionDietFileItem, NutritionSettingsPayload, NutritionExerciseGroup, NutritionExerciseItem, ArticleSectionSettings, ArticleTagItem, ArticleTagListPayload, ArticleCategoryItem, ArticleCategoryListPayload, ArticlePostAdminPayload, ArticlePostItem, ArticlePostPublicListPayload, ArticlePostPublicDetailPayload, NutritionMealPhotoAnalysis, MessagingBotSettings, TelegramWebhookInfo, AppointmentBookingClosurePayload } from "./types";
 import type { CookingRecipeDetailPayload, CookingRecipeListPayload, CookingRecipeUpdatePayload } from "./types";
-import type { CustomLandingOverview, CustomLandingPartner, CustomLandingPartnerDashboard } from "./types";
+import type { CustomLandingOverview, CustomLandingPartner, CustomLandingPartnerDashboard, CustomLandingSettings } from "./types";
 import { getDefaultRegistrationRequirements, UserProfilePayload } from "./membership";
 import { normalizeDigits } from "./normalize";
 import { v4 as uuidv4 } from "uuid";
@@ -2852,6 +2852,13 @@ export const api = {
       return getJson<LandingOrderSummary>(`/landing-api/v1/orders/${id}`);
     },
 
+    pay: async (id: string, gateway?: PaymentProvider | ""): Promise<ApiResponse<{ mode: "sandbox" | "gateway"; order: LandingOrderSummary; payment: LandingOrderPaymentSummary; paymentUrl?: string | null; redirectForm?: { action: string; method: string; inputs: Record<string, string> } | null }>> => {
+      return postJson<{ mode: "sandbox" | "gateway"; order: LandingOrderSummary; payment: LandingOrderPaymentSummary; paymentUrl?: string | null; redirectForm?: { action: string; method: string; inputs: Record<string, string> } | null }>(
+        `/landing-api/v1/orders/${id}/pay`,
+        { gateway: gateway || undefined },
+      );
+    },
+
     checkDomain: async (id: string, domain: string): Promise<ApiResponse<{ domain: string; available: boolean; status: string; message: string }>> => {
       const search = new URLSearchParams({ domain });
       return getJson<{ domain: string; available: boolean; status: string; message: string }>(`/landing-api/v1/orders/${id}/domain-availability?${search.toString()}`);
@@ -3621,8 +3628,18 @@ export const api = {
 
   customLanding: {
     overview: async (): Promise<ApiResponse<CustomLandingOverview>> => getJson<CustomLandingOverview>("/api/v1/custom-landing"),
+    settings: async (): Promise<ApiResponse<CustomLandingSettings>> => getJson<CustomLandingSettings>("/api/v1/custom-landing/settings"),
+    updateSettings: async (payload: Record<string, unknown>): Promise<ApiResponse<CustomLandingSettings>> => requestJson<CustomLandingSettings>("/api/v1/custom-landing/settings", "PUT", payload),
+    issueAppToken: async (): Promise<ApiResponse<{ accessToken: string; tokenType: string; expiresAt: string | null }>> => postJson<{ accessToken: string; tokenType: string; expiresAt: string | null }>("/api/v1/custom-landing/app-token"),
+    updateLogo: async (payload: { logo?: File | null; removeLogo?: boolean }): Promise<ApiResponse<CustomLandingSettings>> => {
+      const formData = new FormData();
+      if (payload.logo) formData.append("logo", payload.logo);
+      if (payload.removeLogo) formData.append("remove_logo", "1");
+      return requestFormData<CustomLandingSettings>("/api/v1/custom-landing/settings/logo", "POST", formData);
+    },
     createPartner: async (payload: Record<string, unknown>): Promise<ApiResponse<CustomLandingPartner>> => postJson<CustomLandingPartner>("/api/v1/custom-landing/partners", payload),
     updatePartner: async (partnerId: string, payload: Record<string, unknown>): Promise<ApiResponse<CustomLandingPartner>> => requestJson<CustomLandingPartner>(`/api/v1/custom-landing/partners/${encodeURIComponent(partnerId)}`, "PUT", payload),
+    deletePartner: async (partnerId: string, payload: Record<string, unknown>): Promise<ApiResponse<unknown>> => requestJson(`/api/v1/custom-landing/partners/${encodeURIComponent(partnerId)}`, "DELETE", payload),
     partnerDashboard: async (partnerId: string, search = ""): Promise<ApiResponse<CustomLandingPartnerDashboard>> => getJson<CustomLandingPartnerDashboard>(`/api/v1/custom-landing/partners/${encodeURIComponent(partnerId)}${search ? `?search=${encodeURIComponent(search)}` : ""}`),
     settle: async (partnerId: string, payload: Record<string, unknown>): Promise<ApiResponse<unknown>> => postJson(`/api/v1/custom-landing/partners/${encodeURIComponent(partnerId)}/settlements`, payload),
     deleteCommission: async (commissionId: string, note?: string): Promise<ApiResponse<unknown>> => requestJson(`/api/v1/custom-landing/commissions/${encodeURIComponent(commissionId)}`, "DELETE", { note }),

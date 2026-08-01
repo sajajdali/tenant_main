@@ -144,6 +144,89 @@
                                     <input type="text" id="video_url" name="video_url" class="form-control" dir="ltr" value="{{ old('video_url', $videoIntroContent['videoUrl'] ?? '') }}">
                                     <small class="text-muted d-block mt-1">پیشنهاد می‌شود فایل را از بخش مقابل آپلود کنید. لینک YouTube در لندینگ پخش نمی‌شود.</small>
                                 </div>
+                                <div class="col-12">
+                                    <div class="d-flex align-items-center justify-content-between mb-3">
+                                        <div>
+                                            <label class="form-label mb-1">لینک‌های مشاهده دمو</label>
+                                            <div class="text-muted small">برای هر لندینگ هر تعداد دمو لازم دارید اضافه کنید؛ مثلاً مردانه، زنانه یا فقط یک دمو برای رژیم.</div>
+                                        </div>
+                                        <button type="button" class="btn btn-sm btn-light-primary ms-3" data-repeatable-add="#demo-links">افزودن دمو</button>
+                                    </div>
+                                    @php
+                                        $demoLinks = old('demo_links', $videoIntroContent['demoLinks'] ?? []);
+                                        if ((!is_array($demoLinks) || count($demoLinks) === 0) && (!empty($videoIntroContent['menDemoUrl']) || !empty($videoIntroContent['womenDemoUrl']))) {
+                                            $demoLinks = array_values(array_filter([
+                                                !empty($videoIntroContent['menDemoUrl']) ? ['title' => 'دموی نسخه سالن مردانه', 'description' => 'نمونه تجربه رزرو و سایت مخصوص آرایشگاه مردانه.', 'url' => $videoIntroContent['menDemoUrl'], 'icon' => 'scissors'] : null,
+                                                !empty($videoIntroContent['womenDemoUrl']) ? ['title' => 'دموی نسخه سالن زنانه', 'description' => 'نمونه تجربه رزرو و سایت مخصوص سالن زیبایی زنانه.', 'url' => $videoIntroContent['womenDemoUrl'], 'icon' => 'sparkles'] : null,
+                                            ]));
+                                        }
+                                        if (!is_array($demoLinks) || count($demoLinks) === 0) {
+                                            $demoLinks = [['title' => '', 'description' => '', 'url' => '', 'icon' => 'external']];
+                                        }
+                                    @endphp
+                                    <div id="demo-links" class="d-grid gap-3">
+                                        @foreach ($demoLinks as $index => $link)
+                                            <div class="border rounded-3 p-3 bg-light-subtle">
+                                                <div class="d-flex align-items-center justify-content-between mb-3">
+                                                    <h6 class="mb-0">دمو {{ $index + 1 }}</h6>
+                                                    <button type="button" class="btn btn-sm btn-light-danger" data-repeatable-remove>حذف</button>
+                                                </div>
+                                                <div class="row g-3">
+                                                    <div class="col-md-4">
+                                                        <label class="form-label">عنوان</label>
+                                                        <input type="text" name="demo_links[{{ $index }}][title]" class="form-control" value="{{ $link['title'] ?? '' }}">
+                                                    </div>
+                                                    <div class="col-md-5">
+                                                        <label class="form-label">لینک</label>
+                                                        <input type="text" name="demo_links[{{ $index }}][url]" dir="ltr" class="form-control" value="{{ $link['url'] ?? '' }}">
+                                                    </div>
+                                                    <div class="col-md-3">
+                                                        <label class="form-label">آیکن</label>
+                                                        <select name="demo_links[{{ $index }}][icon]" class="form-select">
+                                                            <option value="external" @selected(($link['icon'] ?? '') === 'external')>عمومی</option>
+                                                            <option value="scissors" @selected(($link['icon'] ?? '') === 'scissors')>آرایشگاه مردانه</option>
+                                                            <option value="sparkles" @selected(($link['icon'] ?? '') === 'sparkles')>سالن زنانه</option>
+                                                        </select>
+                                                    </div>
+                                                    <div class="col-12">
+                                                        <label class="form-label">توضیح کوتاه</label>
+                                                        <input type="text" name="demo_links[{{ $index }}][description]" class="form-control" value="{{ $link['description'] ?? '' }}">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                    <template id="demo-links-template">
+                                        <div class="border rounded-3 p-3 bg-light-subtle">
+                                            <div class="d-flex align-items-center justify-content-between mb-3">
+                                                <h6 class="mb-0">دمو جدید</h6>
+                                                <button type="button" class="btn btn-sm btn-light-danger" data-repeatable-remove>حذف</button>
+                                            </div>
+                                            <div class="row g-3">
+                                                <div class="col-md-4">
+                                                    <label class="form-label">عنوان</label>
+                                                    <input type="text" name="demo_links[__INDEX__][title]" class="form-control">
+                                                </div>
+                                                <div class="col-md-5">
+                                                    <label class="form-label">لینک</label>
+                                                    <input type="text" name="demo_links[__INDEX__][url]" dir="ltr" class="form-control">
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <label class="form-label">آیکن</label>
+                                                    <select name="demo_links[__INDEX__][icon]" class="form-select">
+                                                        <option value="external">عمومی</option>
+                                                        <option value="scissors">آرایشگاه مردانه</option>
+                                                        <option value="sparkles">سالن زنانه</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-12">
+                                                    <label class="form-label">توضیح کوتاه</label>
+                                                    <input type="text" name="demo_links[__INDEX__][description]" class="form-control">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </template>
+                                </div>
                                 <div class="col-md-6">
                                     <label class="form-label" for="video_file">آپلود ویدئو</label>
                                     <input type="file" id="video_file" name="video_file" class="form-control" accept="video/mp4,video/quicktime,video/webm,video/x-m4v,video/x-msvideo,.mp4,.mov,.webm,.m4v,.avi">
@@ -705,7 +788,7 @@
                                 </div>
                                 <div class="col-12">
                                     <label class="form-label" for="copyright_text">متن کپی‌رایت</label>
-                                    <input type="text" id="copyright_text" name="copyright_text" class="form-control" value="{{ old('copyright_text', $footerCtaContent['copyrightText'] ?? '© پله — تمامی حقوق محفوظ است.') }}">
+                                    <input type="text" id="copyright_text" name="copyright_text" class="form-control" value="{{ old('copyright_text', $footerCtaContent['copyrightText'] ?? '© استپ — تمامی حقوق محفوظ است.') }}">
                                 </div>
                             @else
                                 <div class="col-12">

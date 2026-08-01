@@ -38,7 +38,9 @@ class LandingCheckoutPricingService
         $domainAmount = 0;
         $domainTld = null;
 
-        if ($requestedDomain !== null && trim($requestedDomain) !== '') {
+        $domainIncluded = $this->packageIncludesDomain($subscriptionPackage);
+
+        if ($domainIncluded && $requestedDomain !== null && trim($requestedDomain) !== '') {
             $domainTld = app(LandingDomainAvailabilityService::class)->extractTld(
                 app(LandingDomainAvailabilityService::class)->normalizeDomain($requestedDomain)
             );
@@ -56,7 +58,7 @@ class LandingCheckoutPricingService
             $domainAmount = $domainTld === '.ir' && isset($landingPricing['domainIrPriceAmount']) && $landingPricing['domainIrPriceAmount'] !== null
                 ? (int) $landingPricing['domainIrPriceAmount']
                 : (int) $domainPricing->register_price_amount;
-        } elseif ($landingSite !== null) {
+        } elseif ($domainIncluded && $landingSite !== null) {
             $defaultIrPricing = DomainTldPrice::query()->where('tld', '.ir')->where('is_active', true)->first();
             $landingIrAmount = isset($landingPricing['domainIrPriceAmount']) && $landingPricing['domainIrPriceAmount'] !== null
                 ? (int) $landingPricing['domainIrPriceAmount']
@@ -93,5 +95,10 @@ class LandingCheckoutPricingService
             'audienceOverrideApplied' => (bool) ($packagePricing['audienceOverrideApplied'] ?? false),
             'smsCreditGiftAmount' => max(0, (int) $subscriptionPackage->sms_credit_gift_amount),
         ];
+    }
+
+    private function packageIncludesDomain(SubscriptionPackage $subscriptionPackage): bool
+    {
+        return (int) ($subscriptionPackage->user_limit ?? 0) !== 1;
     }
 }

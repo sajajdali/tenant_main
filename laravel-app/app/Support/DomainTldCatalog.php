@@ -15,7 +15,7 @@ class DomainTldCatalog
     public static function defaults(): array
     {
         return [
-            ['tld' => '.ir', 'label' => 'دامنه ملی ایران', 'register_price_amount' => 500000, 'renew_price_amount' => 500000, 'transfer_price_amount' => 0, 'is_active' => true],
+            ['tld' => '.ir', 'label' => 'دامنه ملی ایران', 'register_price_amount' => 89000, 'renew_price_amount' => 89000, 'transfer_price_amount' => 0, 'is_active' => true],
             ['tld' => '.com', 'label' => 'دامنه بین‌المللی عمومی', 'register_price_amount' => 1800000, 'renew_price_amount' => 1800000, 'transfer_price_amount' => 0, 'is_active' => true],
             ['tld' => '.net', 'label' => 'دامنه شبکه و عمومی', 'register_price_amount' => 1650000, 'renew_price_amount' => 1650000, 'transfer_price_amount' => 0, 'is_active' => true],
             ['tld' => '.org', 'label' => 'دامنه سازمانی', 'register_price_amount' => 1600000, 'renew_price_amount' => 1600000, 'transfer_price_amount' => 0, 'is_active' => true],

@@ -163,6 +163,11 @@ class LandingSectionController extends Controller
             'modal_title' => ['nullable', 'string', 'max:255'],
             'modal_description' => ['nullable', 'string', 'max:1000'],
             'video_url' => ['nullable', 'string', 'max:2000'],
+            'demo_links' => ['nullable', 'array'],
+            'demo_links.*.title' => ['nullable', 'string', 'max:255'],
+            'demo_links.*.description' => ['nullable', 'string', 'max:500'],
+            'demo_links.*.url' => ['nullable', 'string', 'max:2000'],
+            'demo_links.*.icon' => ['nullable', 'string', Rule::in(['external', 'scissors', 'sparkles'])],
             'video_file' => ['nullable', 'file', 'mimetypes:video/mp4,video/quicktime,video/webm,video/x-m4v,video/x-msvideo,application/octet-stream', 'mimes:mp4,mov,webm,m4v,avi', 'max:61440'],
             'cover_url' => ['nullable', 'string', 'max:2000'],
             'cover_file' => ['nullable', 'file', 'image', 'mimes:jpg,jpeg,png,gif,webp,avif', 'max:8192'],
@@ -277,6 +282,16 @@ class LandingSectionController extends Controller
                 'videoPath' => $videoPath,
                 'coverUrl' => $coverUrl,
                 'coverPath' => $coverPath,
+                'demoLinks' => collect($validated['demo_links'] ?? [])
+                    ->map(fn (array $item): array => [
+                        'title' => trim((string) ($item['title'] ?? '')),
+                        'description' => trim((string) ($item['description'] ?? '')),
+                        'url' => trim((string) ($item['url'] ?? '')),
+                        'icon' => in_array(($item['icon'] ?? ''), ['external', 'scissors', 'sparkles'], true) ? (string) $item['icon'] : 'external',
+                    ])
+                    ->filter(fn (array $item): bool => $item['title'] !== '' || $item['url'] !== '')
+                    ->values()
+                    ->all(),
             ];
         } elseif ($section->section_key === 'before_after') {
             $contentJson = [

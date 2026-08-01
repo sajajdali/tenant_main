@@ -130,7 +130,7 @@ export default function LandingAboutPage() {
       <header className="sticky top-0 z-20 border-b border-border/70 bg-card/70 backdrop-blur-md">
         <div className="container mx-auto flex items-center justify-between px-4 py-4">
           <div className="flex items-center gap-3">
-            <img src={landingSiteSettings.logoUrl} alt={landingSiteSettings.siteTitle} className="h-10 w-10 rounded-xl border border-border/70 object-cover" />
+            <img src={landingSiteSettings.logoUrl} alt={landingSiteSettings.siteTitle} className="h-10 w-auto max-w-[170px] object-contain" />
             <div>
               <div className="text-sm text-primary">{landingSiteSettings.headerLabel}</div>
               <h2 className="text-base font-black sm:text-lg">{landingSiteSettings.siteTitle}</h2>

@@ -2,9 +2,10 @@ import { useEffect, useMemo, useState } from "react";
 import { getInitialTenantMeta } from "@/lib/bootstrap";
 import { useLandingAuth } from "@/lib/landing-auth";
 import { LandingAuthDialog } from "@/components/landing-auth-dialog";
-import { getLandingSiteSettings } from "@/lib/landing-site";
-import { Menu, Phone, X } from "lucide-react";
+import { getLandingHeaderMenuItems, getLandingSiteSettings } from "@/lib/landing-site";
+import { ExternalLink, Menu, Phone, Scissors, Sparkles, X } from "lucide-react";
 import { api } from "@/lib/api";
+import { PellehBrandLogo } from "@/components/pelleh-brand-logo";
 import type { LandingOrderSummary } from "@/lib/types";
 
 const defaultHeroImage = "http://127.0.0.1:8000/booking-app/assets/hero-photo-Nr4dc0GO.webp";
@@ -31,8 +32,10 @@ function list(value: unknown, fallback: string[]) {
 }
 
 type FeatureItem = { title: string; short: string; url: string; isPrimary: boolean };
-type PlanCard = { packageId: string; title: string; description: string; badgeText: string; buttonText: string; featured: boolean; showOnHome: boolean; features: string[] };
+type PlanFeature = { title: string; url: string; enabled: boolean };
+type PlanCard = { packageId: string; title: string; description: string; badgeText: string; buttonText: string; featured: boolean; showOnHome: boolean; features: PlanFeature[] };
 type FaqItem = { question: string; answer: string };
+type DemoLink = { title: string; description: string; url: string; icon: string };
 
 function featureList(value: unknown): FeatureItem[] {
   if (!Array.isArray(value)) return [];
@@ -57,8 +60,27 @@ function planCards(value: unknown): PlanCard[] {
     const record = item as Record<string, unknown>;
     const packageId = text(record.packageId, "");
     if (!packageId || record.showOnHome === false) return [];
-    return [{ packageId, title: text(record.title, ""), description: text(record.description, ""), badgeText: text(record.badgeText, ""), buttonText: text(record.buttonText, "ثبت سفارش"), featured: record.featured === true, showOnHome: true, features: list(record.features, []) }];
+    const features = Array.isArray(record.features) ? record.features.flatMap((feature): PlanFeature[] => {
+      if (typeof feature === "string" && feature.trim()) return [{ title: feature, url: "", enabled: true }];
+      if (!feature || typeof feature !== "object") return [];
+      const featureRecord = feature as Record<string, unknown>;
+      const title = text(featureRecord.title, "");
+      if (!title) return [];
+      return [{ title, url: text(featureRecord.url, ""), enabled: featureRecord.enabled !== false }];
+    }) : [];
+    return [{ packageId, title: text(record.title, ""), description: text(record.description, ""), badgeText: text(record.badgeText, ""), buttonText: text(record.buttonText, "ثبت سفارش"), featured: record.featured === true, showOnHome: true, features }];
   });
+}
+
+function PlanFeatureLink({ feature }: { feature: PlanFeature }) {
+  const title = <span className="whitespace-pre-line">{feature.title}</span>;
+
+  if (!feature.url) return title;
+
+  return <span className="inline-flex w-full items-start justify-between gap-2">
+    <a href={feature.url} className={`whitespace-pre-line underline-offset-4 ${feature.enabled ? "hover:text-[#e0c06e] hover:underline" : "text-[#817d74]"}`}>{feature.title}</a>
+    <a href={feature.url} aria-label={`اطلاعات بیشتر درباره ${feature.title.replace(/\s+/g, " ")}`} className="mt-0.5 inline-flex size-4 shrink-0 items-center justify-center rounded-full border border-[#e0c06e]/45 text-[10px] font-black leading-none text-[#e0c06e]/90 transition hover:border-[#e0c06e] hover:bg-[#e0c06e] hover:text-[#0e0d0b]">i</a>
+  </span>;
 }
 
 function faqItems(value: unknown): FaqItem[] {
@@ -71,6 +93,35 @@ function faqItems(value: unknown): FaqItem[] {
     if (!question || !answer || record.showOnHome === false) return [];
     return [{ question, answer }];
   });
+}
+
+function demoLinks(value: unknown, legacyMenUrl: string, legacyWomenUrl: string): DemoLink[] {
+  const items = Array.isArray(value) ? value.flatMap((item): DemoLink[] => {
+    if (!item || typeof item !== "object") return [];
+    const record = item as Record<string, unknown>;
+    const title = text(record.title, "");
+    const url = text(record.url, "");
+    if (!title || !url) return [];
+    return [{
+      title,
+      description: text(record.description, ""),
+      url,
+      icon: text(record.icon, "external"),
+    }];
+  }) : [];
+
+  if (items.length) return items;
+
+  return [
+    { title: "دموی نسخه سالن مردانه", description: "نمونه تجربه رزرو و سایت مخصوص آرایشگاه مردانه.", url: legacyMenUrl, icon: "scissors" },
+    { title: "دموی نسخه سالن زنانه", description: "نمونه تجربه رزرو و سایت مخصوص سالن زیبایی زنانه.", url: legacyWomenUrl, icon: "sparkles" },
+  ].filter((item) => item.url);
+}
+
+function DemoIcon({ icon }: { icon: string }) {
+  if (icon === "scissors") return <Scissors className="size-6" />;
+  if (icon === "sparkles") return <Sparkles className="size-6" />;
+  return <ExternalLink className="size-6" />;
 }
 
 function TypingSlogan({ prefix, items, finalText }: { prefix: string; items: string[]; finalText: string }) {
@@ -109,6 +160,7 @@ export default function PellehStaticLandingPage() {
   const meta = getInitialTenantMeta();
   const { customer, loading: authLoading, logout } = useLandingAuth();
   const siteSettings = getLandingSiteSettings();
+  const headerMenuItems = getLandingHeaderMenuItems();
   const hero = meta?.landingSections?.slider?.content ?? {};
   const video = meta?.landingSections?.video_intro?.content ?? {};
   const features = meta?.landingSections?.feature_grid?.content ?? {};
@@ -117,12 +169,15 @@ export default function PellehStaticLandingPage() {
   const footer = meta?.landingSections?.footer_cta?.content ?? {};
   const [videoOpen, setVideoOpen] = useState(false);
   const [moreFeaturesOpen, setMoreFeaturesOpen] = useState(false);
+  const [expandedPlanCards, setExpandedPlanCards] = useState<Record<string, boolean>>({});
   const [openFaq, setOpenFaq] = useState<number | null>(0);
   const [loginOpen, setLoginOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [incompleteOrder, setIncompleteOrder] = useState<LandingOrderSummary | null>(null);
   const contactPhone = siteSettings.contactPhones[0] || "۰۲۱-۰۰۰۰۰۰۰۰";
-  const videoUrl = text(video.videoUrl, "");
+  const menDemoUrl = text(video.menDemoUrl, text(hero.menDemoUrl, ""));
+  const womenDemoUrl = text(video.womenDemoUrl, text(hero.womenDemoUrl, ""));
+  const demoLinkItems = demoLinks(video.demoLinks, menDemoUrl, womenDemoUrl);
   const allFeatures = meta?.landingFeatures?.length
     ? meta.landingFeatures.map((item) => ({ title: item.title, short: item.short || "", url: item.url, isPrimary: item.isPrimary }))
     : featureList(features.items);
@@ -163,15 +218,17 @@ export default function PellehStaticLandingPage() {
     <div dir="rtl" lang="fa" className="min-h-screen bg-[#0e0d0b] font-sans text-[#f4f2ee]">
       <header className="sticky top-0 z-40 border-b border-white/10 bg-[#0e0d0bd9] backdrop-blur-xl">
         <div className="relative mx-auto flex max-w-[1200px] items-center justify-between gap-4 px-[clamp(20px,4vw,32px)] py-[clamp(14px,2.5vw,20px)]">
-          <div className="flex items-center gap-3">
-            <button type="button" onClick={() => setMenuOpen((open) => !open)} aria-label="منو" className="flex size-10 items-center justify-center rounded-xl border border-white/10 text-white transition hover:border-[#c9a24a]/60">{menuOpen ? <X className="size-5" /> : <Menu className="size-5" />}</button>
-            <a href="/" className="flex items-center gap-2.5"><div className="flex size-9 items-center justify-center rounded-full border border-[#c9a24a] text-[#e0c06e]">پ</div><strong>پلـه</strong></a>
+          <div className="flex items-center">
+            <PellehBrandLogo imageClassName="h-14 w-auto max-w-[230px] object-contain sm:h-16 sm:max-w-[280px]" />
           </div>
-          <a href={`tel:${contactPhone.replace(/[^0-9+]/g, "")}`} className="flex flex-row-reverse items-center gap-2.5 text-[#e0c06e]"><Phone className="size-5 shrink-0" /><span className="flex flex-col items-start"><b className="text-xs text-white sm:text-sm" dir="ltr">{contactPhone}</b><small className="mt-0.5 animate-pulse whitespace-nowrap rounded-full bg-[#c9a24a]/15 px-2 py-0.5 text-[10px] font-black text-[#e0c06e] sm:text-[11px]">مشاوره رایگان</small></span></a>
+          <div className="flex items-center gap-3 [direction:ltr]">
+            <button type="button" onClick={() => setMenuOpen((open) => !open)} aria-label="منو" className="flex size-10 items-center justify-center rounded-xl border border-white/10 text-white transition hover:border-[#c9a24a]/60 sm:size-11">{menuOpen ? <X className="size-5" /> : <Menu className="size-5" />}</button>
+            <a href={`tel:${contactPhone.replace(/[^0-9+]/g, "")}`} className="flex flex-row items-center gap-2.5 text-[#e0c06e]"><Phone className="size-5 shrink-0" /><span className="flex flex-col items-start"><b className="text-xs text-white sm:text-sm" dir="ltr">{contactPhone}</b><small className="mt-0.5 animate-pulse whitespace-nowrap rounded-full bg-[#c9a24a]/15 px-2 py-0.5 text-[10px] font-black text-[#e0c06e] sm:text-[11px]">مشاوره رایگان</small></span></a>
+          </div>
 
-          {menuOpen && <><button type="button" aria-label="بستن منو" onClick={() => setMenuOpen(false)} className="fixed inset-0 top-full z-[-1] bg-black/20" /><div className="absolute start-[clamp(20px,4vw,32px)] top-[calc(100%+8px)] z-50 w-[min(280px,calc(100vw-40px))] rounded-2xl border border-white/10 bg-[#171512] p-2 shadow-2xl">
+          {menuOpen && <><button type="button" aria-label="بستن منو" onClick={() => setMenuOpen(false)} className="fixed inset-0 top-full z-[-1] bg-black/20" /><div className="absolute end-[clamp(20px,4vw,32px)] top-[calc(100%+8px)] z-50 w-[min(280px,calc(100vw-40px))] rounded-2xl border border-white/10 bg-[#171512] p-2 shadow-2xl">
             {authLoading ? <div className="m-2 h-10 animate-pulse rounded-xl bg-white/5" /> : customer ? <div className="mb-2 rounded-xl border border-emerald-400/15 bg-emerald-400/[.06] p-3"><div className="flex items-center gap-2 text-xs text-emerald-300"><span className="size-2 rounded-full bg-emerald-400" /> وارد شده‌اید</div><strong className="mt-1 block truncate text-sm">{customer.firstName || customer.mobile}</strong></div> : <button type="button" onClick={() => { setMenuOpen(false); setLoginOpen(true); }} className="mb-2 block w-full rounded-xl bg-[#c9a24a] px-4 py-3 text-sm font-bold text-[#0e0d0b]">ورود به حساب</button>}
-            <a href="/" className="block rounded-xl px-4 py-3 text-sm hover:bg-white/5">خانه</a><a href="/plans" className="block rounded-xl px-4 py-3 text-sm hover:bg-white/5">پلن‌ها و قیمت‌ها</a><a href="#video" onClick={() => setMenuOpen(false)} className="block rounded-xl px-4 py-3 text-sm hover:bg-white/5">مشاهده دمو</a><a href="/faq" className="block rounded-xl px-4 py-3 text-sm hover:bg-white/5">سوالات متداول</a><a href="/contact" className="block rounded-xl px-4 py-3 text-sm hover:bg-white/5">تماس با ما</a>
+            {headerMenuItems.map((item) => <a key={item.key} href={item.href} onClick={() => setMenuOpen(false)} className="block rounded-xl px-4 py-3 text-sm hover:bg-white/5">{item.label}</a>)}
             {customer && <><a href="/orders" className="block rounded-xl px-4 py-3 text-sm font-bold text-[#e0c06e] hover:bg-white/5">سفارش‌های من</a><button type="button" onClick={() => void logout()} className="block w-full rounded-xl px-4 py-3 text-start text-sm text-red-300 hover:bg-red-500/5">خروج از حساب</button></>}
           </div></>}
         </div>
@@ -181,7 +238,7 @@ export default function PellehStaticLandingPage() {
         <section className="mx-auto flex max-w-[1200px] flex-wrap items-center gap-[clamp(32px,6vw,64px)] p-[clamp(20px,4vw,32px)]">
           <div className="min-w-[280px] flex-1 basis-[320px]">
             <span className="text-xs tracking-wide text-[#e0c06e]">{text(hero.badgeText, "ویژه آرایشگران و سالن‌های زیبایی")}</span>
-            <h1 className="my-4 text-[clamp(22px,4vw,27px)] font-extrabold leading-[1.3]">{text(hero.titleLine1, "یک پله بالاتر باشید")}</h1>
+            <h1 className="my-4 text-[clamp(22px,4vw,27px)] font-extrabold leading-[1.3]">{text(hero.titleLine1, "یک استپ بالاتر باشید")}</h1>
             <TypingSlogan prefix={text(hero.typingPrefix, "شده بخوای")} items={list(hero.typingItems, DEFAULT_ITEMS)} finalText={text(hero.typingFinalText, "متفاوت باشی، اصلاً؟")} />
             <button type="button" onClick={() => setVideoOpen(true)} className="rounded-full bg-[#c9a24a] px-6 py-3.5 text-sm font-bold text-[#0e0d0b]">{text(hero.secondaryCtaText, "مشاهده دموی واقعی")}</button>
           </div>
@@ -258,6 +315,9 @@ export default function PellehStaticLandingPage() {
             <div className="grid grid-cols-[repeat(auto-fit,minmax(260px,1fr))] items-stretch gap-5">
               {visiblePlans.map((card, index) => {
                 const featured = index === recommendedIndex;
+                const cardKey = `${card.packageId}-${index}`;
+                const expanded = expandedPlanCards[cardKey] === true;
+                const visibleFeatures = expanded ? card.features : card.features.slice(0, 9);
                 return <article key={`${card.packageId}-${index}`} className={`relative flex flex-col rounded-[20px] border p-7 ${featured ? "border-[#c9a24a]/50 bg-gradient-to-br from-[#241f16] to-[#171512] shadow-[0_20px_50px_-20px_rgba(201,162,74,.25)]" : "border-white/10 bg-[#171512]"}`}>
                   {featured && <span className="absolute start-5 top-0 -translate-y-1/2 rounded-full bg-[#c9a24a] px-4 py-1 text-[11px] font-extrabold text-[#0e0d0b]">{card.badgeText || "پیشنهادی"}</span>}
                   <h3 className="text-lg font-extrabold">{card.title || card.pkg.name}</h3>
@@ -266,17 +326,26 @@ export default function PellehStaticLandingPage() {
                     {card.pkg.discountAmount > 0 && card.pkg.priceAmount > card.pkg.payableAmount && (
                       <div className="mb-2.5 flex min-h-6 items-center gap-2 text-[#817d74]">
                         <span className="whitespace-nowrap text-[13px] font-medium leading-none line-through decoration-[#b96f62] decoration-[1.5px] [font-variant-numeric:tabular-nums]">{money.format(card.pkg.priceAmount)}</span>
-                        <span className="text-[11px] leading-none">ریال</span>
+                        <span className="text-[11px] leading-none">تومان</span>
                         <span className="rounded-full border border-[#c9a24a]/20 bg-[#c9a24a]/10 px-2 py-1 text-[9px] font-extrabold leading-none text-[#e0c06e]">تخفیف‌خورده</span>
                       </div>
                     )}
                     <div className="flex items-end gap-2 whitespace-nowrap">
                       <strong className="text-[clamp(25px,3vw,32px)] font-black leading-none tracking-[-0.03em] text-[#e0c06e] [font-variant-numeric:tabular-nums]">{money.format(card.pkg.payableAmount)}</strong>
-                      <span className="pb-0.5 text-[12px] font-semibold leading-none text-[#c4bda9]">ریال</span>
+                      <span className="pb-0.5 text-[12px] font-semibold leading-none text-[#c4bda9]">تومان</span>
                     </div>
                     <div className="mt-3 text-[11px] font-medium leading-none text-[#817d74]">{money.format(card.pkg.durationDays)} روزه <span className="mx-1 text-white/20">•</span> {professionalLimitLabel(card.pkg.userLimit)}</div>
                   </div>
-                  <ul className="mb-7 flex-1 space-y-3 text-[13px]">{card.features.map((feature, featureIndex) => <li key={featureIndex} className="flex gap-2"><span className="text-[#e0c06e]">✓</span><span>{feature}</span></li>)}</ul>
+                  <div className={`relative mb-7 flex-1 overflow-hidden transition-all duration-500 ${expanded ? "pb-2" : "pb-12"}`}>
+                    <ul className="space-y-3 text-[13px]">{visibleFeatures.map((feature, featureIndex) => <li key={featureIndex} className={`flex items-start gap-2 ${feature.enabled ? "" : "text-[#817d74]"}`}><span className={feature.enabled ? "text-[#e0c06e]" : "text-[#817d74]"}>{feature.enabled ? "✓" : "—"}</span><PlanFeatureLink feature={feature} /></li>)}</ul>
+                    {card.features.length > 9 && !expanded && (
+                      <div className="pointer-events-none absolute inset-x-0 bottom-0 flex h-24 items-end justify-center bg-gradient-to-t from-[#171512] via-[#171512]/95 to-transparent">
+                        <button type="button" onClick={() => setExpandedPlanCards((current) => ({ ...current, [cardKey]: true }))} className="pointer-events-auto inline-flex items-center justify-center rounded-full border border-[#e0c06e]/30 bg-transparent px-3.5 py-1.5 text-[11px] font-extrabold text-[#e0c06e] transition hover:border-[#e0c06e]/70 hover:bg-[#e0c06e]/10">
+                          ادامه امکانات
+                        </button>
+                      </div>
+                    )}
+                  </div>
                   <a href={`/plans/duration?users=${encodeURIComponent(card.pkg.userLimit == null ? "unlimited" : String(card.pkg.userLimit))}`} className={`block rounded-full px-5 py-3.5 text-center text-sm font-bold ${featured ? "bg-[#c9a24a] text-[#0e0d0b]" : "border border-white/15 text-[#f4f2ee]"}`}>{card.buttonText}</a>
                 </article>;
               })}
@@ -313,21 +382,36 @@ export default function PellehStaticLandingPage() {
       {meta?.landingSections?.footer_cta?.status !== "inactive" && (
         <footer className="bg-[#0e0d0b] text-center">
           <div className="mx-auto max-w-[1200px] border-t border-white/10 px-[clamp(20px,4vw,32px)] py-[clamp(50px,8vw,90px)]">
-            <h2 className="mb-5 text-[clamp(18px,3vw,21px)] font-extrabold text-[#f4f2ee]">{text(footer.title, "یک پله بالاتر باشید")}</h2>
+            <h2 className="mb-5 text-[clamp(18px,3vw,21px)] font-extrabold text-[#f4f2ee]">{text(footer.title, "یک استپ بالاتر باشید")}</h2>
             <a href={text(footer.buttonUrl, "/plans")} className="inline-flex items-center justify-center whitespace-nowrap rounded-full bg-[#c9a24a] px-7 py-3.5 text-sm font-bold text-[#0e0d0b] transition hover:-translate-y-0.5 hover:bg-[#e0c06e]">
               {text(footer.buttonText, "شروع خرید پکیج")}
             </a>
           </div>
-          <p className="mx-auto max-w-[1200px] px-[clamp(20px,4vw,32px)] pb-10 pt-6 text-[13px] text-[#9c988d]">{text(footer.copyrightText, "© پله — تمامی حقوق محفوظ است.")}</p>
+          <p className="mx-auto max-w-[1200px] px-[clamp(20px,4vw,32px)] pb-10 pt-6 text-[13px] text-[#9c988d]">{text(footer.copyrightText, "© استپ — تمامی حقوق محفوظ است.")}</p>
         </footer>
       )}
 
       {videoOpen && (
         <div role="dialog" aria-modal="true" className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-3 backdrop-blur-md sm:p-6" onClick={() => setVideoOpen(false)}>
-          <div className="w-full max-w-5xl overflow-hidden rounded-[22px] border border-white/10 bg-[#171512] shadow-[0_30px_100px_-35px_rgba(0,0,0,.9)]" onClick={(event) => event.stopPropagation()}>
-            <div className="flex items-center justify-between gap-4 border-b border-white/10 px-4 py-3 sm:px-5"><div><strong className="block text-sm sm:text-base">{text(video.modalTitle, "ویدئوی معرفی سیستم")}</strong>{!text(video.modalDescription, "").includes("نسخه تستی پلیر") && text(video.modalDescription, "") && <span className="mt-1 hidden text-xs text-[#9c988d] sm:block">{text(video.modalDescription, "")}</span>}</div><button type="button" aria-label="بستن" className="flex size-9 shrink-0 items-center justify-center rounded-full border border-white/10 bg-black/30 text-xl text-[#aaa59b] transition hover:text-white" onClick={() => setVideoOpen(false)}>×</button></div>
-            <div className="relative aspect-video w-full bg-black">
-              {videoUrl && !/^https?:\/\/(?:www\.)?(?:youtube\.com|youtu\.be)/i.test(videoUrl) ? <video className="h-full w-full bg-black object-contain" src={videoUrl} poster={text(video.coverUrl, defaultVideoCover)} controls controlsList="nodownload" preload="metadata" playsInline autoPlay>مرورگر شما امکان پخش این ویدئو را ندارد.</video> : <div className="flex h-full flex-col items-center justify-center gap-3 px-5 text-center text-[#9c988d]"><span className="flex size-14 items-center justify-center rounded-full border border-[#c9a24a]/25 bg-[#c9a24a]/10 text-xl text-[#e0c06e]">▶</span><span className="text-sm">هنوز ویدئوی داخلی بارگذاری نشده است.</span></div>}
+          <div className="w-full max-w-2xl overflow-hidden rounded-[26px] border border-white/10 bg-[#171512] shadow-[0_30px_100px_-35px_rgba(0,0,0,.9)]" onClick={(event) => event.stopPropagation()}>
+            <div className="flex items-center justify-between gap-4 border-b border-white/10 px-5 py-4 sm:px-6">
+              <div>
+                <strong className="block text-base font-black sm:text-lg">انتخاب دموی واقعی</strong>
+                <span className="mt-1 block text-xs leading-6 text-[#9c988d]">نسخه مناسب سالن خودتان را باز کنید و تجربه مشتری را ببینید.</span>
+              </div>
+              <button type="button" aria-label="بستن" className="flex size-9 shrink-0 items-center justify-center rounded-full border border-white/10 bg-black/30 text-xl text-[#aaa59b] transition hover:text-white" onClick={() => setVideoOpen(false)}>×</button>
+            </div>
+            <div className={`grid gap-4 p-5 sm:p-6 ${demoLinkItems.length === 1 ? "" : "sm:grid-cols-2"}`}>
+              {demoLinkItems.length ? demoLinkItems.map((item, index) => (
+                <a key={`${item.url}-${index}`} href={item.url} target="_blank" rel="noreferrer" className="group relative overflow-hidden rounded-[22px] border border-[#c9a24a]/25 bg-[linear-gradient(145deg,rgba(201,162,74,.16),rgba(255,255,255,.035))] p-5 text-start transition hover:-translate-y-0.5 hover:border-[#e0c06e]/70 hover:bg-[#c9a24a]/10">
+                  <span className="mb-5 flex size-12 items-center justify-center rounded-2xl border border-[#c9a24a]/25 bg-black/25 text-[#e0c06e]"><DemoIcon icon={item.icon} /></span>
+                  <strong className="block text-lg font-black text-white">{item.title}</strong>
+                  {item.description && <span className="mt-2 block text-sm leading-7 text-[#aaa59b]">{item.description}</span>}
+                  <span className="mt-5 inline-flex items-center gap-2 text-xs font-bold text-[#e0c06e]">مشاهده دمو <ExternalLink className="size-3.5" /></span>
+                </a>
+              )) : (
+                <div className="rounded-[22px] border border-dashed border-white/15 p-8 text-center text-sm leading-7 text-[#aaa59b]">هنوز لینک دمویی برای این لندینگ ثبت نشده است.</div>
+              )}
             </div>
           </div>
         </div>
