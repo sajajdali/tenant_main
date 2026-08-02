@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useRoute } from "wouter";
 import { getInitialTenantMeta } from "@/lib/bootstrap";
-import { PellehBrandLogo } from "@/components/pelleh-brand-logo";
+import { PellehLandingHeader } from "@/components/pelleh-landing-header";
 
 const defaultHeroImage = "http://127.0.0.1:8000/booking-app/assets/hero-photo-Nr4dc0GO.webp";
 
@@ -34,7 +34,7 @@ export default function PellehFeatureDetailPage() {
   const [, params] = useRoute("/features/:slug");
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const items = features();
-  const path = `/features/${params?.slug ?? ""}`;
+  const path = params?.slug ? `/features/${params.slug}` : (items[0]?.url || "/features");
   const index = Math.max(0, items.findIndex((item) => item.url === path || item.url.replace(/\/$/, "") === path));
   const item = items[index];
   if (!item) return <div dir="rtl" className="min-h-screen bg-[#0e0d0b] p-10 text-center text-white">این امکان پیدا نشد.</div>;
@@ -44,7 +44,7 @@ export default function PellehFeatureDetailPage() {
   const total = new Intl.NumberFormat("fa-IR").format(items.length);
 
   return <div dir="rtl" lang="fa" className="min-h-screen bg-[#0e0d0b] text-[#f4f2ee]">
-    <header className="sticky top-0 z-40 border-b border-white/10 bg-[#0e0d0bd9] backdrop-blur-xl"><div className="mx-auto flex max-w-[1200px] items-center justify-between px-8 py-5"><PellehBrandLogo imageClassName="h-14 w-auto max-w-[230px] object-contain sm:h-16 sm:max-w-[280px]" /><a href="/plans" className="rounded-full border border-[#c9a24a] px-5 py-2.5 text-sm text-[#e0c06e]">شروع خرید پکیج</a></div></header>
+    <PellehLandingHeader />
     <main>
       <section className="mx-auto flex max-w-[640px] items-center justify-center gap-2.5 px-5 pt-[clamp(36px,6vw,56px)]"><span dir="ltr" className="text-xs font-semibold tracking-wider text-[#e0c06e]">{number} / {total}</span><div className="h-px max-w-[120px] flex-1 bg-white/10"/><span className="text-xs tracking-[1.5px] text-[#9c988d]">امکانات پله</span><div className="h-px max-w-[120px] flex-1 bg-white/10"/></section>
       <section className="mx-auto max-w-[760px] px-5 pt-[clamp(24px,5vw,40px)] text-center"><span className="mb-5 inline-flex rounded-full border border-[#c9a24a]/30 bg-[#c9a24a]/10 px-4 py-1.5 text-xs font-semibold text-[#e0c06e]">{item.badge || item.short}</span><h1 className="mb-4 text-[clamp(26px,4.4vw,38px)] font-extrabold leading-[1.4]">{item.title}</h1><p className="mx-auto max-w-[540px] text-[15px] leading-8 text-[#9c988d]">{item.detail}</p></section>

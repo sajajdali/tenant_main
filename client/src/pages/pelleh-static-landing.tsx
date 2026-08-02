@@ -1,11 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { getInitialTenantMeta } from "@/lib/bootstrap";
 import { useLandingAuth } from "@/lib/landing-auth";
-import { LandingAuthDialog } from "@/components/landing-auth-dialog";
-import { getLandingHeaderMenuItems, getLandingSiteSettings } from "@/lib/landing-site";
-import { ExternalLink, Menu, Phone, Scissors, Sparkles, X } from "lucide-react";
+import { ExternalLink, Scissors, Sparkles, X } from "lucide-react";
 import { api } from "@/lib/api";
-import { PellehBrandLogo } from "@/components/pelleh-brand-logo";
+import { PellehLandingHeader } from "@/components/pelleh-landing-header";
 import type { LandingOrderSummary } from "@/lib/types";
 
 const defaultHeroImage = "http://127.0.0.1:8000/booking-app/assets/hero-photo-Nr4dc0GO.webp";
@@ -158,9 +156,7 @@ function TypingSlogan({ prefix, items, finalText }: { prefix: string; items: str
 
 export default function PellehStaticLandingPage() {
   const meta = getInitialTenantMeta();
-  const { customer, loading: authLoading, logout } = useLandingAuth();
-  const siteSettings = getLandingSiteSettings();
-  const headerMenuItems = getLandingHeaderMenuItems();
+  const { customer } = useLandingAuth();
   const hero = meta?.landingSections?.slider?.content ?? {};
   const video = meta?.landingSections?.video_intro?.content ?? {};
   const features = meta?.landingSections?.feature_grid?.content ?? {};
@@ -168,13 +164,9 @@ export default function PellehStaticLandingPage() {
   const faq = meta?.landingSections?.faq?.content ?? {};
   const footer = meta?.landingSections?.footer_cta?.content ?? {};
   const [videoOpen, setVideoOpen] = useState(false);
-  const [moreFeaturesOpen, setMoreFeaturesOpen] = useState(false);
   const [expandedPlanCards, setExpandedPlanCards] = useState<Record<string, boolean>>({});
   const [openFaq, setOpenFaq] = useState<number | null>(0);
-  const [loginOpen, setLoginOpen] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
   const [incompleteOrder, setIncompleteOrder] = useState<LandingOrderSummary | null>(null);
-  const contactPhone = siteSettings.contactPhones[0] || "۰۲۱-۰۰۰۰۰۰۰۰";
   const menDemoUrl = text(video.menDemoUrl, text(hero.menDemoUrl, ""));
   const womenDemoUrl = text(video.womenDemoUrl, text(hero.womenDemoUrl, ""));
   const demoLinkItems = demoLinks(video.demoLinks, menDemoUrl, womenDemoUrl);
@@ -184,6 +176,7 @@ export default function PellehStaticLandingPage() {
   const selectedPrimary = allFeatures.filter((item) => item.isPrimary).slice(0, 3);
   const primaryFeatures = [...selectedPrimary, ...allFeatures.filter((item) => !selectedPrimary.includes(item))].slice(0, 3);
   const otherFeatures = allFeatures.filter((item) => !primaryFeatures.includes(item));
+  const firstFeatureUrl = allFeatures[0]?.url || "/features";
   const faNumber = new Intl.NumberFormat("fa-IR", { minimumIntegerDigits: 2, useGrouping: false });
   const money = new Intl.NumberFormat("fa-IR");
   const singularProfessional = meta?.audience?.singularLabel?.trim() || "آرایشگر";
@@ -216,23 +209,7 @@ export default function PellehStaticLandingPage() {
 
   return (
     <div dir="rtl" lang="fa" className="min-h-screen bg-[#0e0d0b] font-sans text-[#f4f2ee]">
-      <header className="sticky top-0 z-40 border-b border-white/10 bg-[#0e0d0bd9] backdrop-blur-xl">
-        <div className="relative mx-auto flex max-w-[1200px] items-center justify-between gap-4 px-[clamp(20px,4vw,32px)] py-[clamp(14px,2.5vw,20px)]">
-          <div className="flex items-center">
-            <PellehBrandLogo imageClassName="h-14 w-auto max-w-[230px] object-contain sm:h-16 sm:max-w-[280px]" />
-          </div>
-          <div className="flex items-center gap-3 [direction:ltr]">
-            <button type="button" onClick={() => setMenuOpen((open) => !open)} aria-label="منو" className="flex size-10 items-center justify-center rounded-xl border border-white/10 text-white transition hover:border-[#c9a24a]/60 sm:size-11">{menuOpen ? <X className="size-5" /> : <Menu className="size-5" />}</button>
-            <a href={`tel:${contactPhone.replace(/[^0-9+]/g, "")}`} className="flex flex-row items-center gap-2.5 text-[#e0c06e]"><Phone className="size-5 shrink-0" /><span className="flex flex-col items-start"><b className="text-xs text-white sm:text-sm" dir="ltr">{contactPhone}</b><small className="mt-0.5 animate-pulse whitespace-nowrap rounded-full bg-[#c9a24a]/15 px-2 py-0.5 text-[10px] font-black text-[#e0c06e] sm:text-[11px]">مشاوره رایگان</small></span></a>
-          </div>
-
-          {menuOpen && <><button type="button" aria-label="بستن منو" onClick={() => setMenuOpen(false)} className="fixed inset-0 top-full z-[-1] bg-black/20" /><div className="absolute end-[clamp(20px,4vw,32px)] top-[calc(100%+8px)] z-50 w-[min(280px,calc(100vw-40px))] rounded-2xl border border-white/10 bg-[#171512] p-2 shadow-2xl">
-            {authLoading ? <div className="m-2 h-10 animate-pulse rounded-xl bg-white/5" /> : customer ? <div className="mb-2 rounded-xl border border-emerald-400/15 bg-emerald-400/[.06] p-3"><div className="flex items-center gap-2 text-xs text-emerald-300"><span className="size-2 rounded-full bg-emerald-400" /> وارد شده‌اید</div><strong className="mt-1 block truncate text-sm">{customer.firstName || customer.mobile}</strong></div> : <button type="button" onClick={() => { setMenuOpen(false); setLoginOpen(true); }} className="mb-2 block w-full rounded-xl bg-[#c9a24a] px-4 py-3 text-sm font-bold text-[#0e0d0b]">ورود به حساب</button>}
-            {headerMenuItems.map((item) => <a key={item.key} href={item.href} onClick={() => setMenuOpen(false)} className="block rounded-xl px-4 py-3 text-sm hover:bg-white/5">{item.label}</a>)}
-            {customer && <><a href="/orders" className="block rounded-xl px-4 py-3 text-sm font-bold text-[#e0c06e] hover:bg-white/5">سفارش‌های من</a><button type="button" onClick={() => void logout()} className="block w-full rounded-xl px-4 py-3 text-start text-sm text-red-300 hover:bg-red-500/5">خروج از حساب</button></>}
-          </div></>}
-        </div>
-      </header>
+      <PellehLandingHeader />
 
       <main>
         <section className="mx-auto flex max-w-[1200px] flex-wrap items-center gap-[clamp(32px,6vw,64px)] p-[clamp(20px,4vw,32px)]">
@@ -285,21 +262,11 @@ export default function PellehStaticLandingPage() {
             {otherFeatures.length > 0 && (
               <section className="mx-auto max-w-[1200px] border-b border-white/10 px-[clamp(20px,4vw,32px)] pb-[clamp(40px,7vw,70px)]">
                 <div className="flex justify-center">
-                  <button type="button" onClick={() => setMoreFeaturesOpen((open) => !open)} className="flex items-center gap-2 rounded-full border border-white/10 bg-transparent px-6 py-3 text-[13px] text-[#f4f2ee]">
+                  <a href={firstFeatureUrl} className="flex items-center gap-2 rounded-full border border-white/10 bg-transparent px-6 py-3 text-[13px] text-[#f4f2ee] transition hover:border-[#c9a24a]/50 hover:text-[#e0c06e]">
                     {text(features.viewAllLabel, "سایر امکانات سیستم")}
-                    <span className={`text-[#e0c06e] transition-transform ${moreFeaturesOpen ? "rotate-180" : ""}`}>⌄</span>
-                  </button>
+                    <span className="text-[#e0c06e]">←</span>
+                  </a>
                 </div>
-                {moreFeaturesOpen && (
-                  <div className="mt-8 grid grid-cols-[repeat(auto-fit,minmax(240px,1fr))] gap-4">
-                    {otherFeatures.map((item, index) => (
-                      <a key={`${item.title}-${index}`} href={item.url} className="rounded-[14px] border border-white/10 bg-[#171512] p-[22px] transition hover:border-[#c9a24a]/50">
-                        <h3 className="mb-2 text-sm font-bold text-[#e0c06e]">{item.title}</h3>
-                        <p className="text-[12.5px] leading-[1.85] text-[#9c988d]">{item.short}</p>
-                      </a>
-                    ))}
-                  </div>
-                )}
               </section>
             )}
           </>
@@ -416,7 +383,6 @@ export default function PellehStaticLandingPage() {
           </div>
         </div>
       )}
-      <LandingAuthDialog open={loginOpen} onOpenChange={setLoginOpen} />
       {incompleteOrder && <div role="dialog" aria-modal="true" className="fixed inset-0 z-[70] flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm">
         <div className="relative w-full max-w-md rounded-[24px] border border-amber-400/30 bg-[#171512] p-6 text-center shadow-2xl sm:p-8">
           <button type="button" onClick={() => setIncompleteOrder(null)} aria-label="بستن" className="absolute left-4 top-4 flex size-8 items-center justify-center rounded-full border border-white/10 text-[#9c988d] hover:text-white"><X className="size-4" /></button>

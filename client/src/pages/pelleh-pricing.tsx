@@ -1,6 +1,6 @@
 import { getInitialTenantMeta } from "@/lib/bootstrap";
 import { PellehCheckoutSteps } from "@/components/pelleh-checkout-steps";
-import { PellehBrandLogo } from "@/components/pelleh-brand-logo";
+import { PellehLandingHeader } from "@/components/pelleh-landing-header";
 
 const userLimitKey = (value?: number | null) => value == null ? "unlimited" : String(value);
 type PlanFeature = { title: string; url: string; enabled: boolean };
@@ -44,7 +44,7 @@ export default function PellehPricingPage() {
   const limit = (value?:number|null)=>value==null?`نامحدود ${unit}`:`${number.format(value)} ${unit}`;
 
   return <div dir="rtl" className="min-h-screen bg-[#0e0d0b] text-[#f4f2ee] [font-family:Vazirmatn,system-ui,sans-serif]">
-    <header className="sticky top-0 z-40 border-b border-white/10 bg-[#0e0d0bd9] backdrop-blur-xl"><div className="mx-auto flex max-w-[1200px] items-center justify-between px-8 py-5"><PellehBrandLogo imageClassName="h-14 w-auto max-w-[230px] object-contain sm:h-16 sm:max-w-[280px]" /><a href="/" className="rounded-full border border-[#c9a24a] px-5 py-2.5 text-sm text-[#e0c06e]">صفحه اصلی</a></div></header>
+    <PellehLandingHeader />
     <main>
       <div className="mx-auto max-w-[1000px] px-5 pt-8"><PellehCheckoutSteps current={1} /></div>
       <section className="mx-auto max-w-[900px] px-5 py-[clamp(40px,7vw,64px)] text-center"><span className="text-xs tracking-[1.5px] text-[#e0c06e]">لیست قیمت</span><h1 className="my-3.5 text-[clamp(24px,4vw,30px)] font-extrabold">پلن‌ها و امکانات هر پلن</h1><p className="text-sm leading-7 text-[#9c988d]">تفاوت پلن‌ها را شفاف ببینید و براساس اندازه مجموعه خودتان تصمیم بگیرید.</p></section>

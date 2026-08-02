@@ -1,31 +1,20 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import {
-  CircleHelp,
   Headset,
-  House,
-  Info,
-  LayoutGrid,
-  ListChecks,
   Mail,
   MapPin,
-  Menu,
   Phone,
-  PhoneCall,
-  ReceiptText,
   Send,
-  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { getInitialTenantMeta } from "@/lib/bootstrap";
 import { api } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
-import { getLandingHeaderMenuItems, getLandingSiteSettings } from "@/lib/landing-site";
-import { LandingAuthDialog } from "@/components/landing-auth-dialog";
-import { PellehBrandLogo } from "@/components/pelleh-brand-logo";
+import { getLandingSiteSettings } from "@/lib/landing-site";
+import { PellehLandingHeader } from "@/components/pelleh-landing-header";
 import { CodeText, PhoneText } from "@/i18n/ltr-text";
 import { useLocale, useT } from "@/i18n/locale";
 
@@ -49,9 +38,6 @@ export default function LandingContactPage() {
   const bootstrapMeta = getInitialTenantMeta();
   const landingSiteSettings = getLandingSiteSettings();
   const { toast } = useToast();
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [phoneModalOpen, setPhoneModalOpen] = useState(false);
-  const [loginOpen, setLoginOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [form, setForm] = useState<ContactFormState>(defaultFormState);
@@ -141,9 +127,6 @@ export default function LandingContactPage() {
     };
   }, [pageSettings, t]);
 
-  const iconMap = { home: House, about: Info, features: LayoutGrid, plans: ListChecks, faq: CircleHelp, contact: PhoneCall, orders: ReceiptText } as const;
-  const headerMenuItems = getLandingHeaderMenuItems().map((item) => ({ ...item, icon: iconMap[item.key] ?? House }));
-
   useEffect(() => {
     document.title = t("landingContact.documentTitle", { siteTitle: landingSiteSettings.siteTitle });
 
@@ -187,24 +170,10 @@ export default function LandingContactPage() {
   };
 
   const locationParts = [dynamicTexts.provinceName, dynamicTexts.cityName].filter(Boolean).join(t("landingContact.locationSeparator"));
-  const primaryPhone = dynamicTexts.phones[0] || landingSiteSettings.contactPhones[0] || "";
 
   return (
     <div className="flex min-h-screen flex-col bg-[#0e0d0b] text-[#f4f2ee] [font-family:Vazirmatn,system-ui,sans-serif]" dir={dir}>
-      <header className="sticky top-0 z-40 border-b border-white/10 bg-[#0e0d0bd9] backdrop-blur-xl">
-        <div className="relative mx-auto flex max-w-[1200px] items-center justify-between gap-4 px-[clamp(20px,4vw,32px)] py-[clamp(14px,2.5vw,20px)]">
-          <PellehBrandLogo imageClassName="h-14 w-auto max-w-[230px] object-contain sm:h-16 sm:max-w-[280px]" />
-          <div className="flex items-center gap-3 [direction:ltr]">
-            <button type="button" onClick={() => setMenuOpen((open) => !open)} aria-label="منو" className="flex size-10 items-center justify-center rounded-xl border border-white/10 text-white transition hover:border-[#c9a24a]/60 sm:size-11">{menuOpen ? <X className="size-5" /> : <Menu className="size-5" />}</button>
-            {primaryPhone ? <button type="button" onClick={() => setPhoneModalOpen(true)} className="hidden flex-row items-center gap-2.5 text-[#e0c06e] sm:flex"><Phone className="size-5 shrink-0" /><span className="flex flex-col items-start"><b className="text-sm text-white" dir="ltr">{primaryPhone}</b><small className="mt-0.5 whitespace-nowrap rounded-full bg-[#c9a24a]/15 px-2 py-0.5 text-[11px] font-black text-[#e0c06e]">مشاوره رایگان</small></span></button> : null}
-          </div>
-
-          {menuOpen && <><button type="button" aria-label="بستن منو" onClick={() => setMenuOpen(false)} className="fixed inset-0 top-full z-[-1] bg-black/20" /><div className="absolute end-[clamp(20px,4vw,32px)] top-[calc(100%+8px)] z-50 w-[min(280px,calc(100vw-40px))] rounded-2xl border border-white/10 bg-[#171512] p-2 shadow-2xl">
-            {headerMenuItems.map((item) => <a key={item.label} href={item.href} onClick={() => setMenuOpen(false)} className="flex items-center justify-between rounded-xl px-4 py-3 text-sm hover:bg-white/5"><span>{item.label}</span><item.icon className="size-4 text-[#e0c06e]" /></a>)}
-            <button type="button" onClick={() => { setMenuOpen(false); setLoginOpen(true); }} className="mt-2 block w-full rounded-xl bg-[#c9a24a] px-4 py-3 text-start text-sm font-bold text-[#0e0d0b]">ورود به حساب</button>
-          </div></>}
-        </div>
-      </header>
+      <PellehLandingHeader />
 
       <main className="mx-auto w-full max-w-[1200px] flex-1 px-[clamp(20px,4vw,32px)] py-[clamp(28px,5vw,56px)]">
         <section className="grid items-start gap-7 lg:grid-cols-[0.92fr_1.08fr]">
@@ -250,29 +219,6 @@ export default function LandingContactPage() {
       </main>
 
       <footer className="border-t border-white/10 px-5 py-8 text-center text-xs text-[#817d74]">© استپ — تمامی حقوق محفوظ است.</footer>
-
-      <Dialog open={phoneModalOpen} onOpenChange={setPhoneModalOpen}>
-        <DialogContent className="max-w-md border-white/10 bg-[#171512] text-[#f4f2ee]" dir={dir}>
-          <DialogHeader>
-            <DialogTitle>{dynamicTexts.phoneModalTitle}</DialogTitle>
-            <DialogDescription className="text-[#9c988d]">{dynamicTexts.phoneModalDescription}</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-2">
-            {dynamicTexts.phones.map((phone) => (
-              <a
-                key={phone}
-                href={`tel:${phone.replace(/[^\d+]/g, "")}`}
-                className="flex items-center justify-between rounded-xl border border-white/10 bg-white/[.035] px-4 py-3 transition hover:border-[#c9a24a]/45"
-              >
-                <PhoneText className="font-semibold text-white">{phone}</PhoneText>
-                <Phone className="h-4 w-4 text-[#e0c06e]" />
-              </a>
-            ))}
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      <LandingAuthDialog open={loginOpen} onOpenChange={setLoginOpen} />
     </div>
   );
 }

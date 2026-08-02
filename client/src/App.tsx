@@ -209,7 +209,7 @@ function Router() {
         <Route path="/" component={PellehStaticLandingPage} />
         <Route path="/barbers" component={LandingPreviewPage} />
         <Route path="/features/:slug" component={PellehFeatureDetailPage} />
-        <Route path="/features" component={LandingFeaturesPage} />
+        <Route path="/features" component={PellehFeatureDetailPage} />
         <Route path="/plans" component={PellehPricingPage} />
         <Route path="/plans/duration" component={PellehPlanDurationPage} />
         <Route path="/about" component={LandingAboutPage} />
