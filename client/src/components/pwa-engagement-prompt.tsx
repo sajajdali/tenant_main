@@ -73,9 +73,24 @@ function getDefaultInstallGateState() {
     return false;
   }
 
+  if (isLandingSurface()) {
+    return false;
+  }
+
   const path = window.location.pathname.replace(/\/+$/, "") || "/";
   const isBookingEntryPath = path === "/" || path === "/booking";
   return getPwaInstallPromptAllowed(!isBookingEntryPath);
+}
+
+function isLandingSurface() {
+  if (typeof window === "undefined") {
+    return false;
+  }
+
+  const meta = getInitialTenantMeta();
+  const path = window.location.pathname.replace(/\/+$/, "") || "/";
+
+  return meta?.isLandingDomain === true || path === "/landing-preview" || path.startsWith("/landing-preview/");
 }
 
 export function PwaEngagementPrompt() {
@@ -92,6 +107,7 @@ export function PwaEngagementPrompt() {
   const [hasUserInteracted, setHasUserInteracted] = useState(false);
   const [installDelayElapsed, setInstallDelayElapsed] = useState(false);
   const ios = useMemo(() => isIosDevice(), []);
+  const isLanding = useMemo(() => isLandingSurface(), []);
 
   useEffect(() => {
     if (typeof window === "undefined") {
@@ -173,13 +189,15 @@ export function PwaEngagementPrompt() {
   }, [hasUserInteracted, installGateAllowed]);
 
   const canShowInstall =
+    !isLanding &&
     installGateAllowed &&
     hasUserInteracted &&
     installDelayElapsed &&
     !isStandalone &&
     !installHidden &&
     (deferredPrompt !== null || ios);
-  const canAskNotification = Boolean(user)
+  const canAskNotification = !isLanding
+    && Boolean(user)
     && (isAdmin || isBarber)
     && !notificationHidden
     && notificationPermission === "default";

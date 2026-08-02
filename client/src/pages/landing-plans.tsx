@@ -17,7 +17,7 @@ import { DiscountCodeDialog } from "@/components/discount-code-dialog";
 import { CodeText, PhoneText } from "@/i18n/ltr-text";
 import { useFormat, useLocale, useT } from "@/i18n/locale";
 import { PellehCheckoutSteps } from "@/components/pelleh-checkout-steps";
-import { PellehBrandLogo } from "@/components/pelleh-brand-logo";
+import { PellehLandingHeader } from "@/components/pelleh-landing-header";
 
 const submitGatewayForm = (redirectForm: { action: string; method: string; inputs: Record<string, string> }) => {
   const form = document.createElement("form");
@@ -382,11 +382,8 @@ export default function LandingPlansPage() {
       : "هزینه نصب و راه‌اندازی";
     const periodBadgeClass = "rounded-full border border-[#c9a24a]/25 bg-[#c9a24a]/10 px-2 py-0.5 text-[10px] font-black leading-5 text-[#e0c06e]";
     return <div dir="rtl" className="min-h-screen bg-[#0e0d0b] text-[#f4f2ee] [font-family:Vazirmatn,system-ui,sans-serif]">
-      <div className="border-t border-white/10" />
+      <PellehLandingHeader />
       <main className="mx-auto max-w-[1050px] px-4 pb-14 pt-8 sm:px-6 sm:pt-12">
-        <div className="mb-7 flex justify-center">
-          <PellehBrandLogo imageClassName="h-16 w-auto max-w-[280px] object-contain sm:h-20 sm:max-w-[340px]" />
-        </div>
         <PellehCheckoutSteps current={2} />
         <div className="mb-8 mt-9 text-center sm:mb-10 sm:mt-12">
           <h1 className="text-2xl font-black sm:text-3xl">خلاصه انتخاب شما</h1>

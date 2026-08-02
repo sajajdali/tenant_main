@@ -180,13 +180,23 @@ class LandingOrderPaymentService
         }
 
         $callbackUrl = str_replace(['{payment}', '__PAYMENT__'], (string) $payment->id, $callbackUrlTemplate);
+        $gatewayAmount = $this->gatewayAmountRial($payment);
         $invoice = (new Invoice())
-            ->amount((int) $payment->amount)
+            ->amount($gatewayAmount)
             ->detail('description', 'پرداخت سفارش لندینگ')
             ->detail('mobile', $customer->mobile);
 
+        $payment->update([
+            'meta_json' => array_merge($payment->meta_json ?? [], [
+                'display_currency' => 'IRT',
+                'display_amount_toman' => (int) $payment->amount,
+                'gateway_currency' => 'IRR',
+                'gateway_amount_rial' => $gatewayAmount,
+            ]),
+        ]);
+
         $paymentManager = Payment::via($selectedGateway)
-            ->config(TenantPaymentGateways::driverConfig($selectedGateway, $settings['gateways'][$selectedGateway], $callbackUrl))
+            ->config($this->landingGatewayConfig($selectedGateway, $settings['gateways'][$selectedGateway], $callbackUrl))
             ->callbackUrl($callbackUrl);
 
         $paymentManager->purchase($invoice, function ($driver, $transactionId) use ($payment): void {
@@ -223,8 +233,8 @@ class LandingOrderPaymentService
 
         try {
             $receipt = Payment::via($gateway)
-                ->config(TenantPaymentGateways::driverConfig($gateway, $gatewaySettings, ''))
-                ->amount((int) $payment->amount)
+                ->config($this->landingGatewayConfig($gateway, $gatewaySettings, ''))
+                ->amount($this->gatewayAmountRial($payment))
                 ->transactionId((string) $payment->authority)
                 ->verify();
         } catch (InvalidPaymentException $exception) {
@@ -378,5 +388,23 @@ class LandingOrderPaymentService
         } while (LandingOrderPayment::query()->where('invoice_number', $number)->exists());
 
         return $number;
+    }
+
+    private function gatewayAmountRial(LandingOrderPayment $payment): int
+    {
+        $storedGatewayAmount = (int) data_get($payment->meta_json, 'gateway_amount_rial', 0);
+        if ($storedGatewayAmount > 0) {
+            return $storedGatewayAmount;
+        }
+
+        return (int) $payment->amount * 10;
+    }
+
+    private function landingGatewayConfig(string $gateway, array $settings, string $callbackUrl): array
+    {
+        return array_merge(
+            TenantPaymentGateways::driverConfig($gateway, $settings, $callbackUrl),
+            ['currency' => 'R'],
+        );
     }
 }
