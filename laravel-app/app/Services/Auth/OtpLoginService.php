@@ -12,6 +12,7 @@ use App\Domain\Tenant\Models\TenantUser;
 use App\Models\User as CentralUser;
 use App\Services\Landing\LandingCustomerService;
 use App\Services\Sms\SmsDispatchService;
+use App\Services\Sms\SmsProviderManager;
 use App\Services\TenantProvisioningService;
 use App\Support\SmsGatewaySettings;
 use App\Support\SmsQueue;
@@ -31,10 +32,13 @@ class OtpLoginService
         private readonly TenantProvisioningService $tenantProvisioningService,
         private readonly LandingCustomerService $landingCustomerService,
         private readonly SmsDispatchService $smsDispatchService,
+        private readonly SmsProviderManager $smsProviderManager,
     ) {}
 
     public function sendForCentral(string $mobile): array
     {
+        $mobile = $this->normalizeOtpMobile($mobile);
+
         $user = CentralUser::query()
             ->where('mobile', $mobile)
             ->where('is_active', true)
@@ -45,7 +49,22 @@ class OtpLoginService
             return ['ok' => false, 'message' => __('api.auth.central_user_not_found')];
         }
 
-        return $this->issueCode('central', $mobile);
+        $otp = $this->issueCode('central', $mobile);
+
+        if (! $otp['ok']) {
+            return $otp;
+        }
+
+        $smsResult = $this->sendCentralOtpMessage('central', $mobile, (string) ($otp['code'] ?? ''), 'استپ');
+
+        if (! $smsResult['ok']) {
+            Cache::forget($this->otpKey('central', $mobile));
+            Cache::forget($this->cooldownKey('central', $mobile));
+
+            return $smsResult;
+        }
+
+        return $otp;
     }
 
     public function sendForTenant(string $mobile, ?Tenant $tenant): array
@@ -91,6 +110,8 @@ class OtpLoginService
 
     public function verifyForCentral(string $mobile, string $code): ?CentralUser
     {
+        $mobile = $this->normalizeOtpMobile($mobile);
+
         if (! $this->hasValidCode('central', $mobile, $code)) {
             return null;
         }
@@ -119,11 +140,29 @@ class OtpLoginService
 
     public function sendForLandingCustomer(string $mobile): array
     {
-        return $this->issueCode('landing_customer', $mobile);
+        $mobile = $this->normalizeOtpMobile($mobile);
+        $otp = $this->issueCode('landing_customer', $mobile);
+
+        if (! $otp['ok']) {
+            return $otp;
+        }
+
+        $smsResult = $this->sendCentralOtpMessage('landing_customer', $mobile, (string) ($otp['code'] ?? ''), 'استپ');
+
+        if (! $smsResult['ok']) {
+            Cache::forget($this->otpKey('landing_customer', $mobile));
+            Cache::forget($this->cooldownKey('landing_customer', $mobile));
+
+            return $smsResult;
+        }
+
+        return $otp;
     }
 
     public function verifyForLandingCustomer(string $mobile, string $code): ?LandingCustomer
     {
+        $mobile = $this->normalizeOtpMobile($mobile);
+
         if (! $this->hasValidCode('landing_customer', $mobile, $code)) {
             return null;
         }
@@ -265,6 +304,91 @@ class OtpLoginService
             'ok' => true,
             'message' => __('api.auth.otp_queued'),
         ];
+    }
+
+    private function sendCentralOtpMessage(string $scope, string $mobile, string $code, string $businessName): array
+    {
+        $provider = 'kavenegar';
+        $sender = trim((string) (SmsSenderRegistry::defaultSender() ?? ''));
+        $sandboxEnabled = SmsGatewaySettings::sandboxEnabled();
+
+        if (! $sandboxEnabled && SmsGatewaySettings::kavenegarApiKey() === '') {
+            return [
+                'ok' => false,
+                'message' => __('api.auth.sms_api_key_missing'),
+            ];
+        }
+
+        $body = (string) SmsTemplateRegistry::definitions()['loginOtp']['default_body'];
+        $webOtpSignature = $this->webOtpSignature($code);
+        $message = strtr($body, [
+            '{{code}}' => $code,
+            '{{business_name}}' => $businessName,
+            '{{mobile}}' => $mobile,
+            '{{web_otp}}' => $webOtpSignature,
+        ]);
+
+        if ($webOtpSignature !== '' && ! str_contains($body, '{{web_otp}}')) {
+            $message = rtrim($message).PHP_EOL.$webOtpSignature;
+        }
+
+        $setting = new SmsSetting([
+            'enabled' => true,
+            'provider' => $provider,
+            'credentials' => [
+                'sender' => $sender,
+            ],
+            'templates' => [
+                'v2' => [
+                    'loginOtp' => [
+                        'enabled' => true,
+                        'body' => $body,
+                        'status' => 'approved',
+                    ],
+                ],
+            ],
+        ]);
+
+        try {
+            $result = $this->smsProviderManager->driver($provider)->send($setting, $mobile, $message);
+        } catch (\Throwable $exception) {
+            Log::error('Central OTP SMS failed.', [
+                'scope' => $scope,
+                'mobile' => $mobile,
+                'provider' => $provider,
+                'message' => $exception->getMessage(),
+                'exception_class' => $exception::class,
+            ]);
+
+            return [
+                'ok' => false,
+                'message' => __('api.auth.sms_provider_invalid_response'),
+            ];
+        }
+
+        if (($result['ok'] ?? false) !== true) {
+            Log::warning('Central OTP SMS rejected.', [
+                'scope' => $scope,
+                'mobile' => $mobile,
+                'provider' => $provider,
+                'message' => (string) ($result['message'] ?? ''),
+            ]);
+
+            return [
+                'ok' => false,
+                'message' => (string) ($result['message'] ?? __('api.auth.sms_provider_invalid_response')),
+            ];
+        }
+
+        return [
+            'ok' => true,
+            'message' => __('api.auth.otp_queued'),
+        ];
+    }
+
+    private function normalizeOtpMobile(string $mobile): string
+    {
+        return $this->smsDispatchService->normalizeMobile($mobile) ?? trim($mobile);
     }
 
     private function generateCode(): string
