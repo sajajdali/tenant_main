@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Tenant;
 
 use App\Domain\Tenant\Models\NutritionPackage;
+use App\Domain\Tenant\Models\NutritionDietTemplate;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -25,6 +26,12 @@ class NutritionPackageController extends Controller
         'vip',
     ];
 
+    private const FIRST_DIET_TEMPLATE_MODES = [
+        'default',
+        'custom',
+        'disabled',
+    ];
+
     private const FEATURE_ICONS = [
         'clipboard',
         'user',
@@ -43,7 +50,7 @@ class NutritionPackageController extends Controller
         $goal = trim((string) request()->query('goal', ''));
 
         $items = NutritionPackage::query()
-            ->with(['children.children'])
+            ->with(['children.children', 'firstDietTemplate'])
             ->where('is_active', true)
             ->get();
 
@@ -62,7 +69,7 @@ class NutritionPackageController extends Controller
         $this->ensureAdmin($request);
 
         $items = NutritionPackage::query()
-            ->with(['children.children'])
+            ->with(['children.children', 'firstDietTemplate'])
             ->whereNull('parent_id')
             ->orderBy('sort_order')
             ->orderBy('name')
@@ -95,6 +102,7 @@ class NutritionPackageController extends Controller
                     ])
                     ->values()
                     ->all(),
+                'dietTemplateOptions' => $this->dietTemplateOptions(),
             ],
         ]);
     }
@@ -131,6 +139,13 @@ class NutritionPackageController extends Controller
             'is_recommended' => (bool) ($validated['is_recommended'] ?? false),
             'visual_style' => $this->normalizeVisualStyle($validated['visual_style'] ?? 'normal'),
             'action_label' => $this->normalizeShortText($validated['action_label'] ?? null),
+            'first_diet_template_mode' => $this->normalizeFirstDietTemplateMode($validated['first_diet_template_mode'] ?? 'default'),
+            'first_diet_template_id' => $this->normalizeFirstDietTemplateMode($validated['first_diet_template_mode'] ?? 'default') === 'custom'
+                ? ($validated['first_diet_template_id'] ?? null)
+                : null,
+            'first_diet_template_ids' => $this->normalizeFirstDietTemplateMode($validated['first_diet_template_mode'] ?? 'default') === 'custom'
+                ? $this->normalizeGoalTemplateIds($validated['first_diet_template_ids'] ?? [], $validated['first_diet_template_id'] ?? null)
+                : null,
             'applicable_goals' => array_values($validated['applicable_goals']),
             'sort_order' => (int) ($validated['sort_order'] ?? 0),
             'is_active' => (bool) ($validated['is_active'] ?? true),
@@ -179,6 +194,13 @@ class NutritionPackageController extends Controller
             'is_recommended' => (bool) ($validated['is_recommended'] ?? false),
             'visual_style' => $this->normalizeVisualStyle($validated['visual_style'] ?? 'normal'),
             'action_label' => $this->normalizeShortText($validated['action_label'] ?? null),
+            'first_diet_template_mode' => $this->normalizeFirstDietTemplateMode($validated['first_diet_template_mode'] ?? 'default'),
+            'first_diet_template_id' => $this->normalizeFirstDietTemplateMode($validated['first_diet_template_mode'] ?? 'default') === 'custom'
+                ? ($validated['first_diet_template_id'] ?? null)
+                : null,
+            'first_diet_template_ids' => $this->normalizeFirstDietTemplateMode($validated['first_diet_template_mode'] ?? 'default') === 'custom'
+                ? $this->normalizeGoalTemplateIds($validated['first_diet_template_ids'] ?? [], $validated['first_diet_template_id'] ?? null)
+                : null,
             'applicable_goals' => array_values($validated['applicable_goals']),
             'sort_order' => (int) ($validated['sort_order'] ?? 0),
             'is_active' => (bool) $validated['is_active'],
@@ -232,6 +254,12 @@ class NutritionPackageController extends Controller
             'is_recommended' => ['nullable', 'boolean'],
             'visual_style' => ['nullable', 'string', 'in:' . implode(',', self::VISUAL_STYLES)],
             'action_label' => ['nullable', 'string', 'max:80'],
+            'first_diet_template_mode' => ['nullable', 'string', 'in:' . implode(',', self::FIRST_DIET_TEMPLATE_MODES)],
+            'first_diet_template_id' => ['nullable', 'integer', 'exists:nutrition_diet_templates,id'],
+            'first_diet_template_ids' => ['nullable', 'array'],
+            'first_diet_template_ids.lose-weight' => ['nullable', 'integer', 'exists:nutrition_diet_templates,id'],
+            'first_diet_template_ids.gain-weight' => ['nullable', 'integer', 'exists:nutrition_diet_templates,id'],
+            'first_diet_template_ids.maintain-weight' => ['nullable', 'integer', 'exists:nutrition_diet_templates,id'],
             'applicable_goals' => ['required', 'array', 'min:1'],
             'applicable_goals.*' => ['string', 'in:' . implode(',', self::APPLICABLE_GOALS)],
             'sort_order' => ['nullable', 'integer', 'min:0'],
@@ -261,12 +289,20 @@ class NutritionPackageController extends Controller
             $depth = (int) $parent->depth + 1;
         }
 
+        if (($validated['first_diet_template_mode'] ?? 'default') === 'custom') {
+            $templateIds = $this->normalizeGoalTemplateIds($validated['first_diet_template_ids'] ?? [], $validated['first_diet_template_id'] ?? null);
+            if (count($templateIds) < count(self::APPLICABLE_GOALS)) {
+                abort(422, 'برای رژیم اول اختصاصی این پکیج، الگوی هر هدف را جدا انتخاب کنید.');
+            }
+        }
+
         return [$validated, $parent, $depth];
     }
 
     private function transformPackage(NutritionPackage $item): array
     {
         $item->loadMissing(['children.children']);
+        $item->loadMissing(['firstDietTemplate']);
         $goals = collect($item->applicable_goals ?? [])->filter()->values()->all();
 
         return [
@@ -289,6 +325,12 @@ class NutritionPackageController extends Controller
             'isRecommended' => (bool) $item->is_recommended,
             'visualStyle' => $this->normalizeVisualStyle($item->visual_style ?? 'normal'),
             'actionLabel' => $item->action_label,
+            'firstDietTemplateMode' => $this->normalizeFirstDietTemplateMode($item->first_diet_template_mode ?? 'default'),
+            'firstDietTemplateId' => $item->first_diet_template_id ? (string) $item->first_diet_template_id : null,
+            'firstDietTemplateIds' => collect($this->normalizeGoalTemplateIds($item->first_diet_template_ids ?? [], $item->first_diet_template_id))
+                ->map(fn (int $templateId): string => (string) $templateId)
+                ->all(),
+            'firstDietTemplateName' => $item->firstDietTemplate?->name,
             'applicableGoals' => $goals,
             'applicableGoalLabels' => collect($goals)
                 ->map(fn (string $goal) => $this->goalOptions()->get($goal, $goal))
@@ -396,6 +438,28 @@ class NutritionPackageController extends Controller
         return in_array($normalized, self::VISUAL_STYLES, true) ? $normalized : 'normal';
     }
 
+    private function normalizeFirstDietTemplateMode(null|string $value): string
+    {
+        $normalized = trim((string) $value);
+
+        return in_array($normalized, self::FIRST_DIET_TEMPLATE_MODES, true) ? $normalized : 'default';
+    }
+
+    private function normalizeGoalTemplateIds(mixed $value, mixed $legacyTemplateId = null): array
+    {
+        $items = is_array($value) ? $value : [];
+        $legacy = is_numeric($legacyTemplateId) && (int) $legacyTemplateId > 0 ? (int) $legacyTemplateId : null;
+
+        return collect(self::APPLICABLE_GOALS)
+            ->mapWithKeys(function (string $goal) use ($items, $legacy): array {
+                $templateId = $items[$goal] ?? $legacy;
+
+                return [$goal => is_numeric($templateId) && (int) $templateId > 0 ? (int) $templateId : null];
+            })
+            ->filter(fn (?int $templateId): bool => $templateId !== null)
+            ->all();
+    }
+
     private function normalizeFeatures(array $features): array
     {
         return collect($features)
@@ -445,5 +509,21 @@ class NutritionPackageController extends Controller
             'gain-weight' => 'افزایش وزن',
             'maintain-weight' => 'تثبیت وزن',
         ]);
+    }
+
+    private function dietTemplateOptions(): array
+    {
+        return NutritionDietTemplate::query()
+            ->where('is_active', true)
+            ->orderBy('depth')
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get(['id', 'name', 'depth'])
+            ->map(fn (NutritionDietTemplate $item): array => [
+                'value' => (string) $item->id,
+                'label' => str_repeat('— ', (int) $item->depth) . $item->name,
+            ])
+            ->values()
+            ->all();
     }
 }

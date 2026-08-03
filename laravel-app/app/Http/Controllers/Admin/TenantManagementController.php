@@ -8,6 +8,7 @@ use App\Domain\Tenant\Models\AudienceType;
 use App\Domain\Tenant\Models\Domain;
 use App\Domain\Landing\Models\AudienceCheckoutSetting;
 use App\Domain\Landing\Models\DomainTldPrice;
+use App\Domain\Landing\Models\LandingSite;
 use App\Domain\Tenant\Models\SubscriptionPackage;
 use App\Domain\Tenant\Models\FeatureModule;
 use App\Domain\Tenant\Models\Tenant;
@@ -118,6 +119,7 @@ class TenantManagementController extends Controller
             'nutritionInitialTokenDefault' => OpenAiSettings::nutritionInitialTokenGrant(),
             'featureModules' => FeatureModule::query()->where('is_active', true)->orderBy('sort_order')->orderBy('name')->get(),
             'selectedFeatureModuleIds' => collect(old('feature_module_ids', []))->map(fn ($id) => (string) $id)->all(),
+            'landingSites' => LandingSite::query()->with('domains')->where('is_active', true)->orderBy('name')->get(),
             'isEdit' => false,
         ]);
     }
@@ -142,6 +144,7 @@ class TenantManagementController extends Controller
                 'maliart_enabled' => $request->user()?->role === 'admin'
                     && (bool) ($validated['maliart_payment_enabled'] ?? false),
             ],
+            'demo_bar' => $this->normalizedDemoBarSettings($validated),
         ]);
 
         $tenant->createDomain($validated['domain']);
@@ -200,6 +203,7 @@ class TenantManagementController extends Controller
             'nutritionInitialTokenDefault' => OpenAiSettings::nutritionInitialTokenGrant(),
             'featureModules' => FeatureModule::query()->where('is_active', true)->orderBy('sort_order')->orderBy('name')->get(),
             'selectedFeatureModuleIds' => $tenant->featureModules()->pluck('feature_module_id')->map(fn ($id) => (string) $id)->all(),
+            'landingSites' => LandingSite::query()->with('domains')->where('is_active', true)->orderBy('name')->get(),
             'isEdit' => true,
         ]);
     }
@@ -489,6 +493,7 @@ class TenantManagementController extends Controller
                     ? (bool) ($validated['maliart_payment_enabled'] ?? false)
                     : (bool) data_get($tenant->getAttribute('payment_overrides'), 'maliart_enabled', false),
             ],
+            'demo_bar' => $this->normalizedDemoBarSettings($validated),
         ]);
 
         if ($primaryDomain) {
@@ -883,11 +888,18 @@ class TenantManagementController extends Controller
             'feature_module_ids' => ['nullable', 'array'],
             'feature_module_ids.*' => ['integer', 'exists:feature_modules,id'],
             'maliart_payment_enabled' => ['nullable', 'boolean'],
+            'demo_bar_enabled' => ['nullable', 'boolean'],
+            'demo_bar_landing_site_id' => ['nullable', 'integer', 'exists:central.landing_sites,id'],
+            'demo_bar_message' => ['nullable', 'string', 'max:255'],
+            'demo_bar_cta_label' => ['nullable', 'string', 'max:80'],
+            'demo_bar_target_path' => ['nullable', 'string', 'max:255'],
+            'demo_bar_open_new_tab' => ['nullable', 'boolean'],
         ]);
 
         $package = SubscriptionPackage::query()->findOrFail($validated['subscription_package_id']);
         $audience = AudienceType::query()->find($validated['audience_type_id']);
-        $validated['support_ends_at'] = now()->addDays((int) $package->duration_days)->toDateString();
+        $validated['support_ends_at'] = $tenant?->support_ends_at?->toDateString()
+            ?? now()->addDays((int) $package->duration_days)->toDateString();
         $validated['domain_attributes'] = $this->resolveDomainAttributes($validated, $tenant);
         $validated['nutrition_initial_tokens'] = $tenant
             ? 0
@@ -897,8 +909,32 @@ class TenantManagementController extends Controller
         $validated['feature_module_ids'] = $tenant
             ? []
             : collect($validated['feature_module_ids'] ?? [])->map(fn ($id) => (int) $id)->unique()->values()->all();
+        $validated['demo_bar'] = [
+            'enabled' => (bool) ($validated['demo_bar_enabled'] ?? false),
+            'landing_site_id' => (int) ($validated['demo_bar_landing_site_id'] ?? 0),
+            'message' => trim((string) ($validated['demo_bar_message'] ?? '')),
+            'cta_label' => trim((string) ($validated['demo_bar_cta_label'] ?? '')),
+            'target_path' => trim((string) ($validated['demo_bar_target_path'] ?? '/plans')),
+            'open_new_tab' => (bool) ($validated['demo_bar_open_new_tab'] ?? true),
+        ];
 
         return $validated;
+    }
+
+    private function normalizedDemoBarSettings(array $validated): array
+    {
+        $demoBar = $validated['demo_bar'] ?? [];
+        $targetPath = trim((string) ($demoBar['target_path'] ?? '/plans'));
+        $targetPath = $targetPath !== '' ? $targetPath : '/plans';
+
+        return [
+            'enabled' => (bool) ($demoBar['enabled'] ?? false),
+            'landing_site_id' => max(0, (int) ($demoBar['landing_site_id'] ?? 0)),
+            'message' => trim((string) ($demoBar['message'] ?? '')),
+            'cta_label' => trim((string) ($demoBar['cta_label'] ?? '')),
+            'target_path' => str_starts_with($targetPath, '/') ? $targetPath : '/'.ltrim($targetPath, '/'),
+            'open_new_tab' => (bool) ($demoBar['open_new_tab'] ?? true),
+        ];
     }
 
     private function activateSelectedFeatureModules(Tenant $tenant, array $featureModuleIds, Request $request): array

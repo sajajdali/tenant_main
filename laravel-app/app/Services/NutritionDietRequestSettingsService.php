@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Domain\Tenant\Models\NutritionDietPrescription;
+use App\Domain\Tenant\Models\NutritionDietTemplate;
 use App\Domain\Tenant\Models\NutritionTokenLedger;
 use App\Domain\Tenant\Models\TenantUser;
 use App\Domain\Tenant\Models\GeneralSetting;
@@ -34,6 +35,11 @@ class NutritionDietRequestSettingsService
             'manualMealNutritionDietLimit' => $this->manualMealNutritionDietLimit(),
             'mealReplacementHourlyLimit' => $this->mealReplacementHourlyLimit(),
             'mealReplacementDietLimit' => $this->mealReplacementDietLimit(),
+            'autoFirstDietEnabled' => $this->autoFirstDietEnabled(),
+            'autoFirstDietTemplateId' => $this->autoFirstDietTemplateId(),
+            'autoFirstDietTemplateIds' => $this->autoFirstDietTemplateIds(),
+            'autoFirstDietRequiresApproval' => $this->autoFirstDietRequiresApproval(),
+            'dietTemplateOptions' => $this->dietTemplateOptions(),
             'dietGenerationPrompt' => $this->effectivePromptText('general'),
             'promptSettings' => $this->promptSettingsPayload(),
         ];
@@ -129,6 +135,41 @@ class NutritionDietRequestSettingsService
     public function mealReplacementDietLimit(): ?int
     {
         return $this->nullablePositiveInt('meal_replacement_diet_limit');
+    }
+
+    public function autoFirstDietEnabled(): bool
+    {
+        return (bool) ($this->nutritionSettings()['auto_first_diet_enabled'] ?? false);
+    }
+
+    public function autoFirstDietTemplateId(): ?int
+    {
+        return $this->normalizeNullablePositiveInt($this->nutritionSettings()['auto_first_diet_template_id'] ?? null);
+    }
+
+    public function autoFirstDietTemplateIds(): array
+    {
+        $settings = $this->nutritionSettings();
+        $values = is_array($settings['auto_first_diet_template_ids'] ?? null) ? $settings['auto_first_diet_template_ids'] : [];
+        $fallback = $this->autoFirstDietTemplateId();
+
+        return collect(['lose-weight', 'gain-weight', 'maintain-weight'])
+            ->mapWithKeys(fn (string $goal): array => [
+                $goal => $this->normalizeNullablePositiveInt($values[$goal] ?? null) ?? $fallback,
+            ])
+            ->all();
+    }
+
+    public function autoFirstDietTemplateIdForGoal(?string $goal): ?int
+    {
+        $goal = in_array($goal, ['lose-weight', 'gain-weight', 'maintain-weight'], true) ? $goal : 'lose-weight';
+
+        return $this->autoFirstDietTemplateIds()[$goal] ?? null;
+    }
+
+    public function autoFirstDietRequiresApproval(): bool
+    {
+        return (bool) ($this->nutritionSettings()['auto_first_diet_requires_approval'] ?? false);
     }
 
     public function assertMealPhotoAnalysisUsageAllowed(NutritionDietPrescription $prescription, TenantUser $user): void
@@ -264,6 +305,22 @@ class NutritionDietRequestSettingsService
             $nutritionSettings['meal_replacement_diet_limit'] = $this->normalizeNullablePositiveInt($validated['mealReplacementDietLimit'] ?? null);
         }
 
+        if (array_key_exists('autoFirstDietEnabled', $validated)) {
+            $nutritionSettings['auto_first_diet_enabled'] = (bool) $validated['autoFirstDietEnabled'];
+        }
+
+        if (array_key_exists('autoFirstDietTemplateId', $validated)) {
+            $nutritionSettings['auto_first_diet_template_id'] = $this->normalizeNullablePositiveInt($validated['autoFirstDietTemplateId'] ?? null);
+        }
+
+        if (array_key_exists('autoFirstDietTemplateIds', $validated)) {
+            $nutritionSettings['auto_first_diet_template_ids'] = $this->normalizeGoalTemplateIds($validated['autoFirstDietTemplateIds'] ?? []);
+        }
+
+        if (array_key_exists('autoFirstDietRequiresApproval', $validated)) {
+            $nutritionSettings['auto_first_diet_requires_approval'] = (bool) $validated['autoFirstDietRequiresApproval'];
+        }
+
         $incomingPromptSettings = is_array($validated['promptSettings'] ?? null) ? $validated['promptSettings'] : [];
 
         if (array_key_exists('dietGenerationPrompt', $validated) && ! array_key_exists('general', $incomingPromptSettings)) {
@@ -357,10 +414,30 @@ class NutritionDietRequestSettingsService
 
     private function nullablePositiveInt(string $key): ?int
     {
-        $rules = GeneralSetting::query()->first()?->booking_rules ?? [];
-        $nutritionSettings = is_array($rules['nutrition_settings'] ?? null) ? $rules['nutrition_settings'] : [];
+        return $this->normalizeNullablePositiveInt($this->nutritionSettings()[$key] ?? null);
+    }
 
-        return $this->normalizeNullablePositiveInt($nutritionSettings[$key] ?? null);
+    private function nutritionSettings(): array
+    {
+        $rules = GeneralSetting::query()->first()?->booking_rules ?? [];
+
+        return is_array($rules['nutrition_settings'] ?? null) ? $rules['nutrition_settings'] : [];
+    }
+
+    private function dietTemplateOptions(): array
+    {
+        return NutritionDietTemplate::query()
+            ->where('is_active', true)
+            ->orderBy('depth')
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get(['id', 'name', 'depth'])
+            ->map(fn (NutritionDietTemplate $item): array => [
+                'value' => (string) $item->id,
+                'label' => str_repeat('— ', (int) $item->depth) . $item->name,
+            ])
+            ->values()
+            ->all();
     }
 
     private function normalizeNullablePositiveInt(mixed $value): ?int
@@ -372,6 +449,16 @@ class NutritionDietRequestSettingsService
         $number = (int) $value;
 
         return $number > 0 ? $number : null;
+    }
+
+    private function normalizeGoalTemplateIds(mixed $value): array
+    {
+        $items = is_array($value) ? $value : [];
+
+        return collect(['lose-weight', 'gain-weight', 'maintain-weight'])
+            ->mapWithKeys(fn (string $goal): array => [$goal => $this->normalizeNullablePositiveInt($items[$goal] ?? null)])
+            ->filter(fn (?int $templateId): bool => $templateId !== null)
+            ->all();
     }
 
     /**

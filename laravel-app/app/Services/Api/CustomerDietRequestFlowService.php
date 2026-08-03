@@ -7,9 +7,11 @@ namespace App\Services\Api;
 use App\Domain\Tenant\Models\NutritionDietPrescription;
 use App\Domain\Tenant\Models\NutritionDietRequest;
 use App\Domain\Tenant\Models\NutritionDietTemplate;
+use App\Domain\Tenant\Models\NutritionPackage;
 use App\Domain\Tenant\Models\NutritionPackageSubscription;
 use App\Domain\Tenant\Models\NutritionProfile;
 use App\Domain\Tenant\Models\TenantUser;
+use App\Services\NutritionDietRequestSettingsService;
 use App\Services\NutritionPackagePaymentService;
 use App\Support\NutritionMedicalConditionSupport;
 use Illuminate\Database\Eloquent\Builder;
@@ -38,6 +40,7 @@ class CustomerDietRequestFlowService
     public function __construct(
         private readonly NutritionPackagePaymentService $packages,
         private readonly CustomerNutritionProfileDataService $profileData,
+        private readonly NutritionDietRequestSettingsService $settings,
     ) {}
 
     /**
@@ -118,7 +121,7 @@ class CustomerDietRequestFlowService
         }
 
         $template = $requestType === 'ai'
-            ? $this->resolveTemplate($payload['nutritionDietTemplateId'] ?? null)
+            ? $this->resolveTemplate($payload['nutritionDietTemplateId'] ?? null, ! $hasHistory, $profile)
             : null;
 
         if ($requestType === 'expert' && $this->hasActiveExpertPrescription($user)) {
@@ -207,7 +210,9 @@ class CustomerDietRequestFlowService
             'available' => $baseReady && $total > 0 && $remaining > 0,
             'nextStep' => $hasHistory
                 ? '/nutrition/diet-followup/1'
-                : ($mode === 'ai' ? '/nutrition/select-diet' : '/nutrition/diet-request/expert'),
+                : ($mode === 'ai' && $this->autoFirstDietTemplateId($subscription) !== null
+                    ? '/nutrition/diet-request/confirm'
+                    : ($mode === 'ai' ? '/nutrition/select-diet' : '/nutrition/diet-request/expert')),
         ];
     }
 
@@ -223,7 +228,9 @@ class CustomerDietRequestFlowService
             $subscription === null => '/nutrition/membership/packages?direct_buy=1',
             $activeRequest !== null => '/nutrition/profile',
             ! $hasHistory && $profile->mindset_completed_at === null => '/nutrition/membership/mindset/1',
-            default => '/nutrition/diet-type',
+            default => $this->autoFirstDietTemplateId($subscription) !== null
+                ? '/nutrition/diet-request/confirm'
+                : '/nutrition/diet-type',
         };
     }
 
@@ -234,8 +241,12 @@ class CustomerDietRequestFlowService
             : max(0, (int) $subscription->offline_diet_total - (int) $subscription->offline_diet_used);
     }
 
-    private function resolveTemplate(mixed $templateId): NutritionDietTemplate
+    private function resolveTemplate(mixed $templateId, bool $isFirstDiet = false, ?NutritionProfile $profile = null): ?NutritionDietTemplate
     {
+        if (! is_numeric($templateId) && $isFirstDiet && $this->autoFirstDietTemplateId(null, $profile) !== null) {
+            return null;
+        }
+
         if (! is_numeric($templateId)) {
             $this->fail('nutritionDietTemplateId', __('api.nutrition.diet_request.template_required'));
         }
@@ -249,6 +260,44 @@ class CustomerDietRequestFlowService
         }
 
         return $template;
+    }
+
+    private function autoFirstDietTemplateId(?NutritionPackageSubscription $subscription = null, ?NutritionProfile $profile = null): ?int
+    {
+        if (! $this->settings->autoFirstDietEnabled()) {
+            return null;
+        }
+
+        if ($subscription !== null && $this->remainingForMode($subscription, 'ai') <= 0) {
+            return null;
+        }
+
+        $packageId = $subscription?->nutrition_package_id
+            ?? ($profile?->selected_nutrition_package_id ? (int) $profile->selected_nutrition_package_id : null);
+        $package = $packageId ? NutritionPackage::query()->find($packageId) : null;
+
+        if ($package !== null && (int) $package->online_diet_count <= 0) {
+            return null;
+        }
+
+        $mode = (string) ($package?->first_diet_template_mode ?? 'default');
+
+        if ($mode === 'disabled') {
+            return null;
+        }
+
+        $goal = in_array($profile?->diet_goal, ['lose-weight', 'gain-weight', 'maintain-weight'], true)
+            ? (string) $profile->diet_goal
+            : 'lose-weight';
+
+        if ($mode === 'custom') {
+            $templateIds = is_array($package?->first_diet_template_ids) ? $package->first_diet_template_ids : [];
+            $templateId = $templateIds[$goal] ?? $package?->first_diet_template_id;
+
+            return is_numeric($templateId) && (int) $templateId > 0 ? (int) $templateId : null;
+        }
+
+        return $this->settings->autoFirstDietTemplateIdForGoal($goal);
     }
 
     private function hasActiveExpertPrescription(TenantUser $user): bool

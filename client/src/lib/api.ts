@@ -1679,6 +1679,9 @@ export const api = {
       isRecommended?: boolean;
       visualStyle?: string;
       actionLabel?: string | null;
+      firstDietTemplateMode?: string;
+      firstDietTemplateId?: string | null;
+      firstDietTemplateIds?: Record<string, string | null>;
       sortOrder?: number;
       isActive?: boolean;
     }): Promise<ApiResponse<NutritionPackageItem>> => {
@@ -1703,6 +1706,11 @@ export const api = {
       formData.append("is_recommended", payload.isRecommended ? "1" : "0");
       formData.append("visual_style", payload.visualStyle ?? "normal");
       formData.append("action_label", payload.actionLabel ?? "");
+      formData.append("first_diet_template_mode", payload.firstDietTemplateMode ?? "default");
+      formData.append("first_diet_template_id", payload.firstDietTemplateId ?? "");
+      Object.entries(payload.firstDietTemplateIds ?? {}).forEach(([goal, templateId]) => {
+        formData.append(`first_diet_template_ids[${goal}]`, templateId ?? "");
+      });
       formData.append("sort_order", String(payload.sortOrder ?? 0));
       formData.append("is_active", payload.isActive === false ? "0" : "1");
       if (payload.image) {
@@ -1731,6 +1739,9 @@ export const api = {
       isRecommended?: boolean;
       visualStyle?: string;
       actionLabel?: string | null;
+      firstDietTemplateMode?: string;
+      firstDietTemplateId?: string | null;
+      firstDietTemplateIds?: Record<string, string | null>;
       sortOrder?: number;
       isActive: boolean;
     }): Promise<ApiResponse<NutritionPackageItem>> => {
@@ -1755,6 +1766,11 @@ export const api = {
       formData.append("is_recommended", payload.isRecommended ? "1" : "0");
       formData.append("visual_style", payload.visualStyle ?? "normal");
       formData.append("action_label", payload.actionLabel ?? "");
+      formData.append("first_diet_template_mode", payload.firstDietTemplateMode ?? "default");
+      formData.append("first_diet_template_id", payload.firstDietTemplateId ?? "");
+      Object.entries(payload.firstDietTemplateIds ?? {}).forEach(([goal, templateId]) => {
+        formData.append(`first_diet_template_ids[${goal}]`, templateId ?? "");
+      });
       formData.append("sort_order", String(payload.sortOrder ?? 0));
       formData.append("is_active", payload.isActive ? "1" : "0");
       formData.append("remove_image", payload.removeImage ? "1" : "0");
@@ -2090,6 +2106,10 @@ export const api = {
       manualMealNutritionDietLimit?: number | null;
       mealReplacementHourlyLimit?: number | null;
       mealReplacementDietLimit?: number | null;
+      autoFirstDietEnabled: boolean;
+      autoFirstDietTemplateId?: number | string | null;
+      autoFirstDietTemplateIds?: Record<string, number | string | null>;
+      autoFirstDietRequiresApproval: boolean;
       dietGenerationPrompt?: string;
       promptSettings: {
         general?: string;

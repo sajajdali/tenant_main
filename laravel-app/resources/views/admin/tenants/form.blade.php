@@ -20,6 +20,13 @@
         $managedDomainRegistered = filter_var(old('managed_domain_registered', $tenant->managed_domain_registered ?? $tenant->ir_domain_registered ?? false), FILTER_VALIDATE_BOOLEAN);
         $managedDomainRenewsAt = old('managed_domain_renews_at', $tenant->managed_domain_renews_at?->toDateString() ?? $tenant->ir_domain_renews_at?->toDateString() ?? now()->addYear()->toDateString());
         $managedDomainAmount = old('managed_domain_amount', $tenant->managed_domain_amount ?? $tenant->ir_domain_amount ?? $defaultDomainRenewAmount ?? 0);
+        $demoBarSettings = $tenant->demoBarSettings();
+        $demoBarEnabled = filter_var(old('demo_bar_enabled', $demoBarSettings['enabled'] ?? false), FILTER_VALIDATE_BOOLEAN);
+        $demoBarLandingSiteId = old('demo_bar_landing_site_id', $demoBarSettings['landing_site_id'] ?? '');
+        $demoBarMessage = old('demo_bar_message', $demoBarSettings['message'] ?? 'شما در حال مشاهده دموی واقعی سیستم هستید.');
+        $demoBarCtaLabel = old('demo_bar_cta_label', $demoBarSettings['cta_label'] ?? 'خرید و سفارش');
+        $demoBarTargetPath = old('demo_bar_target_path', $demoBarSettings['target_path'] ?? '/plans');
+        $demoBarOpenNewTab = filter_var(old('demo_bar_open_new_tab', $demoBarSettings['open_new_tab'] ?? true), FILTER_VALIDATE_BOOLEAN);
     @endphp
     <div class="row">
         <div class="col-12">
@@ -139,6 +146,63 @@
                                 </div>
                             </div>
                             @endif
+                            <div class="col-12">
+                                <div class="border rounded-3 p-3">
+                                    <div class="form-check form-switch m-0">
+                                        <input type="hidden" name="demo_bar_enabled" value="0">
+                                        <input
+                                            class="form-check-input"
+                                            type="checkbox"
+                                            role="switch"
+                                            id="demo_bar_enabled"
+                                            name="demo_bar_enabled"
+                                            value="1"
+                                            @checked($demoBarEnabled)
+                                        >
+                                        <label class="form-check-label fw-semibold" for="demo_bar_enabled">این سامانه نسخه دمو است</label>
+                                    </div>
+                                    <div class="form-text mt-2">
+                                        اگر فعال باشد، بالای صفحات عمومی سایت یک نوار ثابت دمو با دکمه خرید نمایش داده می‌شود.
+                                    </div>
+                                    <div class="row g-3 mt-2" id="demo-bar-options">
+                                        <div class="col-md-6">
+                                            <label class="form-label" for="demo_bar_landing_site_id">لندینگ مقصد خرید</label>
+                                            <select class="form-select" id="demo_bar_landing_site_id" name="demo_bar_landing_site_id">
+                                                <option value="">انتخاب نشده</option>
+                                                @foreach ($landingSites as $landingSite)
+                                                    @php
+                                                        $primaryLandingDomain = $landingSite->domains->firstWhere('is_primary', true)?->domain ?? $landingSite->domains->first()?->domain;
+                                                    @endphp
+                                                    <option value="{{ $landingSite->id }}" @selected((string) $demoBarLandingSiteId === (string) $landingSite->id)>
+                                                        {{ $landingSite->name }}{{ $primaryLandingDomain ? ' - '.$primaryLandingDomain : '' }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                            <small class="text-muted d-block mt-2">دکمه خرید کاربر را به همین لندینگ منتقل می‌کند.</small>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label" for="demo_bar_target_path">مسیر داخل لندینگ</label>
+                                            <input type="text" class="form-control" id="demo_bar_target_path" name="demo_bar_target_path" value="{{ $demoBarTargetPath }}" dir="ltr" placeholder="/plans">
+                                            <small class="text-muted d-block mt-2">مثلا /plans یا /plans/duration. اگر خالی باشد /plans استفاده می‌شود.</small>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label" for="demo_bar_message">متن نوار دمو</label>
+                                            <input type="text" class="form-control" id="demo_bar_message" name="demo_bar_message" value="{{ $demoBarMessage }}">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label" for="demo_bar_cta_label">متن دکمه</label>
+                                            <input type="text" class="form-control" id="demo_bar_cta_label" name="demo_bar_cta_label" value="{{ $demoBarCtaLabel }}">
+                                        </div>
+                                        <div class="col-12">
+                                            <div class="form-check m-0">
+                                                <input type="hidden" name="demo_bar_open_new_tab" value="0">
+                                                <input class="form-check-input" type="checkbox" id="demo_bar_open_new_tab" name="demo_bar_open_new_tab" value="1" @checked($demoBarOpenNewTab)>
+                                                <label class="form-check-label" for="demo_bar_open_new_tab">باز کردن لینک خرید در تب جدید</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                             <div class="col-md-6">
                                 <label class="form-label" for="setup_fee_preview_amount">{{ __('admin.tenants.form.fields.setup_fee_amount') }}</label>
                                 <input type="text" class="form-control" id="setup_fee_preview_amount" value="{{ __('admin.money.iran_toman', ['amount' => number_format(0)]) }}" readonly>
@@ -356,6 +420,8 @@
             const managedDomainToggle = document.getElementById('managed_domain_registered');
             const managedDomainFields = document.getElementById('managed-domain-fields');
             const managedDomainAmountInput = document.getElementById('managed_domain_amount');
+            const demoBarToggle = document.getElementById('demo_bar_enabled');
+            const demoBarOptions = document.getElementById('demo-bar-options');
             const initialManagedDomainAmount = managedDomainAmountInput?.value ?? '';
             const pageNumberFormatter = new Intl.NumberFormat(document.documentElement.lang || undefined);
             const iranTomanTemplate = @js(__('admin.money.iran_toman', ['amount' => '__AMOUNT__']));
@@ -387,6 +453,17 @@
 
             audienceSelect.addEventListener('change', updateAudienceSetupFee);
             updateAudienceSetupFee();
+
+            const updateDemoBarOptions = () => {
+                if (!demoBarToggle || !demoBarOptions) {
+                    return;
+                }
+
+                demoBarOptions.style.display = demoBarToggle.checked ? '' : 'none';
+            };
+
+            demoBarToggle?.addEventListener('change', updateDemoBarOptions);
+            updateDemoBarOptions();
 
             const selectedTldRenewAmount = () => {
                 if (!domainTldSelect) {

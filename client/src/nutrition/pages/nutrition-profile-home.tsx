@@ -1129,6 +1129,7 @@ export default function NutritionProfileHomePage() {
       && hasValidSubscriptionDate
       && ((activeSubscription.onlineDietRemaining ?? 0) > 0 || (activeSubscription.offlineDietRemaining ?? 0) > 0),
   );
+  const firstAutoDietAvailable = Boolean(profileCompleted && !hasDietHistory && (activeSubscription?.onlineDietRemaining ?? 0) > 0);
   const dietStartHref = !profileCompleted
     ? firstIncompleteProfileHref ?? "/nutrition/membership/goal"
     : hasUsableSubscription
@@ -1136,7 +1137,9 @@ export default function NutritionProfileHomePage() {
         ? "/nutrition/membership/mindset/1"
         : hasDietHistory
           ? "/nutrition/diet-followup/1"
-          : "/nutrition/diet-type"
+          : firstAutoDietAvailable
+            ? "/nutrition/diet-request/confirm"
+            : "/nutrition/diet-type"
       : "/nutrition/membership/packages?direct_buy=1";
   const hasPendingDietRequest = Boolean(activeDietRequest) && !currentPrescription;
   const hasCurrentPrescription = Boolean(currentPrescription);
@@ -1211,6 +1214,21 @@ export default function NutritionProfileHomePage() {
       toast({
         title: t("nutritionProfileHome.toast.incompleteProfileTitle"),
         description: t("nutritionProfileHome.toast.incompleteProfileDescription"),
+      });
+    }
+
+    if (firstAutoDietAvailable) {
+      updateNutritionFormState({
+        dietRequestMode: "ai",
+        selectedDietTemplateId: undefined,
+        selectedDietTemplateName: undefined,
+        expertRequestDescription: undefined,
+        repeatDietFlowRequired: false,
+        repeatDietCheckinCompleted: undefined,
+        repeatDietAnswers: undefined,
+        repeatDietWeightKg: undefined,
+        repeatDietMedicalNotes: undefined,
+        repeatDietMedicalConditionsItems: undefined,
       });
     }
 

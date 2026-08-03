@@ -8,6 +8,7 @@ use App\Domain\Tenant\Models\NutritionDietRequest;
 use App\Domain\Tenant\Models\NutritionDietPrescription;
 use App\Domain\Tenant\Models\NutritionDietTemplate;
 use App\Domain\Tenant\Models\NutritionMealReplacementSuggestion;
+use App\Domain\Tenant\Models\NutritionPackage;
 use App\Domain\Tenant\Models\NutritionPackageSubscription;
 use App\Domain\Tenant\Models\NutritionProfile;
 use App\Domain\Tenant\Models\TenantUser;
@@ -98,12 +99,6 @@ class NutritionDietRequestController extends Controller
         $repeatDietFeedback = $this->normalizeRepeatDietFeedback($validated['repeat_diet_feedback'] ?? null);
         $requestedCurrentWeightKg = isset($validated['current_weight_kg']) ? round((float) $validated['current_weight_kg'], 2) : null;
 
-        if ($requestType === 'ai' && ! $templateId) {
-            throw ValidationException::withMessages([
-                'nutrition_diet_template_id' => 'برای رژیم آنلاین باید الگوی رژیم انتخاب شود.',
-            ]);
-        }
-
         $rewardContext = null;
 
         $payload = DB::transaction(function () use ($requestType, $templateId, $user, $expertDescription, $repeatDietFeedback, $repeatDietMedicalNotes, $repeatDietMedicalConditionItems, $requestedCurrentWeightKg, &$rewardContext): array {
@@ -181,6 +176,14 @@ class NutritionDietRequestController extends Controller
                         'request' => 'رژیم اختصاصی فعلی شما هنوز به پایان نرسیده است. بعد از اتمام این رژیم می‌توانید درخواست جدید ثبت کنید.',
                     ]);
                 }
+            }
+
+            $templateId = $this->resolveFirstDietTemplateId($profile, $hasPreviousPrescription, $templateId);
+
+            if ($requestType === 'ai' && ! $templateId) {
+                throw ValidationException::withMessages([
+                    'nutrition_diet_template_id' => 'برای رژیم آنلاین باید الگوی رژیم انتخاب شود یا تنظیم رژیم اول خودکار کامل باشد.',
+                ]);
             }
 
             $template = null;
@@ -337,7 +340,8 @@ class NutritionDietRequestController extends Controller
             $requestPrescriptionMode = $template?->prescription_mode ?? 'fixed_text';
             $requestAllowFoodReplacement = (bool) ($template?->allow_food_replacement ?? false);
             $requestSuggestDailyReplacements = (bool) ($template?->suggest_daily_replacements ?? false);
-            $requiresManualDeliveryApproval = $requestType === 'ai' && $this->settings->manualAiApprovalRequired();
+            $requiresManualDeliveryApproval = $requestType === 'ai'
+                && ($this->settings->manualAiApprovalRequired() || (! $hasPreviousPrescription && $this->settings->autoFirstDietRequiresApproval()));
 
             $dietRequestAttributes = [
                 'user_id' => $user->id,
@@ -2349,6 +2353,34 @@ class NutritionDietRequestController extends Controller
         $trimmed = trim((string) $value);
 
         return $trimmed === '' ? null : $trimmed;
+    }
+
+    private function resolveFirstDietTemplateId(NutritionProfile $profile, bool $hasPreviousPrescription, ?int $requestedTemplateId): ?int
+    {
+        if ($requestedTemplateId || $hasPreviousPrescription || ! $this->settings->autoFirstDietEnabled()) {
+            return $requestedTemplateId;
+        }
+
+        $packageId = $profile->selected_nutrition_package_id ? (int) $profile->selected_nutrition_package_id : null;
+        $package = $packageId ? NutritionPackage::query()->find($packageId) : null;
+        $mode = (string) ($package?->first_diet_template_mode ?? 'default');
+
+        if ($mode === 'disabled') {
+            return null;
+        }
+
+        $goal = in_array($profile->diet_goal, ['lose-weight', 'gain-weight', 'maintain-weight'], true)
+            ? (string) $profile->diet_goal
+            : 'lose-weight';
+
+        if ($mode === 'custom') {
+            $templateIds = is_array($package?->first_diet_template_ids) ? $package->first_diet_template_ids : [];
+            $templateId = $templateIds[$goal] ?? $package?->first_diet_template_id;
+
+            return is_numeric($templateId) && (int) $templateId > 0 ? (int) $templateId : null;
+        }
+
+        return $this->settings->autoFirstDietTemplateIdForGoal($goal);
     }
 
     private function canManageDietWorkflow(Request $request): bool

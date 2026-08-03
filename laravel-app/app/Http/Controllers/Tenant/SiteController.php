@@ -6,7 +6,9 @@ namespace App\Http\Controllers\Tenant;
 
 use App\Domain\Booking\Models\Barber;
 use App\Domain\Booking\Models\Service;
+use App\Domain\Landing\Models\LandingSite;
 use App\Domain\Tenant\Models\GeneralSetting;
+use App\Domain\Tenant\Models\Tenant;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Tenant\ArticleSettingsController;
 use App\Http\Controllers\Tenant\NutritionLandingSettingsController;
@@ -70,6 +72,7 @@ class SiteController extends Controller
                     'domainRenewal' => $domainRenewal,
                     'panelAccessLocked' => $tenant->isPanelAccessLocked(),
                     'panelAccessMessage' => $tenant->isPanelAccessLocked() ? $tenant->panelAccessMessage() : null,
+                    'demoBar' => $this->demoBarMeta($tenant),
                     'galleryEnabled' => (bool) (($generalSettings?->booking_rules ?? [])['gallery_enabled'] ?? false),
                     'contactEnabled' => (bool) ((($generalSettings?->booking_rules ?? [])['contact_page'] ?? [])['enabled'] ?? false),
                     'storeEnabled' => (bool) ((($generalSettings?->booking_rules ?? [])['store_page'] ?? [])['enabled'] ?? true),
@@ -247,6 +250,55 @@ class SiteController extends Controller
             'Content-Type' => 'image/png',
             'Cache-Control' => 'public, max-age=31536000, immutable',
         ]);
+    }
+
+    private function demoBarMeta(Tenant $tenant): ?array
+    {
+        $settings = $tenant->demoBarSettings();
+
+        if (! (bool) ($settings['enabled'] ?? false)) {
+            return null;
+        }
+
+        $landingSite = $this->demoBarLandingSite($tenant, (int) ($settings['landing_site_id'] ?? 0));
+        $domain = $landingSite?->domains->firstWhere('is_primary', true)?->domain
+            ?? $landingSite?->domains->first()?->domain;
+
+        $path = trim((string) ($settings['target_path'] ?? '/plans'));
+        $path = $path !== '' ? $path : '/plans';
+        $path = str_starts_with($path, '/') ? $path : '/'.$path;
+        $scheme = $domain && app()->environment('local') && ! str_contains($domain, '.ir') ? 'http' : 'https';
+
+        return [
+            'enabled' => true,
+            'message' => trim((string) ($settings['message'] ?? '')) ?: 'شما در حال مشاهده دموی واقعی سیستم هستید.',
+            'ctaLabel' => trim((string) ($settings['cta_label'] ?? '')) ?: 'خرید و سفارش',
+            'url' => $domain ? $scheme.'://'.$domain.$path : null,
+            'openNewTab' => (bool) ($settings['open_new_tab'] ?? true),
+        ];
+    }
+
+    private function demoBarLandingSite(Tenant $tenant, int $landingSiteId): ?LandingSite
+    {
+        if ($landingSiteId > 0) {
+            $landingSite = LandingSite::query()
+                ->with('domains')
+                ->where('is_active', true)
+                ->find($landingSiteId);
+
+            if ($landingSite?->domains->isNotEmpty()) {
+                return $landingSite;
+            }
+        }
+
+        return LandingSite::query()
+            ->with('domains')
+            ->where('is_active', true)
+            ->whereHas('domains')
+            ->when($tenant->audience_type_id, fn ($query) => $query->orderByRaw('CASE WHEN audience_type_id = ? THEN 0 ELSE 1 END', [$tenant->audience_type_id]))
+            ->orderByDesc('is_default')
+            ->orderBy('name')
+            ->first();
     }
 
     private function buildPageMeta(Request $request, string $tenantName, array $rules): array
