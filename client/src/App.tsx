@@ -712,7 +712,7 @@ function AppShell() {
 function DemoPurchaseBar({ demoBar }: { demoBar: NonNullable<TenantMeta["demoBar"]> }) {
   return (
     <div className="demo-purchase-bar fixed inset-x-0 top-0 z-[90] h-[55px] border-b border-[#5c430d] bg-[#1f1807] px-4 text-[#ffbf45] shadow-[0_4px_14px_rgba(0,0,0,.16)]" dir="rtl">
-      <div className="mx-auto flex h-full max-w-7xl items-center justify-between gap-3">
+      <div className="mx-auto flex h-full w-full max-w-[640px] items-center justify-between gap-3">
         <div className="flex min-w-0 flex-1 items-center justify-start gap-2 text-right text-[11px] font-black leading-[15px] sm:text-xs">
           <span className="h-2 w-2 shrink-0 animate-pulse rounded-full bg-[#ffad1f] shadow-[0_0_0_3px_rgba(255,173,31,.16),0_0_10px_rgba(255,173,31,.75)]" aria-hidden="true" />
           <span className="demo-purchase-message">{demoBar.message}</span>
