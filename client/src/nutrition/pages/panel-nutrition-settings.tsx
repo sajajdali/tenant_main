@@ -109,6 +109,12 @@ const AI_LIMIT_GROUPS: AiLimitGroup[] = [
   },
 ];
 
+const FIRST_DIET_GOALS = [
+  { key: "lose-weight", labelKey: "panelNutritionSettings.autoFirstDiet.goal.loseWeight" },
+  { key: "gain-weight", labelKey: "panelNutritionSettings.autoFirstDiet.goal.gainWeight" },
+  { key: "maintain-weight", labelKey: "panelNutritionSettings.autoFirstDiet.goal.maintainWeight" },
+] as const;
+
 function createEmptySettings(): NutritionSettingsPayload {
   return {
     manualAiApprovalRequired: false,
@@ -122,6 +128,11 @@ function createEmptySettings(): NutritionSettingsPayload {
     manualMealNutritionDietLimit: null,
     mealReplacementHourlyLimit: null,
     mealReplacementDietLimit: null,
+    autoFirstDietEnabled: false,
+    autoFirstDietTemplateId: null,
+    autoFirstDietTemplateIds: {},
+    autoFirstDietRequiresApproval: false,
+    dietTemplateOptions: [],
     dietGenerationPrompt: "",
     promptSettings: {
       general: { value: "", default: "", customized: false },
@@ -206,6 +217,10 @@ export default function PanelNutritionSettingsPage() {
     manualMealNutritionDietLimit: source.manualMealNutritionDietLimit ?? null,
     mealReplacementHourlyLimit: source.mealReplacementHourlyLimit ?? null,
     mealReplacementDietLimit: source.mealReplacementDietLimit ?? null,
+    autoFirstDietEnabled: source.autoFirstDietEnabled,
+    autoFirstDietTemplateId: source.autoFirstDietTemplateId ?? null,
+    autoFirstDietTemplateIds: source.autoFirstDietTemplateIds ?? {},
+    autoFirstDietRequiresApproval: source.autoFirstDietRequiresApproval,
     dietGenerationPrompt: promptOverrides.general ?? source.promptSettings.general.value,
     promptSettings: {
       general: promptOverrides.general ?? source.promptSettings.general.value,
@@ -348,6 +363,60 @@ export default function PanelNutritionSettingsPage() {
                     checked={settings.holdIncompletePrescriptionsForReview}
                     onCheckedChange={(checked) => setSettings((current) => ({ ...current, holdIncompletePrescriptionsForReview: checked }))}
                   />
+                </div>
+
+                <div className="space-y-4 rounded-[22px] border border-amber-300/20 bg-amber-300/[0.07] p-4">
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="space-y-1">
+                      <div className="font-bold text-white">{t("panelNutritionSettings.autoFirstDiet.title")}</div>
+                      <div className="text-xs leading-6 text-slate-300">
+                        {t("panelNutritionSettings.autoFirstDiet.description")}
+                      </div>
+                    </div>
+                    <Switch
+                      checked={settings.autoFirstDietEnabled}
+                      onCheckedChange={(checked) => setSettings((current) => ({ ...current, autoFirstDietEnabled: checked }))}
+                    />
+                  </div>
+
+                  {settings.autoFirstDietEnabled ? (
+                    <>
+                      <div className="grid gap-3">
+                        {FIRST_DIET_GOALS.map((goal) => (
+                          <div key={goal.key} className="space-y-2">
+                            <Label className="text-sm text-slate-200">{t(goal.labelKey as MessageKey)}</Label>
+                            <select
+                              value={settings.autoFirstDietTemplateIds?.[goal.key] ? String(settings.autoFirstDietTemplateIds[goal.key]) : ""}
+                              onChange={(event) => setSettings((current) => ({
+                                ...current,
+                                autoFirstDietTemplateIds: {
+                                  ...(current.autoFirstDietTemplateIds ?? {}),
+                                  [goal.key]: event.target.value || null,
+                                },
+                              }))}
+                              className="h-11 w-full rounded-xl border border-white/10 bg-slate-950/60 px-3 text-sm text-white"
+                            >
+                              <option value="">{t("panelNutritionSettings.autoFirstDiet.templatePlaceholder")}</option>
+                              {(settings.dietTemplateOptions ?? []).map((option) => (
+                                <option key={option.value} value={option.value}>{option.label}</option>
+                              ))}
+                            </select>
+                          </div>
+                        ))}
+                      </div>
+
+                      <div className="flex items-center justify-between gap-4 rounded-[18px] border border-white/10 bg-slate-950/20 px-4 py-3">
+                        <div className="space-y-1">
+                          <div className="text-sm font-bold text-white">{t("panelNutritionSettings.autoFirstDiet.approvalTitle")}</div>
+                          <div className="text-xs leading-6 text-slate-400">{t("panelNutritionSettings.autoFirstDiet.approvalDescription")}</div>
+                        </div>
+                        <Switch
+                          checked={settings.autoFirstDietRequiresApproval}
+                          onCheckedChange={(checked) => setSettings((current) => ({ ...current, autoFirstDietRequiresApproval: checked }))}
+                        />
+                      </div>
+                    </>
+                  ) : null}
                 </div>
 
                 <div className="flex items-center justify-between rounded-[22px] border border-white/10 bg-white/[0.04] px-4 py-4">

@@ -36,12 +36,30 @@ export default function NutritionDietTypePage() {
         ? requestsResult.data.items.find((item) => item.status === "sent" || item.status === "in_progress" || item.status === "not_sent") ?? null
         : null;
       const currentSubscription = summaryResult.success ? summaryResult.data.subscription ?? null : null;
+      const firstAutoDietAvailable = !hasPreviousDiet && (currentSubscription?.onlineDietRemaining ?? 0) > 0;
       const availableModes: Array<"ai" | "expert"> = currentSubscription
         ? [
             currentSubscription.onlineDietRemaining > 0 ? "ai" as const : null,
             currentSubscription.offlineDietRemaining > 0 ? "expert" as const : null,
           ].filter((mode): mode is "ai" | "expert" => mode !== null)
         : [];
+
+      if (!currentActiveRequest && currentSubscription && firstAutoDietAvailable) {
+        updateNutritionFormState({
+          dietRequestMode: "ai",
+          selectedDietTemplateId: undefined,
+          selectedDietTemplateName: undefined,
+          expertRequestDescription: undefined,
+          repeatDietFlowRequired: false,
+          repeatDietCheckinCompleted: undefined,
+          repeatDietAnswers: undefined,
+          repeatDietWeightKg: undefined,
+          repeatDietMedicalNotes: undefined,
+          repeatDietMedicalConditionsItems: undefined,
+        });
+        setLocation("/nutrition/diet-request/confirm");
+        return;
+      }
 
       if (!currentActiveRequest && currentSubscription && availableModes.length === 1) {
         const onlyMode = availableModes[0];
@@ -57,7 +75,7 @@ export default function NutritionDietTypePage() {
           repeatDietMedicalNotes: undefined,
           repeatDietMedicalConditionsItems: undefined,
         });
-        setLocation(hasPreviousDiet ? "/nutrition/diet-followup/1" : onlyMode === "ai" ? "/nutrition/select-diet" : "/nutrition/diet-request/expert");
+        setLocation(hasPreviousDiet ? "/nutrition/diet-followup/1" : onlyMode === "ai" ? "/nutrition/diet-request/confirm" : "/nutrition/diet-request/expert");
         return;
       }
 
@@ -125,7 +143,7 @@ export default function NutritionDietTypePage() {
       repeatDietMedicalNotes: undefined,
       repeatDietMedicalConditionsItems: undefined,
     });
-    setLocation(hasDietHistory ? "/nutrition/diet-followup/1" : mode === "ai" ? "/nutrition/select-diet" : "/nutrition/diet-request/expert");
+    setLocation(hasDietHistory ? "/nutrition/diet-followup/1" : mode === "ai" ? "/nutrition/diet-request/confirm" : "/nutrition/diet-request/expert");
   };
 
   if (loading) {

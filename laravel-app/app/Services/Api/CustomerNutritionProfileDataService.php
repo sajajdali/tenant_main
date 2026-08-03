@@ -591,7 +591,45 @@ class CustomerNutritionProfileDataService
             return '/nutrition/membership/mindset/1';
         }
 
-        return $historyCount > 0 ? '/nutrition/diet-followup/1' : '/nutrition/diet-type';
+        if ($historyCount > 0) {
+            return '/nutrition/diet-followup/1';
+        }
+
+        return $this->autoFirstDietTemplateId($profile) !== null
+            ? '/nutrition/diet-request/confirm'
+            : '/nutrition/diet-type';
+    }
+
+    private function autoFirstDietTemplateId(NutritionProfile $profile): ?int
+    {
+        if (! $this->settings->autoFirstDietEnabled()) {
+            return null;
+        }
+
+        $package = $profile->selectedPackage;
+
+        if ($package !== null && (int) $package->online_diet_count <= 0) {
+            return null;
+        }
+
+        $mode = (string) ($package?->first_diet_template_mode ?? 'default');
+
+        if ($mode === 'disabled') {
+            return null;
+        }
+
+        $goal = in_array($profile->diet_goal, ['lose-weight', 'gain-weight', 'maintain-weight'], true)
+            ? (string) $profile->diet_goal
+            : 'lose-weight';
+
+        if ($mode === 'custom') {
+            $templateIds = is_array($package?->first_diet_template_ids) ? $package->first_diet_template_ids : [];
+            $templateId = $templateIds[$goal] ?? $package?->first_diet_template_id;
+
+            return is_numeric($templateId) && (int) $templateId > 0 ? (int) $templateId : null;
+        }
+
+        return $this->settings->autoFirstDietTemplateIdForGoal($goal);
     }
 
     private function firstIncompleteMembershipHref(?NutritionProfile $profile): string

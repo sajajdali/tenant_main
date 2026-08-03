@@ -149,6 +149,10 @@ export interface NutritionPackageItem {
   isRecommended?: boolean;
   visualStyle?: "normal" | "gold" | "vip" | string;
   actionLabel?: string | null;
+  firstDietTemplateMode?: "default" | "custom" | "disabled" | string;
+  firstDietTemplateId?: string | null;
+  firstDietTemplateIds?: Record<string, string | null>;
+  firstDietTemplateName?: string | null;
   applicableGoals?: string[];
   applicableGoalLabels?: string[];
   sortOrder: number;
@@ -161,6 +165,7 @@ export interface NutritionPackageListPayload {
   items: NutritionPackageItem[];
   parentOptions?: NutritionDietTemplateParentOption[];
   goalOptions?: NutritionDietTemplateOption[];
+  dietTemplateOptions?: NutritionDietTemplateOption[];
 }
 
 export interface NutritionDiscountCodeItem {
@@ -667,6 +672,11 @@ export interface NutritionSettingsPayload {
   manualMealNutritionDietLimit?: number | null;
   mealReplacementHourlyLimit?: number | null;
   mealReplacementDietLimit?: number | null;
+  autoFirstDietEnabled: boolean;
+  autoFirstDietTemplateId?: number | string | null;
+  autoFirstDietTemplateIds?: Record<string, number | string | null>;
+  autoFirstDietRequiresApproval: boolean;
+  dietTemplateOptions?: NutritionDietTemplateOption[];
   dietGenerationPrompt: string;
   promptSettings: NutritionDietPromptSettings;
 }
@@ -2097,6 +2107,13 @@ export interface TenantMeta {
   landingSiteId?: number;
   primaryDomain?: string;
   isLandingDomain?: boolean;
+  demoBar?: {
+    enabled: boolean;
+    message: string;
+    ctaLabel: string;
+    url?: string | null;
+    openNewTab?: boolean;
+  } | null;
   landingSiteSettings?: Record<string, unknown>;
   landingSections?: Record<string, {
     id: number;

@@ -34,6 +34,9 @@ class NutritionPackage extends Model
         'is_recommended',
         'visual_style',
         'action_label',
+        'first_diet_template_mode',
+        'first_diet_template_id',
+        'first_diet_template_ids',
         'applicable_goals',
         'sort_order',
         'is_active',
@@ -50,6 +53,8 @@ class NutritionPackage extends Model
             'discounted_price_amount' => 'integer',
             'features' => 'array',
             'is_recommended' => 'boolean',
+            'first_diet_template_id' => 'integer',
+            'first_diet_template_ids' => 'array',
             'applicable_goals' => 'array',
             'sort_order' => 'integer',
             'is_active' => 'boolean',
@@ -64,5 +69,10 @@ class NutritionPackage extends Model
     public function children(): HasMany
     {
         return $this->hasMany(self::class, 'parent_id')->orderBy('sort_order')->orderBy('name');
+    }
+
+    public function firstDietTemplate(): BelongsTo
+    {
+        return $this->belongsTo(NutritionDietTemplate::class, 'first_diet_template_id');
     }
 }

@@ -42,6 +42,12 @@ const PACKAGE_FEATURE_ICON_OPTIONS = [
   { value: "sparkles", label: "ویژه" },
 ];
 
+const FIRST_DIET_GOALS = [
+  { key: "lose-weight", labelKey: "panelNutritionPackages.firstDiet.goal.loseWeight" },
+  { key: "gain-weight", labelKey: "panelNutritionPackages.firstDiet.goal.gainWeight" },
+  { key: "maintain-weight", labelKey: "panelNutritionPackages.firstDiet.goal.maintainWeight" },
+] as const;
+
 function normalizeFeatureRows(rows: PackageFeatureRow[]) {
   return rows.map((row) => ({ icon: row.icon || "clipboard", text: row.text.trim() })).filter((row) => row.text !== "");
 }
@@ -78,6 +84,7 @@ export default function PanelNutritionPackagesPage() {
   const [items, setItems] = useState<NutritionPackageItem[]>([]);
   const [parentOptions, setParentOptions] = useState<NutritionDietTemplateParentOption[]>([]);
   const [goalOptions, setGoalOptions] = useState<NutritionDietTemplateOption[]>([]);
+  const [dietTemplateOptions, setDietTemplateOptions] = useState<NutritionDietTemplateOption[]>([]);
 
   const [name, setName] = useState("");
   const [shortTitle, setShortTitle] = useState("");
@@ -100,6 +107,8 @@ export default function PanelNutritionPackagesPage() {
   const [imagePreview, setImagePreview] = useState("");
   const [parentId, setParentId] = useState<string>("none");
   const [applicableGoals, setApplicableGoals] = useState<string[]>([]);
+  const [firstDietTemplateMode, setFirstDietTemplateMode] = useState("default");
+  const [firstDietTemplateIds, setFirstDietTemplateIds] = useState<Record<string, string | null>>({});
 
   const [editItem, setEditItem] = useState<NutritionPackageItem | null>(null);
   const [editName, setEditName] = useState("");
@@ -124,6 +133,8 @@ export default function PanelNutritionPackagesPage() {
   const [editRemoveImage, setEditRemoveImage] = useState(false);
   const [editParentId, setEditParentId] = useState<string>("none");
   const [editApplicableGoals, setEditApplicableGoals] = useState<string[]>([]);
+  const [editFirstDietTemplateMode, setEditFirstDietTemplateMode] = useState("default");
+  const [editFirstDietTemplateIds, setEditFirstDietTemplateIds] = useState<Record<string, string | null>>({});
 
   const loadItems = async () => {
     setLoading(true);
@@ -132,6 +143,7 @@ export default function PanelNutritionPackagesPage() {
       setItems(res.data.items);
       setParentOptions(res.data.parentOptions ?? []);
       setGoalOptions(res.data.goalOptions ?? []);
+      setDietTemplateOptions(res.data.dietTemplateOptions ?? []);
     } else {
       toast({ variant: "destructive", title: t("common.error"), description: res.message });
     }
@@ -173,6 +185,8 @@ export default function PanelNutritionPackagesPage() {
     setImagePreview("");
     setParentId("none");
     setApplicableGoals([]);
+    setFirstDietTemplateMode("default");
+    setFirstDietTemplateIds({});
   };
 
   const availableParentOptions = useMemo(
@@ -285,6 +299,15 @@ export default function PanelNutritionPackagesPage() {
               </div>
 
               <PackageFeatureEditor rows={featureRows} onChange={setFeatureRows} t={t} />
+
+              <FirstDietTemplateControls
+                mode={firstDietTemplateMode}
+                templateIds={firstDietTemplateIds}
+                templateOptions={dietTemplateOptions}
+                onModeChange={setFirstDietTemplateMode}
+                onTemplateIdsChange={setFirstDietTemplateIds}
+                t={t}
+              />
 
               <div className="space-y-2">
                 <Label>{t("panelNutritionPackages.fields.parent")}</Label>
@@ -441,6 +464,8 @@ export default function PanelNutritionPackagesPage() {
                     isRecommended,
                     visualStyle,
                     actionLabel: actionLabel.trim() || null,
+                    firstDietTemplateMode,
+                    firstDietTemplateIds: firstDietTemplateMode === "custom" ? firstDietTemplateIds : {},
                     sortOrder: Number(sortOrder) || 0,
                     isActive,
                   });
@@ -509,6 +534,8 @@ export default function PanelNutritionPackagesPage() {
                         setEditRemoveImage(false);
                         setEditParentId(selected.parentId ?? "none");
                         setEditApplicableGoals(selected.applicableGoals ?? []);
+                        setEditFirstDietTemplateMode(selected.firstDietTemplateMode ?? "default");
+                        setEditFirstDietTemplateIds(selected.firstDietTemplateIds ?? {});
                       }}
                       onDelete={async (selected) => {
                         setDeletingId(selected.id);
@@ -565,6 +592,14 @@ export default function PanelNutritionPackagesPage() {
               <div className="text-xs text-muted-foreground">{t("panelNutritionPackages.descriptionHint")}</div>
             </div>
             <PackageFeatureEditor rows={editFeatureRows} onChange={setEditFeatureRows} t={t} />
+            <FirstDietTemplateControls
+              mode={editFirstDietTemplateMode}
+              templateIds={editFirstDietTemplateIds}
+              templateOptions={dietTemplateOptions}
+              onModeChange={setEditFirstDietTemplateMode}
+              onTemplateIdsChange={setEditFirstDietTemplateIds}
+              t={t}
+            />
             <div className="space-y-2">
               <Label>{t("panelNutritionPackages.fields.parent")}</Label>
               <select
@@ -727,6 +762,8 @@ export default function PanelNutritionPackagesPage() {
                   isRecommended: editIsRecommended,
                   visualStyle: editVisualStyle,
                   actionLabel: editActionLabel.trim() || null,
+                  firstDietTemplateMode: editFirstDietTemplateMode,
+                  firstDietTemplateIds: editFirstDietTemplateMode === "custom" ? editFirstDietTemplateIds : {},
                   sortOrder: Number(editSortOrder) || 0,
                   isActive: editIsActive,
                 });
@@ -744,6 +781,66 @@ export default function PanelNutritionPackagesPage() {
           </div>
         </DialogContent>
       </Dialog>
+    </div>
+  );
+}
+
+function FirstDietTemplateControls({
+  mode,
+  templateIds,
+  templateOptions,
+  onModeChange,
+  onTemplateIdsChange,
+  t,
+}: {
+  mode: string;
+  templateIds: Record<string, string | null>;
+  templateOptions: NutritionDietTemplateOption[];
+  onModeChange: (value: string) => void;
+  onTemplateIdsChange: (value: Record<string, string | null>) => void;
+  t: Translator;
+}) {
+  return (
+    <div className="space-y-3 rounded-2xl border border-amber-500/20 bg-amber-500/5 p-4">
+      <div>
+        <Label>{t("panelNutritionPackages.firstDiet.title")}</Label>
+        <div className="mt-1 text-xs leading-6 text-muted-foreground">{t("panelNutritionPackages.firstDiet.description")}</div>
+      </div>
+      <div className="grid gap-3 md:grid-cols-2">
+        <div className="space-y-2">
+          <Label>{t("panelNutritionPackages.firstDiet.modeLabel")}</Label>
+          <select
+            value={mode}
+            onChange={(event) => {
+              onModeChange(event.target.value);
+              if (event.target.value !== "custom") {
+                onTemplateIdsChange({});
+              }
+            }}
+            className="flex h-11 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm"
+          >
+            <option value="default">{t("panelNutritionPackages.firstDiet.mode.default")}</option>
+            <option value="custom">{t("panelNutritionPackages.firstDiet.mode.custom")}</option>
+            <option value="disabled">{t("panelNutritionPackages.firstDiet.mode.disabled")}</option>
+          </select>
+        </div>
+        {FIRST_DIET_GOALS.map((goal) => (
+          <div key={goal.key} className="space-y-2">
+            <Label>{t(goal.labelKey as any)}</Label>
+            <select
+              value={templateIds[goal.key] ?? ""}
+              onChange={(event) => onTemplateIdsChange({ ...templateIds, [goal.key]: event.target.value || null })}
+              disabled={mode !== "custom"}
+              className="flex h-11 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm disabled:opacity-60"
+            >
+              <option value="">{t("panelNutritionPackages.firstDiet.templatePlaceholder")}</option>
+              {templateOptions.map((option) => (
+                <option key={option.value} value={option.value}>{option.label}</option>
+              ))}
+            </select>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

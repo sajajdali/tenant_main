@@ -50,7 +50,7 @@ export default function NutritionDietRequestConfirmPage() {
       return;
     }
 
-    if (!formState.dietRequestMode || (formState.dietRequestMode === "ai" && !formState.selectedDietTemplateId)) {
+    if (!formState.dietRequestMode) {
       setLocation("/nutrition/diet-type");
       return;
     }
@@ -65,7 +65,7 @@ export default function NutritionDietRequestConfirmPage() {
       setSubscription(summaryResult.success ? summaryResult.data.subscription ?? null : null);
       setLoading(false);
     });
-  }, [formState.dietRequestMode, formState.repeatDietCheckinCompleted, formState.repeatDietFlowRequired, formState.selectedDietTemplateId, isLoading, setLocation, user]);
+  }, [formState.dietRequestMode, formState.repeatDietCheckinCompleted, formState.repeatDietFlowRequired, isLoading, setLocation, user]);
 
   if (isLoading || loading || !profile) {
     return (
@@ -87,9 +87,14 @@ export default function NutritionDietRequestConfirmPage() {
     : formState.dietRequestMode === "ai"
       ? t("nutritionDietRequestConfirm.noQuota.ai")
       : t("nutritionDietRequestConfirm.noQuota.expert");
+  const backHref = formState.dietRequestMode === "ai"
+    ? formState.selectedDietTemplateId || formState.repeatDietFlowRequired
+      ? "/nutrition/select-diet"
+      : "/nutrition/diet-type"
+    : "/nutrition/diet-request/expert";
 
   const handleSubmit = async () => {
-    if (!formState.dietRequestMode || (formState.dietRequestMode === "ai" && !formState.selectedDietTemplateId) || submitting) {
+    if (!formState.dietRequestMode || submitting) {
       return;
     }
 
@@ -137,7 +142,7 @@ export default function NutritionDietRequestConfirmPage() {
 
       <div className="relative z-10 mx-auto flex min-h-[calc(100vh-16px)] w-full max-w-[390px] flex-col overflow-hidden rounded-[32px] border border-white/10 bg-[linear-gradient(180deg,rgba(10,16,29,0.98),rgba(5,9,17,0.995)_54%,rgba(5,8,14,1))] px-5 pb-6 pt-5 shadow-[0_24px_80px_-52px_rgba(0,0,0,0.95),inset_0_1px_0_rgba(255,255,255,0.04)]">
         <NutritionTopbar
-          backHref={formState.dietRequestMode === "ai" ? "/nutrition/select-diet" : "/nutrition/diet-request/expert"}
+          backHref={backHref}
           title={t("nutritionDietRequestConfirm.topbarTitle")}
           description={t("nutritionDietRequestConfirm.topbarDescription")}
           variant="hero"

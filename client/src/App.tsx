@@ -17,7 +17,7 @@ import { useToast } from "@/hooks/use-toast";
 import { subscribeAppointmentBooked, subscribeUserNotificationInboxUpdates } from "@/lib/realtime";
 import { DEFAULT_APPOINTMENT_ALERT_SOUND, getAppointmentAlertSound } from "@/lib/appointment-alert-sounds";
 import { isAppointmentBookingDisabled } from "@/lib/audience";
-import type { Appointment, UserRole } from "@/lib/types";
+import type { Appointment, TenantMeta, UserRole } from "@/lib/types";
 import { useFormat, useLocale, useT } from "@/i18n/locale";
 import { LOCALE_DEFINITIONS } from "@/i18n/registry";
 import NotFound from "@/pages/not-found";
@@ -651,9 +651,12 @@ function AppShell() {
   const [location] = useLocation();
   const { isLoading } = useAuth();
   const { locale } = useLocale();
+  const tenantMeta = getInitialTenantMeta();
+  const demoBar = tenantMeta?.demoBar;
 
   const isProtectedPath = location.startsWith("/panel") || location.startsWith("/settings");
   const panelDir = LOCALE_DEFINITIONS[locale].dir;
+  const showDemoBar = !isProtectedPath && demoBar?.enabled === true;
 
   useEffect(() => {
     const cachedAppearance = readCachedAppearance();
@@ -675,17 +678,56 @@ function AppShell() {
     };
   }, [isProtectedPath]);
 
+  useEffect(() => {
+    if (!isProtectedPath && showDemoBar) {
+      document.body.dataset.tenantDemoBar = "true";
+      return () => {
+        delete document.body.dataset.tenantDemoBar;
+      };
+    }
+
+    delete document.body.dataset.tenantDemoBar;
+  }, [isProtectedPath, showDemoBar]);
+
   if (isProtectedPath && isLoading) {
     return <ProtectedRouteBootstrap />;
   }
 
   return (
-    <div className={isProtectedPath ? "tenant-panel-shell" : undefined} dir={isProtectedPath ? panelDir : undefined}>
+    <div
+      className={isProtectedPath ? "tenant-panel-shell" : showDemoBar ? "tenant-public-shell has-demo-bar" : "tenant-public-shell"}
+      dir={isProtectedPath ? panelDir : undefined}
+      style={!isProtectedPath && showDemoBar ? { paddingTop: "55px" } : undefined}
+    >
+      {showDemoBar ? <DemoPurchaseBar demoBar={demoBar} /> : null}
       <PanelRealtimeNotifier />
       <PanelHelpButton />
       <Router />
       <PwaEngagementPrompt />
       <Toaster />
+    </div>
+  );
+}
+
+function DemoPurchaseBar({ demoBar }: { demoBar: NonNullable<TenantMeta["demoBar"]> }) {
+  return (
+    <div className="demo-purchase-bar fixed inset-x-0 top-0 z-[90] h-[55px] border-b border-[#5c430d] bg-[#1f1807] px-4 text-[#ffbf45] shadow-[0_4px_14px_rgba(0,0,0,.16)]" dir="rtl">
+      <div className="mx-auto flex h-full max-w-7xl items-center justify-between gap-3">
+        <div className="flex min-w-0 flex-1 items-center justify-start gap-2 text-right text-[11px] font-black leading-[15px] sm:text-xs">
+          <span className="h-2 w-2 shrink-0 animate-pulse rounded-full bg-[#ffad1f] shadow-[0_0_0_3px_rgba(255,173,31,.16),0_0_10px_rgba(255,173,31,.75)]" aria-hidden="true" />
+          <span className="demo-purchase-message">{demoBar.message}</span>
+        </div>
+        {demoBar.url ? (
+          <a
+            href={demoBar.url}
+            target={demoBar.openNewTab === false ? undefined : "_blank"}
+            rel={demoBar.openNewTab === false ? undefined : "noopener noreferrer"}
+            className="order-last inline-flex h-8 min-w-24 shrink-0 items-center justify-center rounded-xl bg-[#ffad1f] px-4 text-[11px] font-black text-[#121006] transition hover:bg-[#ffc04d] sm:order-first sm:min-w-32 sm:text-xs"
+          >
+            {demoBar.ctaLabel}
+          </a>
+        ) : null}
+      </div>
     </div>
   );
 }

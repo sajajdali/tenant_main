@@ -74,7 +74,7 @@ return [
             'feature_modules_title' => 'Tenant feature modules',
             'feature_modules_help' => 'Selected modules are installed and activated after the tenant database is created.',
             'feature_modules_empty' => 'No active module is available for selection.',
-            'support_recalculation_notice' => 'Each save recalculates the support end date from today based on the selected package. If this audience has a setup fee, sales commission is calculated from that amount and credited to the sales expert or manager wallet.',
+            'support_recalculation_notice' => 'Editing a tenant keeps the current support end date. Support changes must be applied through the renewal or support adjustment flow. Setup-fee sales commission is calculated and credited only when the tenant is created.',
             'current_support_ends_at' => 'Current support end:',
             'domain_management_title' => 'Tenant domain management',
             'domain_management_help' => 'Choose whether the user manages the domain or your organization handles renewal. If the domain is registered for the user, its due date and renewal amount appear in the panel and central reports.',

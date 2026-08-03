@@ -43,6 +43,7 @@ class Tenant extends BaseTenant implements TenantWithDatabase
         'ir_domain_renews_at',
         'ir_domain_amount',
         'payment_overrides',
+        'demo_bar',
         'data',
     ];
 
@@ -200,6 +201,13 @@ class Tenant extends BaseTenant implements TenantWithDatabase
         return preg_match('/^\d{4}$/', $code) ? $code : null;
     }
 
+    public function demoBarSettings(): array
+    {
+        $settings = $this->tenantMetaValue('demo_bar', []);
+
+        return is_array($settings) ? $settings : [];
+    }
+
     private function tenantMetaValue(string $key, mixed $default = null): mixed
     {
         $data = $this->tenantMetaPayload();
@@ -226,6 +234,7 @@ class Tenant extends BaseTenant implements TenantWithDatabase
             'panel_access_last_changed_by_user_id',
             'sandbox_overrides',
             'payment_overrides',
+            'demo_bar',
         ] as $key) {
             if (array_key_exists($key, $attributes)) {
                 $payload[$key] = $this->getAttribute($key);

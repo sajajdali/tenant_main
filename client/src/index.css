@@ -51,6 +51,41 @@ body[data-tenant-panel="true"] [data-radix-portal] :where(.text-center, .text-ce
   text-align: center;
 }
 
+.tenant-public-shell.has-demo-bar :where(header.sticky.top-0, .sticky.top-0) {
+  top: 55px !important;
+}
+
+.tenant-public-shell.has-demo-bar :where(.fixed.top-0:not(.demo-purchase-bar)) {
+  top: 55px !important;
+}
+
+.demo-purchase-message {
+  display: -webkit-box;
+  max-height: 30px;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  white-space: normal;
+}
+
+body[data-tenant-demo-bar="true"] [data-radix-portal] :where([data-state].fixed.inset-0) {
+  top: 55px !important;
+}
+
+body[data-tenant-demo-bar="true"] [data-radix-portal] :where([role="dialog"].fixed) {
+  top: 55px !important;
+  height: calc(100dvh - 55px) !important;
+}
+
+body[data-tenant-demo-bar="true"] [data-radix-portal] .sheet-content {
+  top: 55px !important;
+  height: calc(100dvh - 55px) !important;
+}
+
+body[data-tenant-demo-bar="true"] [data-radix-portal] .sheet-content > button {
+  top: 1.25rem !important;
+}
+
 /* Money entry stays visually stable in every locale: the numeric value is on
    the left while the overlaid locale currency unit stays on the right. */
 .booking-finance-money-input,
