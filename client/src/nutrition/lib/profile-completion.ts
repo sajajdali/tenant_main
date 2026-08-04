@@ -10,6 +10,30 @@ export function isNutritionProfileComplete(profile: NutritionProfile | null) {
   );
 }
 
+export function hasStartedNutritionMembership(profile: NutritionProfile | null) {
+  if (!profile) {
+    return false;
+  }
+
+  return Boolean(
+    profile.dietGoal ||
+    profile.gender ||
+    profile.athleteMode ||
+    profile.activityLevel ||
+    profile.birthDate ||
+    profile.heightCm != null ||
+    profile.weightKg != null ||
+    profile.targetWeightKg != null ||
+    profile.weeklyWeightChangeKg != null ||
+    profile.preferencesCompletedAt ||
+    profile.medicalConditions ||
+    profile.medicalConditionsItems?.length ||
+    profile.medicationsAndSupplements ||
+    profile.dislikedFoods ||
+    profile.foodAllergies,
+  );
+}
+
 export function syncNutritionProfileFormState(profile: NutritionProfile | null) {
   if (!profile) {
     return;
