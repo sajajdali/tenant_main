@@ -40,6 +40,14 @@ export default function NutritionWebAppEntryPage({ forcedPreviewPath }: { forced
       return;
     }
 
+    if (!user.name?.trim()) {
+      setProfileReady(false);
+      setProfileChecking(false);
+      setIncompleteProfileHref(null);
+      setIncompleteProfileOpen(false);
+      return;
+    }
+
     setProfileChecking(true);
     api.nutrition.getProfile().then((result) => {
       const profile = result.success ? result.data.profile : null;
