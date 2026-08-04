@@ -2385,17 +2385,24 @@ class NutritionDietRequestController extends Controller
 
     private function canManageDietWorkflow(Request $request): bool
     {
-        $role = (string) ($request->user('tenant_web')?->role ?? '');
-
-        return in_array($role, [
+        $user = $request->user('tenant_web');
+        $role = (string) ($user?->role ?? '');
+        $allowedRoles = [
             'admin',
+            'barber',
             'nutritionist',
             'nutrition_doctor',
             'nutrition-expert',
             'nutrition-doctor',
             'expert',
             'doctor',
-        ], true);
+        ];
+
+        if (in_array($role, $allowedRoles, true)) {
+            return true;
+        }
+
+        return $user && method_exists($user, 'hasAnyRole') && $user->hasAnyRole($allowedRoles);
     }
 
     private function hasAiGenerationColumns(): bool
