@@ -8,7 +8,7 @@ import { NutritionTopbar } from "@/nutrition/components/nutrition-topbar";
 import { useAuth } from "@/lib/auth";
 import { NutritionStartDialog } from "@/nutrition/components/nutrition-start-dialog";
 import { api } from "@/lib/api";
-import { getFirstIncompleteNutritionDraftHref, getFirstIncompleteNutritionProfileHref, hasNutritionProfileHomeAccess, isNutritionProfileComplete } from "@/nutrition/lib/profile-completion";
+import { getFirstIncompleteNutritionDraftHref, getFirstIncompleteNutritionProfileHref, hasNutritionProfileHomeAccess, hasStartedNutritionMembership, isNutritionProfileComplete } from "@/nutrition/lib/profile-completion";
 import { getNutritionFormState } from "@/nutrition/lib/nutrition-form-state";
 import { getNutritionLandingVariantSettings, NUTRITION_LANDING_VARIANTS } from "@/nutrition/lib/landing-presets";
 import { resolveNutritionStartPath } from "@/nutrition/lib/start-routing";
@@ -46,7 +46,7 @@ export default function NutritionWebAppEntryPage({ forcedPreviewPath }: { forced
       const draftHref = profile ? null : getFirstIncompleteNutritionDraftHref(getNutritionFormState());
       setProfileReady(hasNutritionProfileHomeAccess(profile));
 
-      if (!forcedPreviewPath && ((profile && !isNutritionProfileComplete(profile)) || draftHref)) {
+      if (!forcedPreviewPath && ((profile && hasStartedNutritionMembership(profile) && !isNutritionProfileComplete(profile)) || draftHref)) {
         setIncompleteProfileHref(profile ? getFirstIncompleteNutritionProfileHref(profile) ?? "/nutrition/membership/goal" : draftHref);
         setIncompleteProfileOpen(true);
       } else {
