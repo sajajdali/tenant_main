@@ -1864,6 +1864,38 @@ export const api = {
   },
 
   nutritionDietRequests: {
+    options: async (): Promise<ApiResponse<{
+      flowType: "first_diet" | "follow_up";
+      hasDietHistory: boolean;
+      requiresFollowUpQuestions: boolean;
+      nextStep: string | null;
+      modes: Array<{
+        key: "ai" | "expert";
+        included: boolean;
+        total: number;
+        used: number;
+        remaining: number;
+        available: boolean;
+        nextStep: string;
+      }>;
+    }>> => {
+      return getJson<{
+        flowType: "first_diet" | "follow_up";
+        hasDietHistory: boolean;
+        requiresFollowUpQuestions: boolean;
+        nextStep: string | null;
+        modes: Array<{
+          key: "ai" | "expert";
+          included: boolean;
+          total: number;
+          used: number;
+          remaining: number;
+          available: boolean;
+          nextStep: string;
+        }>;
+      }>("/api/v1/nutrition/diet-requests/options");
+    },
+
     create: async (payload: {
       nutritionDietTemplateId?: string;
       requestType: "ai" | "expert";

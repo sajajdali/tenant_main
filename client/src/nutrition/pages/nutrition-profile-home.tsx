@@ -806,6 +806,7 @@ export default function NutritionProfileHomePage() {
   const [currentPrescription, setCurrentPrescription] = useState<NutritionDietPrescription | null>(null);
   const [dietRenewal, setDietRenewal] = useState<NutritionProfileDashboardPayload["dashboard"]["dietRenewal"]>(null);
   const [hasDietHistory, setHasDietHistory] = useState(false);
+  const [dietRequestNextStep, setDietRequestNextStep] = useState<string | null>(null);
   const [nextAppointment, setNextAppointment] = useState<Appointment | null>(null);
   const [onlineChatUnreadCount, setOnlineChatUnreadCount] = useState(0);
   const [managerMessage, setManagerMessage] = useState<string | null>(null);
@@ -885,9 +886,10 @@ export default function NutritionProfileHomePage() {
       setLoading(true);
     }
 
-    const [dashboardResult, appointmentResult] = await Promise.all([
+    const [dashboardResult, appointmentResult, dietRequestOptionsResult] = await Promise.all([
       api.nutrition.getProfileDashboard(),
       api.appointments.mine("upcoming", 1, 1),
+      api.nutritionDietRequests.options(),
     ]);
 
     const nextProfile = dashboardResult.success ? dashboardResult.data.profile : null;
@@ -923,6 +925,7 @@ export default function NutritionProfileHomePage() {
     setCurrentPrescription(dashboardResult.data.prescription.current ?? null);
     setDietRenewal(dashboardResult.data.dashboard.dietRenewal ?? null);
     setHasDietHistory(Boolean(dashboardResult.data.prescription.hasHistory));
+    setDietRequestNextStep(dietRequestOptionsResult.success ? dietRequestOptionsResult.data.nextStep : null);
     setNextAppointment(upcomingAppointment);
 
     if (nextProfile?.targetWeightKg) {
@@ -1129,17 +1132,15 @@ export default function NutritionProfileHomePage() {
       && hasValidSubscriptionDate
       && ((activeSubscription.onlineDietRemaining ?? 0) > 0 || (activeSubscription.offlineDietRemaining ?? 0) > 0),
   );
-  const firstAutoDietAvailable = Boolean(profileCompleted && !hasDietHistory && (activeSubscription?.onlineDietRemaining ?? 0) > 0);
+  const firstAutoDietAvailable = Boolean(profileCompleted && !hasDietHistory && dietRequestNextStep === "/nutrition/diet-request/confirm");
   const dietStartHref = !profileCompleted
     ? firstIncompleteProfileHref ?? "/nutrition/membership/goal"
     : hasUsableSubscription
-      ? !hasDietHistory && !profile?.mindsetCompletedAt
-        ? "/nutrition/membership/mindset/1"
-        : hasDietHistory
-          ? "/nutrition/diet-followup/1"
-          : firstAutoDietAvailable
-            ? "/nutrition/diet-request/confirm"
-            : "/nutrition/diet-type"
+      ? dietRequestNextStep ?? (!hasDietHistory && !profile?.mindsetCompletedAt
+          ? "/nutrition/membership/mindset/1"
+          : hasDietHistory
+            ? "/nutrition/diet-followup/1"
+            : "/nutrition/diet-type")
       : "/nutrition/membership/packages?direct_buy=1";
   const hasPendingDietRequest = Boolean(activeDietRequest) && !currentPrescription;
   const hasCurrentPrescription = Boolean(currentPrescription);

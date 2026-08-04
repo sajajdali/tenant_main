@@ -20,10 +20,11 @@ export default function NutritionDietTypePage() {
   const [activeRequest, setActiveRequest] = useState<NutritionDietRequest | null>(null);
   const [hasDietHistory, setHasDietHistory] = useState(false);
   const [subscription, setSubscription] = useState<NutritionPackageSubscription | null>(null);
+  const [modeNextSteps, setModeNextSteps] = useState<Record<"ai" | "expert", string | null>>({ ai: null, expert: null });
   const [exhaustedDialogMode, setExhaustedDialogMode] = useState<"ai" | "expert" | null>(null);
 
   useEffect(() => {
-    Promise.all([api.nutrition.getProfile(), api.nutritionDietRequests.listMine(), api.nutritionPrescriptions.list(), api.nutritionPackageCheckout.summary()]).then(([profileResult, requestsResult, prescriptionsResult, summaryResult]) => {
+    Promise.all([api.nutrition.getProfile(), api.nutritionDietRequests.listMine(), api.nutritionPrescriptions.list(), api.nutritionPackageCheckout.summary(), api.nutritionDietRequests.options()]).then(([profileResult, requestsResult, prescriptionsResult, summaryResult, optionsResult]) => {
       const profile = profileResult.success ? profileResult.data.profile : null;
       const hasPreviousDiet = Boolean(prescriptionsResult.success ? prescriptionsResult.data.items?.length : 0);
 
@@ -36,7 +37,10 @@ export default function NutritionDietTypePage() {
         ? requestsResult.data.items.find((item) => item.status === "sent" || item.status === "in_progress" || item.status === "not_sent") ?? null
         : null;
       const currentSubscription = summaryResult.success ? summaryResult.data.subscription ?? null : null;
-      const firstAutoDietAvailable = !hasPreviousDiet && (currentSubscription?.onlineDietRemaining ?? 0) > 0;
+      const aiModeNextStep = optionsResult.success
+        ? optionsResult.data.modes.find((mode) => mode.key === "ai")?.nextStep
+        : null;
+      const firstAutoDietAvailable = !hasPreviousDiet && aiModeNextStep === "/nutrition/diet-request/confirm";
       const availableModes: Array<"ai" | "expert"> = currentSubscription
         ? [
             currentSubscription.onlineDietRemaining > 0 ? "ai" as const : null,
@@ -75,13 +79,20 @@ export default function NutritionDietTypePage() {
           repeatDietMedicalNotes: undefined,
           repeatDietMedicalConditionsItems: undefined,
         });
-        setLocation(hasPreviousDiet ? "/nutrition/diet-followup/1" : onlyMode === "ai" ? "/nutrition/diet-request/confirm" : "/nutrition/diet-request/expert");
+        const onlyModeNextStep = optionsResult.success
+          ? optionsResult.data.modes.find((mode) => mode.key === onlyMode)?.nextStep
+          : null;
+        setLocation(hasPreviousDiet ? "/nutrition/diet-followup/1" : onlyModeNextStep ?? (onlyMode === "ai" ? "/nutrition/select-diet" : "/nutrition/diet-request/expert"));
         return;
       }
 
       setActiveRequest(currentActiveRequest);
       setHasDietHistory(hasPreviousDiet);
       setSubscription(currentSubscription);
+      setModeNextSteps({
+        ai: optionsResult.success ? optionsResult.data.modes.find((mode) => mode.key === "ai")?.nextStep ?? null : null,
+        expert: optionsResult.success ? optionsResult.data.modes.find((mode) => mode.key === "expert")?.nextStep ?? null : null,
+      });
       setLoading(false);
     });
   }, [setLocation]);
@@ -143,7 +154,7 @@ export default function NutritionDietTypePage() {
       repeatDietMedicalNotes: undefined,
       repeatDietMedicalConditionsItems: undefined,
     });
-    setLocation(hasDietHistory ? "/nutrition/diet-followup/1" : mode === "ai" ? "/nutrition/diet-request/confirm" : "/nutrition/diet-request/expert");
+    setLocation(hasDietHistory ? "/nutrition/diet-followup/1" : modeNextSteps[mode] ?? (mode === "ai" ? "/nutrition/select-diet" : "/nutrition/diet-request/expert"));
   };
 
   if (loading) {
