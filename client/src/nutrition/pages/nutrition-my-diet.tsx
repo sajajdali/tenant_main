@@ -2105,7 +2105,8 @@ export default function NutritionMyDietPage() {
   const isDietFinished = Boolean(prescription?.endsAt && todayIso > prescription.endsAt);
   const isFinishedDietEndSelected = isDietFinished && !hasUserSelectedDate;
   const showDailyPrescriptionFinishedEmptyState = prescription?.prescriptionMode === "daily_prescription" && isFinishedDietEndSelected;
-  const canRegisterFoodForActiveDate = !isFinishedDietEndSelected;
+  const isFutureActiveDate = Boolean(activeDate && activeDate > todayIso);
+  const canRegisterFoodForActiveDate = !isFinishedDietEndSelected && !isFutureActiveDate;
   const canRegisterWaterForActiveDate = !isFinishedDietEndSelected;
   const showFinishedDietLoggingBlockedToast = () => {
     toast({
@@ -2411,7 +2412,7 @@ export default function NutritionMyDietPage() {
       return false;
     }
 
-    if (prescription?.prescriptionMode === "daily_prescription" && !isDietFinished && activeDate !== toTehranIsoDate(new Date())) {
+    if (prescription?.prescriptionMode === "daily_prescription" && !isDietFinished && activeDate > todayIso) {
       toast({
         variant: "destructive",
         title: t("nutritionMyDiet.toast.dayLogBlockedTitle"),
@@ -2460,7 +2461,7 @@ export default function NutritionMyDietPage() {
       return;
     }
 
-    if (prescription?.prescriptionMode === "daily_prescription" && !isDietFinished && activeDate !== toTehranIsoDate(new Date())) {
+    if (prescription?.prescriptionMode === "daily_prescription" && !isDietFinished && activeDate > todayIso) {
       toast({
         variant: "destructive",
         title: t("nutritionMyDiet.toast.deleteDayBlockedTitle"),
@@ -3415,7 +3416,7 @@ export default function NutritionMyDietPage() {
                               rawQuantityText={optionData["quantity_text"]}
                               source={optionData}
                               calories={optionData["calories"] as number | string | null}
-                              action={
+                              action={canRegisterFoodForActiveDate ? (
                                 <Button
                                   type="button"
                                   disabled={savingMealKey === slotKey}
@@ -3448,7 +3449,7 @@ export default function NutritionMyDietPage() {
                                   {savingMealKey === slotKey ? <Loader2 className="ms-2 h-4.5 w-4.5 animate-spin" /> : <ArrowDown className="ms-2 h-4.5 w-4.5" />}
                                   {isSelected ? t("nutritionMyDiet.mealCard.loggedForDay") : t("nutritionMyDiet.mealCard.ateThisFood")}
                                 </Button>
-                              }
+                              ) : null}
                             />
                           ) : null}
                         </div>
@@ -3879,7 +3880,7 @@ export default function NutritionMyDietPage() {
                           />
 
                           <div className="mt-4 flex gap-2">
-                            <Button
+                            {canRegisterFoodForActiveDate ? <Button
                               type="button"
                               disabled={savingMealKey === slotKey}
                               aria-disabled={!canRegisterFoodForActiveDate}
@@ -3909,7 +3910,7 @@ export default function NutritionMyDietPage() {
                             >
                               {savingMealKey === slotKey ? <Loader2 className="me-2 h-4.5 w-4.5 animate-spin" /> : <ArrowDown className="me-2 h-4.5 w-4.5" />}
                               {isSelected ? t("nutritionMyDiet.mealCard.loggedForDay") : t("nutritionMyDiet.daily.ateMeal")}
-                            </Button>
+                            </Button> : null}
                             {prescription.allowFoodReplacement && activeDate === todayIso && canRegisterFoodForActiveDate ? (
                               <Button
                                 type="button"
