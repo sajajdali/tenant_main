@@ -13,6 +13,7 @@ use App\Domain\Tenant\Models\NutritionPackageOrder;
 use App\Domain\Tenant\Models\TenantUser;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 
@@ -24,6 +25,8 @@ class CustomLandingService
 
     public function captureToken(Request $request, string $token): CustomLandingPartner
     {
+        abort_unless($this->tablesReady(['custom_landing_partners']), 404);
+
         $partner = CustomLandingPartner::query()->where('public_token', $token)->where('status', 'active')->firstOrFail();
         $request->session()->put(self::SESSION_TOKEN_KEY, $partner->public_token);
 
@@ -32,6 +35,12 @@ class CustomLandingService
 
     public function attributeSessionUser(Request $request, TenantUser $user): ?CustomLandingAttribution
     {
+        if (! $this->tablesReady(['custom_landing_partners', 'custom_landing_attributions'])) {
+            $request->session()->forget(self::SESSION_TOKEN_KEY);
+
+            return null;
+        }
+
         $token = (string) $request->session()->pull(self::SESSION_TOKEN_KEY, self::DIRECT_TOKEN);
 
         $partner = $token === self::DIRECT_TOKEN
@@ -71,6 +80,8 @@ class CustomLandingService
 
     public function overview(): array
     {
+        abort_unless($this->tablesReady(), 503, 'ماژول لندینگ اختصاصی هنوز برای این سایت نصب نشده است.');
+
         $this->directPartner();
         $credited = (int) CustomLandingCommission::query()->where('status', 'credited')->sum('commission_amount');
         $reversed = (int) CustomLandingCommission::query()->where('status', 'reversed')->sum('commission_amount');
@@ -132,6 +143,10 @@ class CustomLandingService
 
     public function homeRedirectPartner(): ?CustomLandingPartner
     {
+        if (! $this->tablesReady(['custom_landing_partners'])) {
+            return null;
+        }
+
         $settings = $this->settings();
         if (! (bool) ($settings['redirectHomeEnabled'] ?? false)) {
             return null;
@@ -238,6 +253,8 @@ class CustomLandingService
     public function recordNutritionPackagePayment(NutritionPackageOrder $order): ?CustomLandingCommission
     {
         if ($order->status !== 'paid') return null;
+        if (! $this->tablesReady(['custom_landing_partners', 'custom_landing_attributions', 'custom_landing_commissions'])) return null;
+
         return DB::transaction(function () use ($order): ?CustomLandingCommission {
             $attribution = CustomLandingAttribution::query()->with('partner')->lockForUpdate()->where('tenant_user_id', $order->user_id)->first();
             if (! $attribution || ! $attribution->partner || $attribution->partner->status !== 'active') return null;
@@ -335,6 +352,8 @@ class CustomLandingService
 
     public function directPartner(): CustomLandingPartner
     {
+        abort_unless($this->tablesReady(['custom_landing_partners']), 503, 'ماژول لندینگ اختصاصی هنوز برای این سایت نصب نشده است.');
+
         /** @var CustomLandingPartner $partner */
         $partner = CustomLandingPartner::withTrashed()->firstOrCreate(
             ['public_token' => self::DIRECT_TOKEN],
@@ -363,5 +382,24 @@ class CustomLandingService
     private function isDirectPartner(CustomLandingPartner $partner): bool
     {
         return $partner->public_token === self::DIRECT_TOKEN;
+    }
+
+    /**
+     * @param array<int, string> $tables
+     */
+    private function tablesReady(array $tables = [
+        'custom_landing_partners',
+        'custom_landing_attributions',
+        'custom_landing_commissions',
+        'custom_landing_settlements',
+    ]): bool
+    {
+        foreach ($tables as $table) {
+            if (! Schema::hasTable($table)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }
