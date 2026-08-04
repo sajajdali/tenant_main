@@ -35,7 +35,7 @@ import { NotificationBell } from "@/components/notification-bell";
 import type { Appointment, NutritionDietPrescription, NutritionDietRequest, NutritionPackageCheckoutSummaryPayload, NutritionProfile, NutritionProfileDashboardPayload } from "@/lib/types";
 import { NutritionTopbar } from "@/nutrition/components/nutrition-topbar";
 import { getNutritionFormState, updateNutritionFormState } from "@/nutrition/lib/nutrition-form-state";
-import { getFirstIncompleteNutritionDraftHref, getFirstIncompleteNutritionProfileHref, isNutritionProfileComplete, syncNutritionProfileFormState } from "@/nutrition/lib/profile-completion";
+import { getFirstIncompleteNutritionDraftHref, getFirstIncompleteNutritionProfileHref, hasStartedNutritionMembership, isNutritionProfileComplete, syncNutritionProfileFormState } from "@/nutrition/lib/profile-completion";
 import { subscribeNutritionDietRequestUpdates, subscribeOnlineChatUserUpdates, subscribeUserNotificationInboxUpdates } from "@/lib/realtime";
 import { playChatNotificationSound } from "@/lib/chat-notification-sound";
 import { isAppointmentBookingDisabled } from "@/lib/audience";
@@ -906,7 +906,7 @@ export default function NutritionProfileHomePage() {
     setProfileAccessMessage(null);
     setProfile(nextProfile);
     syncNutritionProfileFormState(nextProfile);
-    if (!options?.silent && ((nextProfile && !isNutritionProfileComplete(nextProfile)) || (!nextProfile && getFirstIncompleteNutritionDraftHref(formState)))) {
+    if (!options?.silent && ((nextProfile && hasStartedNutritionMembership(nextProfile) && !isNutritionProfileComplete(nextProfile)) || (!nextProfile && getFirstIncompleteNutritionDraftHref(formState)))) {
       setIncompleteMembershipOpen(true);
     }
     setManagerMessage(dashboardResult.data.managerMessage ?? null);
