@@ -49,10 +49,14 @@ class TenantMaliartGateway
     public function verify(string $paymentId, string $orderId, int $amount): string
     {
         $remote = $this->client->status($paymentId);
+        $remoteAmount = MaliartPaymentClient::amountAsToman(
+            (int) ($remote['amount'] ?? -1),
+            (string) ($remote['currency'] ?? ''),
+        );
+
         if ((string) ($remote['payment_id'] ?? '') !== $paymentId
             || (string) ($remote['order_id'] ?? '') !== $orderId
-            || (int) ($remote['amount'] ?? -1) !== $amount
-            || (string) ($remote['currency'] ?? '') !== 'IRT'
+            || $remoteAmount !== $amount
             || (string) ($remote['status'] ?? '') !== 'paid') {
             throw new RuntimeException(__('payment.sms_top_up.maliart_invalid_response'));
         }

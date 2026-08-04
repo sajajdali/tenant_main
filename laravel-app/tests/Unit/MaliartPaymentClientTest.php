@@ -78,4 +78,16 @@ class MaliartPaymentClientTest extends TestCase
         $this->assertSame('paid', $result['status']);
         Http::assertSent(fn ($request): bool => $request->method() === 'GET');
     }
+
+    public function test_it_keeps_toman_amounts_for_irt_currency(): void
+    {
+        $this->assertSame(125000, MaliartPaymentClient::amountAsToman(125000, 'IRT'));
+        $this->assertSame(125000, MaliartPaymentClient::amountAsToman(125000, 'T'));
+    }
+
+    public function test_it_converts_bank_rial_amounts_back_to_toman(): void
+    {
+        $this->assertSame(125000, MaliartPaymentClient::amountAsToman(1250000, 'IRR'));
+        $this->assertSame(125000, MaliartPaymentClient::amountAsToman(1250000, 'RIAL'));
+    }
 }

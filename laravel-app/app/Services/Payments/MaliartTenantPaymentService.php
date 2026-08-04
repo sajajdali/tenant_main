@@ -77,10 +77,14 @@ class MaliartTenantPaymentService
         }
 
         $remote = $this->client->status($remotePaymentId);
+        $remoteAmount = MaliartPaymentClient::amountAsToman(
+            (int) ($remote['amount'] ?? -1),
+            (string) ($remote['currency'] ?? ''),
+        );
+
         if ((string) ($remote['payment_id'] ?? '') !== $remotePaymentId
             || (string) ($remote['order_id'] ?? '') !== (string) $payment->invoice_number
-            || (int) ($remote['amount'] ?? -1) !== (int) $payment->payable_amount
-            || (string) ($remote['currency'] ?? '') !== 'IRT'
+            || $remoteAmount !== (int) $payment->payable_amount
             || (string) ($remote['status'] ?? '') !== 'paid') {
             throw new RuntimeException(__('payment.sms_top_up.maliart_invalid_response'));
         }

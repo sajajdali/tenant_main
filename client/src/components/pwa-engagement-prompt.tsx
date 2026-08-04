@@ -18,6 +18,7 @@ type BeforeInstallPromptEvent = Event & {
 };
 
 const INSTALL_SNOOZE_KEY = "barberbook.pwa.installPromptSnoozedAt";
+const INSTALL_MARKER_KEY = "barberbook.pwa.installedAt";
 const NOTIFICATION_SNOOZE_KEY = "barberbook.pwa.notificationPromptSnoozedAt";
 const INSTALL_PROMPT_DELAY_MS = 12_000;
 const SNOOZE_DAYS = 14;
@@ -33,6 +34,36 @@ function isRecentlySnoozed(key: string) {
 
 function snooze(key: string) {
   window.localStorage.setItem(key, String(Date.now()));
+}
+
+function markInstalled() {
+  window.localStorage.setItem(INSTALL_MARKER_KEY, String(Date.now()));
+}
+
+function hasInstallMarker() {
+  return Number(window.localStorage.getItem(INSTALL_MARKER_KEY) || 0) > 0;
+}
+
+async function isInstalledWebApp() {
+  if (typeof window === "undefined") {
+    return false;
+  }
+
+  if (isStandalonePwa() || hasInstallMarker()) {
+    return true;
+  }
+
+  const relatedApps = (window.navigator as Navigator & {
+    getInstalledRelatedApps?: () => Promise<Array<unknown>>;
+  }).getInstalledRelatedApps;
+
+  if (typeof relatedApps !== "function") {
+    return false;
+  }
+
+  const apps = await relatedApps.call(window.navigator).catch(() => []);
+
+  return apps.length > 0;
 }
 
 function isIosDevice() {
@@ -116,8 +147,18 @@ export function PwaEngagementPrompt() {
 
     setIsStandalone(isStandalonePwa());
     setInstallAppName(getInstallAppName(t("pwa.thisSite")));
-    setInstallHidden(isStandalonePwa() || isRecentlySnoozed(INSTALL_SNOOZE_KEY));
+    setInstallHidden(isStandalonePwa() || hasInstallMarker() || isRecentlySnoozed(INSTALL_SNOOZE_KEY));
     setNotificationHidden(isRecentlySnoozed(NOTIFICATION_SNOOZE_KEY));
+    void isInstalledWebApp().then((installed) => {
+      if (!installed) {
+        return;
+      }
+
+      markInstalled();
+      setIsStandalone(true);
+      setInstallHidden(true);
+      setDeferredPrompt(null);
+    });
 
     if ("Notification" in window) {
       setNotificationPermission(Notification.permission);
@@ -125,15 +166,34 @@ export function PwaEngagementPrompt() {
 
     const handleBeforeInstallPrompt = (event: Event) => {
       event.preventDefault();
-      setDeferredPrompt(event as BeforeInstallPromptEvent);
-      setInstallAppName(getInstallAppName(t("pwa.thisSite")));
-      setInstallHidden(isStandalonePwa() || isRecentlySnoozed(INSTALL_SNOOZE_KEY));
+      void isInstalledWebApp().then((installed) => {
+        if (installed) {
+          markInstalled();
+          setIsStandalone(true);
+          setInstallHidden(true);
+          setDeferredPrompt(null);
+          return;
+        }
+
+        setDeferredPrompt(event as BeforeInstallPromptEvent);
+        setInstallAppName(getInstallAppName(t("pwa.thisSite")));
+        setInstallHidden(isRecentlySnoozed(INSTALL_SNOOZE_KEY));
+      });
+    };
+
+    const handleAppInstalled = () => {
+      markInstalled();
+      setIsStandalone(true);
+      setInstallHidden(true);
+      setDeferredPrompt(null);
     };
 
     window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+    window.addEventListener("appinstalled", handleAppInstalled);
 
     return () => {
       window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+      window.removeEventListener("appinstalled", handleAppInstalled);
     };
   }, [t]);
 
@@ -228,6 +288,8 @@ export function PwaEngagementPrompt() {
     if (choice?.outcome !== "accepted") {
       dismissInstall();
     } else {
+      markInstalled();
+      setIsStandalone(true);
       setInstallHidden(true);
     }
   };

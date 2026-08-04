@@ -473,10 +473,12 @@ class SmsTopUpPaymentService
         $remote = $this->maliart->status($remotePaymentId);
         $remoteStatus = (string) ($remote['status'] ?? '');
         $remoteOrderId = (string) ($remote['order_id'] ?? '');
-        $remoteAmount = (int) ($remote['amount'] ?? 0);
-        $remoteCurrency = (string) ($remote['currency'] ?? '');
+        $remoteAmount = MaliartPaymentClient::amountAsToman(
+            (int) ($remote['amount'] ?? 0),
+            (string) ($remote['currency'] ?? ''),
+        );
 
-        if ($remoteOrderId !== (string) $payment->invoice_number || $remoteAmount !== (int) $payment->payable_amount || $remoteCurrency !== 'IRT') {
+        if ($remoteOrderId !== (string) $payment->invoice_number || $remoteAmount !== (int) $payment->payable_amount) {
             $payment->update([
                 'status' => 'failed',
                 'failure_reason' => __('payment.sms_top_up.maliart_mismatch'),

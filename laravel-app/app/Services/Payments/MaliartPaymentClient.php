@@ -12,6 +12,15 @@ use RuntimeException;
 
 class MaliartPaymentClient
 {
+    public static function amountAsToman(int $amount, ?string $currency): int
+    {
+        $normalizedCurrency = strtoupper(trim((string) $currency));
+
+        return in_array($normalizedCurrency, ['IRR', 'R', 'RIAL'], true)
+            ? (int) floor($amount / 10)
+            : $amount;
+    }
+
     public function enabled(): bool
     {
         $settings = SystemSetting::getValue('maliart_payment', []);
