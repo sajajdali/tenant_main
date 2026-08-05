@@ -585,6 +585,13 @@ export default function PanelPage() {
     ...(isNutritionExpertAudience
       ? [
           {
+            title: t("panelDashboard.nutritionCards.packageOrders.title"),
+            description: t("panelDashboard.nutritionCards.packageOrders.description"),
+            href: "/panel/nutrition/package-orders",
+            icon: ShoppingBag,
+            disabled: supportExpired,
+          } satisfies PanelCard,
+          {
             title: t("panelDashboard.nutritionCards.prescribe.title"),
             description: t("panelDashboard.nutritionCards.prescribe.description"),
             href: "/panel/nutrition/prescribe",
@@ -667,6 +674,7 @@ export default function PanelPage() {
       "/panel/nutrition/audio-guidance": "nutrition_templates",
       "/panel/nutrition/ai-prompt-presets": "nutrition_templates",
       "/panel/nutrition/diet-files": "nutrition_templates",
+      "/panel/nutrition/package-orders": "nutrition_packages",
       "/panel/nutrition/packages": "nutrition_packages",
       "/panel/nutrition/discounts": "nutrition_discounts",
       "/panel/nutrition/templates": "nutrition_templates",
@@ -694,6 +702,10 @@ export default function PanelPage() {
       return isNutritionExpertAudience;
     }
 
+    if (item.href === "/panel/nutrition/package-orders") {
+      return isNutritionExpertAudience;
+    }
+
     if (item.href === "/panel/nutrition/exercises") {
       return isNutritionExpertAudience;
     }
@@ -709,6 +721,7 @@ export default function PanelPage() {
       "/panel/nutrition/exercises": "nutrition_templates",
       "/panel/nutrition/ai-prompt-presets": "nutrition_templates",
       "/panel/nutrition/diet-files": "nutrition_templates",
+      "/panel/nutrition/package-orders": "nutrition_packages",
       "/panel/nutrition/packages": "nutrition_packages",
       "/panel/nutrition/discounts": "nutrition_discounts",
       "/panel/nutrition/templates": "nutrition_templates",

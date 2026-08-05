@@ -261,12 +261,44 @@ class NutritionPackagePaymentService
             ->paginate($perPage);
     }
 
-    public function adminOrders(int $perPage = 20)
+    public function adminOrders(array $filters = [], int $perPage = 20)
     {
-        return NutritionPackageOrder::query()
-            ->with(['user', 'package', 'subscription', 'discountCode'])
+        $q = trim((string) ($filters['q'] ?? ''));
+        $user = trim((string) ($filters['user'] ?? ''));
+        $mobile = trim((string) ($filters['mobile'] ?? ''));
+        $dateFrom = trim((string) ($filters['date_from'] ?? ''));
+        $dateTo = trim((string) ($filters['date_to'] ?? ''));
+
+        return NutritionPackageSubscription::query()
+            ->with(['user', 'package', 'order.discountCode'])
+            ->when($q !== '', function ($query) use ($q): void {
+                $query->where(function ($query) use ($q): void {
+                    $query->whereHas('user', function ($query) use ($q): void {
+                        $query->where('name', 'like', "%{$q}%")
+                            ->orWhere('mobile', 'like', "%{$q}%");
+                    })
+                        ->orWhereHas('package', function ($query) use ($q): void {
+                            $query->where('name', 'like', "%{$q}%");
+                        })
+                        ->orWhereHas('order', function ($query) use ($q): void {
+                            $query->where('invoice_number', 'like', "%{$q}%")
+                                ->orWhere('transaction_id', 'like', "%{$q}%")
+                                ->orWhere('reference_id', 'like', "%{$q}%")
+                                ->orWhere('gateway', 'like', "%{$q}%");
+                        });
+                });
+            })
+            ->when($user !== '', function ($query) use ($user): void {
+                $query->whereHas('user', fn ($query) => $query->where('name', 'like', "%{$user}%"));
+            })
+            ->when($mobile !== '', function ($query) use ($mobile): void {
+                $query->whereHas('user', fn ($query) => $query->where('mobile', 'like', "%{$mobile}%"));
+            })
+            ->when($dateFrom !== '', fn ($query) => $query->whereDate('created_at', '>=', $dateFrom))
+            ->when($dateTo !== '', fn ($query) => $query->whereDate('created_at', '<=', $dateTo))
             ->latest('id')
-            ->paginate($perPage);
+            ->paginate(max(1, min(100, $perPage)))
+            ->through(fn (NutritionPackageSubscription $subscription): array => $this->serializePurchasedPackage($subscription));
     }
 
     public function activeSubscriptionForUser(TenantUser $user): ?NutritionPackageSubscription
@@ -299,10 +331,14 @@ class NutritionPackagePaymentService
             'discountAmount' => (int) $order->discount_amount,
             'payableAmount' => (int) $order->payable_amount,
             'referenceId' => $order->reference_id,
+            'transactionId' => $order->transaction_id,
             'discountCode' => $order->discount_code,
             'discountCodeSnapshot' => $order->discount_code_snapshot,
+            'metaJson' => $order->meta_json,
+            'failureReason' => $order->failure_reason,
             'createdAt' => $order->created_at?->toIso8601String(),
             'paidAt' => $order->paid_at?->toIso8601String(),
+            'expiresAt' => $order->expires_at?->toIso8601String(),
             'package' => $order->relationLoaded('package') ? $this->serializePackage($order->package) : null,
             'subscription' => $order->relationLoaded('subscription') ? $this->serializeSubscription($order->subscription) : null,
             'user' => $order->relationLoaded('user') && $order->user ? [
@@ -333,6 +369,43 @@ class NutritionPackagePaymentService
             'priceAmount' => (int) $subscription->price_amount,
             'payableAmount' => (int) $subscription->payable_amount,
             'package' => $subscription->relationLoaded('package') && $subscription->package ? $this->serializePackage($subscription->package) : null,
+        ];
+    }
+
+    public function serializePurchasedPackage(NutritionPackageSubscription $subscription): array
+    {
+        /** @var NutritionPackageOrder|null $order */
+        $order = $subscription->relationLoaded('order') ? $subscription->order : null;
+        $isManualGrant = ! $order;
+
+        return [
+            'id' => (string) ($order?->id ?? 'subscription-'.$subscription->id),
+            'invoiceNumber' => $order?->invoice_number ?? 'SUB-'.$subscription->id,
+            'status' => $isManualGrant ? 'manual' : $order->status,
+            'gateway' => $order?->gateway ?? 'manual',
+            'sandboxMode' => (bool) ($order?->sandbox_mode ?? false),
+            'amount' => (int) ($order?->amount ?? $subscription->price_amount),
+            'discountAmount' => (int) ($order?->discount_amount ?? max(0, $subscription->price_amount - $subscription->payable_amount)),
+            'payableAmount' => (int) ($order?->payable_amount ?? $subscription->payable_amount),
+            'referenceId' => $order?->reference_id,
+            'transactionId' => $order?->transaction_id,
+            'discountCode' => $order?->discount_code,
+            'discountCodeSnapshot' => $order?->discount_code_snapshot,
+            'metaJson' => [
+                'subscription' => $subscription->meta_json,
+                'payment' => $order?->meta_json,
+            ],
+            'failureReason' => $order?->failure_reason,
+            'createdAt' => $subscription->created_at?->toIso8601String(),
+            'paidAt' => $order?->paid_at?->toIso8601String(),
+            'expiresAt' => $order?->expires_at?->toIso8601String(),
+            'package' => $subscription->relationLoaded('package') && $subscription->package ? $this->serializePackage($subscription->package) : null,
+            'subscription' => $this->serializeSubscription($subscription),
+            'user' => $subscription->relationLoaded('user') && $subscription->user ? [
+                'id' => (string) $subscription->user->id,
+                'name' => $subscription->user->name,
+                'mobile' => $subscription->user->mobile,
+            ] : null,
         ];
     }
 
