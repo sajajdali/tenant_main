@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, ArrowRight, Check, ChevronLeft, ChevronRight, FileText, ListChecks, Loader2, Sparkles } from "lucide-react";
+import { ArrowLeft, ArrowRight, ChevronLeft, ChevronRight, FileText, ListChecks, Loader2, Sparkles } from "lucide-react";
 import { useLocation, useRoute } from "wouter";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
@@ -34,7 +34,6 @@ export default function NutritionSelectDietPage() {
   const formState = useMemo(() => getNutritionFormState(), []);
   const [loading, setLoading] = useState(true);
   const [items, setItems] = useState<NutritionDietTemplateItem[]>([]);
-  const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(formState.selectedDietTemplateId ?? null);
   const [failedImageIds, setFailedImageIds] = useState<string[]>([]);
 
   useEffect(() => {
@@ -93,28 +92,10 @@ export default function NutritionSelectDietPage() {
     setLocation("/nutrition/diet-request/confirm");
   }, [currentNode, isDirectLeafRoute, setLocation]);
 
-  const selectedPath = useMemo(
-    () => selectedTemplateId ? findTemplatePath(items, selectedTemplateId) : null,
-    [items, selectedTemplateId],
-  );
-  const selectedTemplate = selectedPath?.[selectedPath.length - 1] ?? null;
   const ActionIcon = isRtl ? ArrowLeft : ArrowRight;
   const DrilldownIcon = isRtl ? ChevronLeft : ChevronRight;
 
-  const confirmSelectedTemplate = () => {
-    if (!selectedTemplate) {
-      return;
-    }
-
-    updateNutritionFormState({
-      selectedDietTemplateId: selectedTemplate.id,
-      selectedDietTemplateName: selectedTemplate.name,
-    });
-    setLocation("/nutrition/diet-request/confirm");
-  };
-
   const selectTemplateAndContinue = (item: NutritionDietTemplateItem) => {
-    setSelectedTemplateId(item.id);
     updateNutritionFormState({
       selectedDietTemplateId: item.id,
       selectedDietTemplateName: item.name,
@@ -184,7 +165,6 @@ export default function NutritionSelectDietPage() {
               visibleItems.map((item, index) => {
                 const hasChildren = (item.children ?? []).length > 0;
                 const cleanConditions = parseNutritionTemplateConditions(item.conditionsText).cleanText;
-                const selected = selectedPath?.some((pathItem) => pathItem.id === item.id) ?? false;
                 const hasImage = Boolean(item.imageUrl?.trim()) && !failedImageIds.includes(item.id);
                 const recommended = index === 1;
 
@@ -205,9 +185,7 @@ export default function NutritionSelectDietPage() {
                       hasImage
                         ? "rounded-[22px] border p-4"
                         : "rounded-[22px] border px-4 py-4",
-                      selected
-                        ? "border-amber-300/80 bg-[linear-gradient(155deg,rgba(46,36,23,0.72),rgba(20,20,22,0.98))] shadow-[0_24px_52px_-34px_rgba(251,191,36,0.72)]"
-                        : "border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.035),rgba(11,16,25,0.72))] shadow-[0_20px_48px_-38px_rgba(0,0,0,0.8)]",
+                      "border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.035),rgba(11,16,25,0.72))] shadow-[0_20px_48px_-38px_rgba(0,0,0,0.8)]",
                     )}
                   >
                     {hasImage ? (
@@ -256,34 +234,14 @@ export default function NutritionSelectDietPage() {
                       </div>
 
                       <div className="flex w-8 shrink-0 justify-center pt-1">
-                        {selected ? (
-                          <span className="flex h-[25px] w-[25px] items-center justify-center rounded-full bg-amber-400 text-slate-950">
-                            <Check className="h-3.5 w-3.5" />
-                          </span>
-                        ) : (
-                          <span className="h-[23px] w-[23px] rounded-full border-2 border-slate-600/80 bg-transparent" />
-                        )}
+                        <span className="h-[23px] w-[23px] rounded-full border-2 border-slate-600/80 bg-transparent" />
                       </div>
                     </div>
 
                     <div className="mt-4 h-px bg-white/8" />
-                    <div className={cn(
-                      "mt-3 flex min-h-[46px] w-full items-center justify-center gap-3 rounded-[15px] px-4 py-3 text-[12px] font-black shadow-[0_18px_45px_-32px_rgba(251,191,36,0.92)] transition",
-                      selected
-                        ? "border border-emerald-300/30 bg-emerald-400 text-slate-950"
-                        : "border border-amber-200/30 bg-gradient-to-l from-amber-500 to-amber-300 text-slate-950 group-hover:brightness-105",
-                    )}>
-                      {selected ? (
-                        <>
-                          <Check className="h-3.5 w-3.5" />
-                          {t("nutritionSelectDiet.selected")}
-                        </>
-                      ) : (
-                        <>
-                          <ActionIcon className="h-3.5 w-3.5" />
-                          {t("nutritionSelectDiet.selectTemplate")}
-                        </>
-                      )}
+                    <div className="mt-3 flex min-h-[46px] w-full items-center justify-center gap-3 rounded-[15px] border border-amber-200/30 bg-gradient-to-l from-amber-500 to-amber-300 px-4 py-3 text-[12px] font-black text-slate-950 shadow-[0_18px_45px_-32px_rgba(251,191,36,0.92)] transition group-hover:brightness-105">
+                      <ActionIcon className="h-3.5 w-3.5" />
+                      {t("nutritionSelectDiet.selectTemplate")}
                     </div>
                   </button>
                 );
@@ -291,15 +249,6 @@ export default function NutritionSelectDietPage() {
             )}
           </div>
 
-          <button
-            type="button"
-            onClick={confirmSelectedTemplate}
-            disabled={!selectedTemplate}
-            className="mt-5 flex h-[50px] w-full items-center justify-center gap-4 rounded-[16px] bg-gradient-to-l from-amber-500 to-amber-300 text-[13px] font-black text-slate-950 shadow-[0_24px_54px_-34px_rgba(251,191,36,0.9)] transition hover:from-amber-400 hover:to-amber-300 disabled:cursor-not-allowed disabled:from-white/10 disabled:to-white/10 disabled:text-slate-500"
-          >
-            {t("nutritionSelectDiet.confirm")}
-            <ActionIcon className="h-4 w-4" />
-          </button>
         </div>
       </div>
     </div>
