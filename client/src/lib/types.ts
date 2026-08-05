@@ -213,13 +213,14 @@ export interface NutritionPackageSubscription {
 export interface NutritionPackageOrder {
   id: string;
   invoiceNumber: string;
-  status: "pending" | "paid" | "failed" | "cancelled";
+  status: "pending" | "paid" | "failed" | "cancelled" | "manual";
   gateway?: string | null;
   sandboxMode: boolean;
   amount: number;
   discountAmount: number;
   payableAmount: number;
   referenceId?: string | null;
+  transactionId?: string | null;
   discountCode?: string | null;
   discountCodeSnapshot?: {
     id?: string;
@@ -229,8 +230,11 @@ export interface NutritionPackageOrder {
     discountValue: number;
     discountAmount: number;
   } | null;
+  metaJson?: Record<string, unknown> | null;
+  failureReason?: string | null;
   createdAt?: string | null;
   paidAt?: string | null;
+  expiresAt?: string | null;
   package?: NutritionPackageItem | null;
   subscription?: NutritionPackageSubscription | null;
   user?: {

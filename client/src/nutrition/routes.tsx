@@ -23,6 +23,7 @@ import NutritionBmiPage from "@/nutrition/pages/nutrition-bmi";
 import NutritionSelectDietPage from "@/nutrition/pages/nutrition-select-diet";
 import PanelNutritionDiscountsPage from "@/nutrition/pages/panel-nutrition-discounts";
 import PanelNutritionPackagesPage from "@/nutrition/pages/panel-nutrition-packages";
+import PanelNutritionPackageOrdersPage from "@/nutrition/pages/panel-nutrition-package-orders";
 import PanelNutritionRequestsPage from "@/nutrition/pages/panel-nutrition-requests";
 import PanelNutritionRequestDetailPage from "@/nutrition/pages/panel-nutrition-request-detail";
 import PanelNutritionRequestReplacementsPage from "@/nutrition/pages/panel-nutrition-request-replacements";
@@ -147,7 +148,6 @@ export function getNutritionRouteDefs(enabled: boolean) {
     <Route key="nutrition-resume" path="/nutrition/resume" component={NutritionPlaceholderRoute} />,
     <Route key="nutrition-profile" path="/nutrition/profile" component={NutritionProfileHomePage} />,
     <Route key="nutrition-bmi" path="/nutrition/bmi" component={NutritionBmiPage} />,
-    <Route key="panel-nutrition-home" path="/panel/nutrition" component={PanelNutritionTokensPage} />,
     <Route key="panel-nutrition-settings" path="/panel/nutrition/settings" component={PanelNutritionSettingsPage} />,
     <Route key="panel-nutrition-landing" path="/panel/nutrition/landing" component={PanelNutritionLandingSettingsPage} />,
     <Route key="panel-nutrition-requests" path="/panel/nutrition/requests" component={PanelNutritionRequestsPage} />,
@@ -166,6 +166,7 @@ export function getNutritionRouteDefs(enabled: boolean) {
     <Route key="panel-nutrition-request-detail" path="/panel/nutrition/requests/:requestId" component={PanelNutritionRequestDetailPage} />,
     <Route key="panel-nutrition-request-replacements" path="/panel/nutrition/requests/:requestId/replacements" component={PanelNutritionRequestReplacementsPage} />,
     <Route key="panel-nutrition-request-tracking" path="/panel/nutrition/requests/:requestId/tracking" component={PanelNutritionRequestTrackingPage} />,
+    <Route key="panel-nutrition-package-orders" path="/panel/nutrition/package-orders" component={PanelNutritionPackageOrdersPage} />,
     <Route key="panel-nutrition-packages" path="/panel/nutrition/packages" component={PanelNutritionPackagesPage} />,
     <Route key="panel-nutrition-discounts" path="/panel/nutrition/discounts" component={PanelNutritionDiscountsPage} />,
     <Route key="panel-nutrition-template-edit" path="/panel/nutrition/templates/:templateId/edit" component={PanelNutritionTemplateCreatePage} />,
@@ -182,5 +183,6 @@ export function getNutritionRouteDefs(enabled: boolean) {
     <Route key="panel-nutrition-membership" path="/panel/nutrition/membership" component={NutritionPlaceholderRoute} />,
     <Route key="panel-nutrition-profile" path="/panel/nutrition/profile" component={NutritionPlaceholderRoute} />,
     <Route key="panel-nutrition-plans" path="/panel/nutrition/plans" component={NutritionPlaceholderRoute} />,
+    <Route key="panel-nutrition-home" path="/panel/nutrition" component={PanelNutritionTokensPage} />,
   ];
 }

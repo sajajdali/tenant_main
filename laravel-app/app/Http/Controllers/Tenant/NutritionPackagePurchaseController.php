@@ -9,6 +9,7 @@ use App\Domain\Tenant\Models\NutritionPackageOrder;
 use App\Domain\Tenant\Models\TenantUser;
 use App\Http\Controllers\Controller;
 use App\Services\NutritionPackagePaymentService;
+use App\Support\TenantAudienceScope;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -130,14 +131,21 @@ class NutritionPackagePurchaseController extends Controller
 
     public function adminOrders(Request $request): JsonResponse
     {
+        abort_unless(TenantAudienceScope::currentTenantUsesNutrition(), 404);
         $this->ensureAdmin($request);
 
-        $orders = $this->service->adminOrders((int) $request->integer('per_page', 20));
+        $orders = $this->service->adminOrders([
+            'q' => $request->string('q')->toString(),
+            'user' => $request->string('user')->toString(),
+            'mobile' => $request->string('mobile')->toString(),
+            'date_from' => $request->string('date_from')->toString(),
+            'date_to' => $request->string('date_to')->toString(),
+        ], (int) $request->integer('per_page', 20));
 
         return response()->json([
             'success' => true,
             'data' => [
-                'items' => $orders->getCollection()->map(fn ($item) => $this->service->serializeOrder($item))->values()->all(),
+                'items' => $orders->getCollection()->values()->all(),
                 'page' => $orders->currentPage(),
                 'perPage' => $orders->perPage(),
                 'total' => $orders->total(),
@@ -156,6 +164,6 @@ class NutritionPackagePurchaseController extends Controller
 
     private function ensureAdmin(Request $request): void
     {
-        abort_unless($request->user('tenant_web')?->role === 'admin', 403, __('authorization.admin_section'));
+        abort_unless(in_array($request->user('tenant_web')?->role, ['admin', 'barber'], true), 403, __('authorization.admin_or_specialist_allowed'));
     }
 }

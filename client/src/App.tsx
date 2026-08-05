@@ -120,6 +120,7 @@ import PanelArticlesPostsPage from "@/pages/panel-articles-posts";
 import PanelArticlesSettingsPage from "@/pages/panel-articles-settings";
 import PanelArticlesTagsPage from "@/pages/panel-articles-tags";
 import { getNutritionRouteDefs, NutritionEntryRoute } from "@/nutrition/routes";
+import PanelNutritionPackageOrdersPage from "@/nutrition/pages/panel-nutrition-package-orders";
 import { isNutritionLandingDefaultEnabled } from "@/nutrition/lib/landing-presets";
 const USER_ROLES = new Set<UserRole>(["guest", "user", "admin", "barber", "customer"]);
 
@@ -265,6 +266,7 @@ function Router() {
       <Route path="/landing-preview/contact" component={LandingContactPage} />
       <Route path="/landing-preview/faq" component={LandingFaqPage} />
       <Route path="/landing-preview/orders" component={LandingOrdersPage} />
+      <Route path="/panel/nutrition/package-orders" component={PanelNutritionPackageOrdersPage} />
       {getNutritionRouteDefs(nutritionRoutesEnabled)}
       <Route path="/panel/gallery" component={PanelGalleryPage} />
       <Route path="/panel/about" component={PanelAboutPage} />
