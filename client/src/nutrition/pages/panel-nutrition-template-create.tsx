@@ -123,6 +123,7 @@ export default function PanelNutritionTemplateCreatePage() {
   const [slug, setSlug] = useState("");
   const [parentId, setParentId] = useState<string>("none");
   const [dietBasis, setDietBasis] = useState<string>("");
+  const [dietLevel, setDietLevel] = useState("");
   const [description, setDescription] = useState("");
   const [templateNotes, setTemplateNotes] = useState("");
   const [conditionsText, setConditionsText] = useState("");
@@ -178,6 +179,7 @@ export default function PanelNutritionTemplateCreatePage() {
     setSlug(editingTemplate.slug);
     setParentId(editingTemplate.parentId ?? "none");
     setDietBasis(editingTemplate.dietBasis);
+    setDietLevel(editingTemplate.dietLevel ?? "");
     setDescription(editingTemplate.description ?? "");
     setTemplateNotes(editingTemplate.templateNotes ?? "");
     setConditionsText(parsed.cleanText);
@@ -373,6 +375,14 @@ export default function PanelNutritionTemplateCreatePage() {
                     ))}
                   </SelectContent>
                 </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>{t("panelNutritionTemplateCreate.fields.dietLevel")}</Label>
+                <Input
+                  value={dietLevel}
+                  onChange={(e) => setDietLevel(e.target.value)}
+                  placeholder={t("panelNutritionTemplateCreate.placeholders.dietLevel")}
+                />
               </div>
               <div className="space-y-2">
                 <Label>{t("panelNutritionTemplateCreate.fields.durationDays")}</Label>
@@ -620,6 +630,7 @@ export default function PanelNutritionTemplateCreatePage() {
                     parentId: parentId === "none" ? null : parentId,
                     image: imageFile,
                     dietBasis,
+                    dietLevel,
                     applicableGoals,
                     mealSlots: mealSlots.map((slot) => ({
                       ...slot,

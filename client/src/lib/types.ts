@@ -101,6 +101,7 @@ export interface NutritionDietTemplateItem {
   imageUrl?: string | null;
   dietBasis: string;
   dietBasisLabel: string;
+  dietLevel?: string | null;
   applicableGoals: string[];
   mealSlots: NutritionDietTemplateMealSlot[];
   prescriptionMode?: "daily_prescription" | "user_choice" | "fixed_text";

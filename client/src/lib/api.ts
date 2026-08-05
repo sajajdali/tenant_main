@@ -1533,6 +1533,7 @@ export const api = {
       parentId?: string | null;
       image?: File | null;
       dietBasis: string;
+      dietLevel?: string;
       applicableGoals: string[];
       mealSlots?: Array<{ key: string; title: string; icon: string; enabled: boolean; description?: string; foodCount: number; sortOrder: number }>;
       prescriptionMode?: "daily_prescription" | "user_choice" | "fixed_text";
@@ -1554,6 +1555,7 @@ export const api = {
       formData.append("slug", payload.slug || "");
       formData.append("parent_id", payload.parentId || "");
       formData.append("diet_basis", payload.dietBasis);
+      formData.append("diet_level", payload.dietLevel || "");
       payload.applicableGoals.forEach((goal) => formData.append("applicable_goals[]", goal));
       formData.append("meal_slots", JSON.stringify((payload.mealSlots ?? []).map((item) => ({
         key: item.key,
@@ -1592,6 +1594,7 @@ export const api = {
         image?: File | null;
         removeImage?: boolean;
         dietBasis: string;
+        dietLevel?: string;
         applicableGoals: string[];
         mealSlots?: Array<{ key: string; title: string; icon: string; enabled: boolean; description?: string; foodCount: number; sortOrder: number }>;
         prescriptionMode?: "daily_prescription" | "user_choice" | "fixed_text";
@@ -1614,6 +1617,7 @@ export const api = {
       formData.append("slug", payload.slug || "");
       formData.append("parent_id", payload.parentId || "");
       formData.append("diet_basis", payload.dietBasis);
+      formData.append("diet_level", payload.dietLevel || "");
       payload.applicableGoals.forEach((goal) => formData.append("applicable_goals[]", goal));
       formData.append("meal_slots", JSON.stringify((payload.mealSlots ?? []).map((item) => ({
         key: item.key,

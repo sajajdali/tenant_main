@@ -153,6 +153,7 @@ class NutritionDietTemplateController extends Controller
                 'slug' => $this->uniqueSlug((string) ($validated['slug'] ?? $validated['name'])),
                 'image_path' => $templateImage,
                 'diet_basis' => $validated['diet_basis'],
+                'diet_level' => $this->nullableTrim($validated['diet_level'] ?? null),
                 'prescription_mode' => $meta['prescription_mode'],
                 'allow_food_replacement' => $meta['allow_food_replacement'],
                 'suggest_daily_replacements' => $meta['suggest_daily_replacements'],
@@ -223,6 +224,7 @@ class NutritionDietTemplateController extends Controller
                 'slug' => $this->uniqueSlug((string) ($validated['slug'] ?? $validated['name']), (int) $nutritionDietTemplate->id),
                 'image_path' => $nutritionDietTemplate->image_path,
                 'diet_basis' => $validated['diet_basis'],
+                'diet_level' => $this->nullableTrim($validated['diet_level'] ?? null),
                 'prescription_mode' => $meta['prescription_mode'],
                 'allow_food_replacement' => $meta['allow_food_replacement'],
                 'suggest_daily_replacements' => $meta['suggest_daily_replacements'],
@@ -290,6 +292,7 @@ class NutritionDietTemplateController extends Controller
             'parent_id' => ['nullable', 'integer', 'exists:nutrition_diet_templates,id'],
             'image' => ['nullable', 'file', 'mimes:jpg,jpeg,png,gif,webp,avif', 'max:8192'],
             'diet_basis' => ['required', 'string', 'in:' . implode(',', self::DIET_BASES)],
+            'diet_level' => ['nullable', 'string', 'max:80'],
             'applicable_goals' => ['required', 'array', 'min:1'],
             'applicable_goals.*' => ['string', 'in:' . implode(',', self::APPLICABLE_GOALS)],
             'meal_slots' => ['nullable', 'array'],
@@ -351,6 +354,7 @@ class NutritionDietTemplateController extends Controller
             'imageUrl' => $this->tenantMediaUrl($item->image_path),
             'dietBasis' => $item->diet_basis,
             'dietBasisLabel' => $this->dietBasisOptions()->get($item->diet_basis),
+            'dietLevel' => $item->diet_level,
             'applicableGoals' => collect($item->applicable_goals ?? [])
                 ->filter()
                 ->values()
@@ -413,6 +417,7 @@ class NutritionDietTemplateController extends Controller
             'imageUrl' => $this->tenantMediaUrl($item->image_path),
             'dietBasis' => $item->diet_basis,
             'dietBasisLabel' => $this->dietBasisOptions()->get($item->diet_basis),
+            'dietLevel' => $item->diet_level,
             'applicableGoals' => collect($item->applicable_goals ?? [])->filter()->values()->all(),
             'mealSlots' => $this->normalizeMealSlots($item->meal_slots ?? []),
             'prescriptionMode' => $item->prescription_mode,
