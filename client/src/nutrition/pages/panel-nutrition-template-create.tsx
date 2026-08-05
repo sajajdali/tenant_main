@@ -497,7 +497,7 @@ export default function PanelNutritionTemplateCreatePage() {
                   placeholder={
                     dietPlanMode === "fixed_text"
                       ? t("panelNutritionTemplateCreate.placeholders.fixedText")
-                      : ""
+                      : t("panelNutritionTemplateCreate.placeholders.templateNotes")
                   }
                 />
               </div>
