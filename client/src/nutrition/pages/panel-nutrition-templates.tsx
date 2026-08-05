@@ -133,7 +133,6 @@ export default function PanelNutritionTemplatesPage() {
                   ) : null}
                   <CodeText className="text-xs text-slate-500">{item.slug}</CodeText>
                   {item.description ? <div className="text-sm leading-7 text-slate-300">{item.description}</div> : null}
-                  {item.templateNotes ? <div className="rounded-2xl border border-amber-300/15 bg-amber-300/10 px-3 py-3 text-sm leading-7 text-amber-50/90">{item.templateNotes}</div> : null}
                   {parsedConditions.cleanText ? <div className="rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-xs leading-7 text-slate-400">{parsedConditions.cleanText}</div> : null}
 
                   <div className="grid gap-2 grid-cols-2 sm:grid-cols-3">
