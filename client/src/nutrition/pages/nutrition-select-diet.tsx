@@ -189,11 +189,11 @@ export default function NutritionSelectDietPage() {
                     )}
                   >
                     {hasImage ? (
-                      <div className="relative mb-5 aspect-[2.4/1] overflow-hidden rounded-[17px] bg-slate-950/40">
+                      <div className="relative mb-5 aspect-[4/3] overflow-hidden rounded-[17px] bg-slate-950/55">
                         <img
                           src={item.imageUrl ?? ""}
                           alt={item.name}
-                          className="h-full w-full object-cover"
+                          className="h-full w-full object-contain"
                           onError={() => setFailedImageIds((current) => (current.includes(item.id) ? current : [...current, item.id]))}
                         />
                         {recommended ? (
