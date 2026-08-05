@@ -376,7 +376,7 @@ export default function PanelLatestBookingsPage() {
                       <TableHead className="min-w-[140px] text-start">{t("panelLatestBookings.table.section")}</TableHead>
                       <TableHead className="min-w-[110px] text-start">{t("panelLatestBookings.table.status")}</TableHead>
                       <TableHead className="min-w-[170px] text-start">{t("panelLatestBookings.table.createdAt")}</TableHead>
-                      <TableHead className="min-w-[220px] text-start">{t("panelLatestBookings.table.actions")}</TableHead>
+                      <TableHead className="min-w-[180px] text-start">{t("panelLatestBookings.table.actions")}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -430,49 +430,48 @@ export default function PanelLatestBookingsPage() {
                           {formatCreatedAt(appointment.createdAt)}
                         </TableCell>
                         <TableCell className="text-start">
-                          <div className="flex flex-wrap justify-end gap-1.5">
+                          <div className="pretty-scrollbar pretty-scrollbar-x flex flex-nowrap justify-end gap-1.5 overflow-x-auto pb-1">
                             {appointment.notes?.trim() ? (
                               <Button
                                 size="icon"
                                 variant="ghost"
+                                aria-label={t("panelLatestBookings.action.showNotes")}
                                 title={t("panelLatestBookings.action.showNotes")}
-                                className="h-8 w-8 rounded-full border border-border/60 bg-background/40 text-muted-foreground hover:bg-primary/10 hover:text-primary"
+                                className="h-9 w-9 shrink-0 rounded-full border border-border/60 bg-background/40 p-0 text-muted-foreground hover:bg-primary/10 hover:text-primary"
                                 onClick={() => setNotesTarget(appointment)}
                               >
                                 <MessageSquareText className="h-4 w-4" />
                               </Button>
                             ) : null}
                             {canViewDay ? (
-                              <Button asChild size="sm" variant="ghost" className="h-8 rounded-full border border-border/60 bg-background/40 px-3 text-[11px] font-bold text-foreground/85 hover:bg-primary/10 hover:text-primary">
+                              <Button asChild size="icon" variant="ghost" className="h-9 w-9 shrink-0 rounded-full border border-border/60 bg-background/40 p-0 text-foreground/85 hover:bg-primary/10 hover:text-primary" title={t("panelLatestBookings.action.viewDay")} aria-label={t("panelLatestBookings.action.viewDay")}>
                                 <Link href={`/booking?date=${encodeURIComponent(appointment.date)}&barber_id=${encodeURIComponent(appointment.barberId)}`}>
-                                  <Eye className="me-1 h-3.5 w-3.5" />
-                                  {t("panelLatestBookings.action.viewDay")}
+                                  <Eye className="h-4 w-4" />
                                 </Link>
                               </Button>
                             ) : null}
                             {canChangeTime ? (
-                              <Button asChild size="sm" variant="ghost" className="h-8 rounded-full border border-cyan-400/25 bg-cyan-500/10 px-3 text-[11px] font-bold text-cyan-300 hover:bg-cyan-500/15 hover:text-cyan-200">
+                              <Button asChild size="icon" variant="ghost" className="h-9 w-9 shrink-0 rounded-full border border-cyan-400/25 bg-cyan-500/10 p-0 text-cyan-300 hover:bg-cyan-500/15 hover:text-cyan-200" title={t("panelLatestBookings.action.changeTime")} aria-label={t("panelLatestBookings.action.changeTime")}>
                                 <Link href={`/booking?appointment=${encodeURIComponent(appointment.id)}&action=change_time&date=${encodeURIComponent(appointment.date)}&barber_id=${encodeURIComponent(appointment.barberId)}&section_id=${encodeURIComponent(appointment.sectionId)}`}>
-                                  <Clock3 className="me-1 h-3.5 w-3.5" />
-                                  {t("panelLatestBookings.action.changeTime")}
+                                  <Clock3 className="h-4 w-4" />
                                 </Link>
                               </Button>
                             ) : null}
-                            <Button asChild size="sm" variant="ghost" className="h-8 rounded-full border border-primary/25 bg-primary/10 px-3 text-[11px] font-bold text-primary hover:bg-primary/15">
+                            <Button asChild size="icon" variant="ghost" className="h-9 w-9 shrink-0 rounded-full border border-primary/25 bg-primary/10 p-0 text-primary hover:bg-primary/15" title={t("panelLatestBookings.action.addFinance")} aria-label={t("panelLatestBookings.action.addFinance")}>
                               <Link href={`/panel/manual-finance?appointment_id=${encodeURIComponent(appointment.id)}`}>
-                                <ReceiptText className="me-1 h-3.5 w-3.5" />
-                                {t("panelLatestBookings.action.addFinance")}
+                                <ReceiptText className="h-4 w-4" />
                               </Link>
                             </Button>
                             <Button
-                              size="sm"
+                              size="icon"
                               variant="ghost"
-                              className="h-8 rounded-full border border-destructive/25 bg-destructive/5 px-3 text-[11px] font-bold text-destructive hover:bg-destructive/10 disabled:border-border/40 disabled:bg-background/20 disabled:text-muted-foreground"
+                              className="h-9 w-9 shrink-0 rounded-full border border-destructive/25 bg-destructive/5 p-0 text-destructive hover:bg-destructive/10 disabled:border-border/40 disabled:bg-background/20 disabled:text-muted-foreground"
                               disabled={appointment.status === "cancelled"}
+                              aria-label={t("common.cancel")}
+                              title={t("common.cancel")}
                               onClick={() => setCancelTarget(appointment)}
                             >
-                              <Trash2 className="me-1 h-3.5 w-3.5" />
-                              {t("common.cancel")}
+                              <Trash2 className="h-4 w-4" />
                             </Button>
                           </div>
                         </TableCell>
@@ -528,7 +527,7 @@ export default function PanelLatestBookingsPage() {
                         </div>
                       </div>
 
-                      <div className="mt-4 grid grid-cols-2 gap-2">
+                      <div className="mt-4 grid grid-cols-[repeat(2,minmax(0,1fr))] gap-2">
                           {appointment.notes?.trim() ? (
                             <Button
                               size="icon"
