@@ -211,11 +211,11 @@ export default function NutritionSelectDietPage() {
                     )}
                   >
                     {hasImage ? (
-                      <div className="relative mb-4 overflow-hidden rounded-[17px] bg-slate-950/40">
+                      <div className="relative mb-5 aspect-[2.4/1] overflow-hidden rounded-[17px] bg-slate-950/40">
                         <img
                           src={item.imageUrl ?? ""}
                           alt={item.name}
-                          className="h-[124px] w-full object-cover"
+                          className="h-full w-full object-cover"
                           onError={() => setFailedImageIds((current) => (current.includes(item.id) ? current : [...current, item.id]))}
                         />
                         {recommended ? (
@@ -237,17 +237,19 @@ export default function NutritionSelectDietPage() {
                           ) : null}
 
                           <div className="min-w-0">
-                            <div className="text-[18px] font-black leading-7 text-white">{item.name}</div>
-                            <div className="mt-2 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] font-black text-slate-300">
-                              <Sparkles className="h-3 w-3 text-amber-300" />
-                              {item.dietBasisLabel}
-                            </div>
+                            <div className="text-[19px] font-black leading-8 text-white">{item.name}</div>
+                            {item.dietLevel?.trim() ? (
+                              <div className="mt-2 inline-flex items-center gap-2 rounded-full border border-amber-200/20 bg-amber-300/10 px-3.5 py-1.5 text-[11px] font-black text-amber-100 shadow-[0_12px_32px_-24px_rgba(251,191,36,0.85)]">
+                                <Sparkles className="h-3.5 w-3.5 text-amber-300" />
+                                {item.dietLevel}
+                              </div>
+                            ) : null}
                           </div>
                         </div>
 
-                        {item.description ? <div className="mt-3 text-[11px] font-bold leading-6 text-slate-400">{item.description}</div> : null}
+                        {item.description ? <div className="mt-4 text-[13px] font-extrabold leading-7 text-slate-300">{item.description}</div> : null}
                         {cleanConditions ? (
-                          <div className="mt-2 text-[10px] font-bold leading-5 text-slate-500">
+                          <div className="mt-3 text-[12px] font-bold leading-7 text-slate-400">
                             {cleanConditions}
                           </div>
                         ) : null}

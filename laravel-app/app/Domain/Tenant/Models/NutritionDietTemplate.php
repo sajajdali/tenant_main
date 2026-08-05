@@ -22,6 +22,7 @@ class NutritionDietTemplate extends Model
         'slug',
         'image_path',
         'diet_basis',
+        'diet_level',
         'prescription_mode',
         'allow_food_replacement',
         'suggest_daily_replacements',
