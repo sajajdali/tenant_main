@@ -78,6 +78,22 @@ function resolveFeatureIndex(features: string[], key: string) {
   return -1;
 }
 
+function hasPersianText(value?: string | null) {
+  return /[\u0600-\u06FF]/.test(value ?? "");
+}
+
+function resolvePersianAudienceLabel(
+  value: string | null | undefined,
+  fallbackKey: MessageKey,
+  knownSlugFallbackKey?: MessageKey,
+) {
+  if (hasPersianText(value)) {
+    return value as string;
+  }
+
+  return translate("fa", knownSlugFallbackKey ?? fallbackKey);
+}
+
 export function getAudienceLabels(meta?: TenantMeta | null) {
   const locale = normalizeLocale(meta?.locale) ?? DEFAULT_LOCALE;
   const slug = meta?.audience?.slug;
@@ -94,9 +110,9 @@ export function getAudienceLabels(meta?: TenantMeta | null) {
   }
 
   return {
-    singular: meta?.audience?.singularLabel || translate(locale, "audience.default.singular"),
-    plural: meta?.audience?.pluralLabel || translate(locale, "audience.default.plural"),
-    business: meta?.audience?.businessLabel || translate(locale, "audience.default.business"),
+    singular: resolvePersianAudienceLabel(meta?.audience?.singularLabel, "audience.default.singular", labelKeys.singular),
+    plural: resolvePersianAudienceLabel(meta?.audience?.pluralLabel, "audience.default.plural", labelKeys.plural),
+    business: resolvePersianAudienceLabel(meta?.audience?.businessLabel, "audience.default.business", labelKeys.business),
   };
 }
 

@@ -27,6 +27,7 @@ export default function PanelGalleryPage() {
   const [loading, setLoading] = useState(true);
   const [savingSettings, setSavingSettings] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [editSubmitting, setEditSubmitting] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [enabled, setEnabled] = useState(false);
   const [items, setItems] = useState<GalleryImage[]>([]);
@@ -40,6 +41,8 @@ export default function PanelGalleryPage() {
   const [editDescription, setEditDescription] = useState("");
   const [editSortOrder, setEditSortOrder] = useState("0");
   const [editActive, setEditActive] = useState(true);
+  const [editImageFile, setEditImageFile] = useState<File | null>(null);
+  const [editImagePreview, setEditImagePreview] = useState("");
   const [tenantMeta, setTenantMeta] = useState<TenantMeta | null>(() => getInitialTenantMeta());
   const labels = getAudienceLabels(tenantMeta);
 
@@ -209,18 +212,19 @@ export default function PanelGalleryPage() {
                     sortOrder: Number(sortOrder) || 0,
                     isActive: true,
                   });
-                  setSubmitting(false);
                   if (!res.success) {
+                    setSubmitting(false);
                     toast({ variant: "destructive", title: t("common.error"), description: res.message });
                     return;
                   }
-                  toast({ title: t("panelGallery.toast.created"), description: res.message });
+                  toast({ title: t("panelGallery.toast.created"), description: t("panelGallery.toast.imageCreated") });
                   resetForm();
                   await loadGallery();
+                  setSubmitting(false);
                 }}
               >
                 {submitting ? <Loader2 className="me-2 h-4 w-4 animate-spin" /> : <ImagePlus className="me-2 h-4 w-4" />}
-                {t("panelGallery.add.submit")}
+                {submitting ? t("common.saving") : t("panelGallery.add.submit")}
               </Button>
             </CardContent>
           </Card>
@@ -268,6 +272,8 @@ export default function PanelGalleryPage() {
                               setEditDescription(item.description || "");
                               setEditSortOrder(String(item.sortOrder));
                               setEditActive(item.isActive);
+                              setEditImageFile(null);
+                              setEditImagePreview("");
                             }}
                           >
                             <Pencil className="h-4 w-4" />
@@ -305,13 +311,35 @@ export default function PanelGalleryPage() {
         ) : null}
       </main>
 
-      <Dialog open={!!editItem} onOpenChange={(open) => !open && setEditItem(null)}>
+      <Dialog
+        open={!!editItem}
+        onOpenChange={(open) => {
+          if (!open) {
+            setEditItem(null);
+            setEditImageFile(null);
+            setEditImagePreview("");
+          }
+        }}
+      >
         <DialogContent className="sm:max-w-xl" dir={dir}>
           <DialogHeader>
             <DialogTitle>{t("panelGallery.edit.title")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            {editItem && <img src={editItem.imageUrl} alt={editItem.title || t("panelGallery.imageAltFallback")} className="max-h-72 w-full rounded-[1.5rem] object-cover" />}
+            {editItem && <img src={editImagePreview || editItem.imageUrl} alt={editItem.title || t("panelGallery.imageAltFallback")} className="max-h-72 w-full rounded-[1.5rem] object-cover" />}
+            <div className="space-y-2">
+              <Label htmlFor="gallery-edit-image">{t("panelGallery.edit.replaceImage")}</Label>
+              <Input
+                id="gallery-edit-image"
+                type="file"
+                accept=".jpg,.jpeg,.png,.gif,.webp,.avif,image/jpeg,image/png,image/gif,image/webp,image/avif"
+                onChange={(event) => {
+                  const file = event.target.files?.[0] || null;
+                  setEditImageFile(file);
+                  setEditImagePreview(file ? URL.createObjectURL(file) : "");
+                }}
+              />
+            </div>
             <div className="space-y-2">
               <Label>{t("panelGallery.form.title")}</Label>
               <Input value={editTitle} onChange={(e) => setEditTitle(e.target.value)} />
@@ -333,24 +361,32 @@ export default function PanelGalleryPage() {
             </div>
             <Button
               className="w-full"
+              disabled={editSubmitting}
               onClick={async () => {
                 if (!editItem) return;
+                setEditSubmitting(true);
                 const res = await api.gallery.update(editItem.id, {
                   title: editTitle,
                   description: editDescription,
                   sortOrder: Number(editSortOrder) || 0,
                   isActive: editActive,
+                  image: editImageFile,
                 });
                 if (!res.success) {
+                  setEditSubmitting(false);
                   toast({ variant: "destructive", title: t("common.error"), description: res.message });
                   return;
                 }
-                toast({ title: t("panelGallery.toast.saved"), description: res.message });
+                toast({ title: t("panelGallery.toast.saved"), description: t("panelGallery.toast.imageUpdated") });
                 setEditItem(null);
+                setEditImageFile(null);
+                setEditImagePreview("");
                 await loadGallery();
+                setEditSubmitting(false);
               }}
             >
-              {t("panelGallery.edit.save")}
+              {editSubmitting && <Loader2 className="me-2 h-4 w-4 animate-spin" />}
+              {editSubmitting ? t("common.saving") : t("panelGallery.edit.save")}
             </Button>
           </div>
         </DialogContent>

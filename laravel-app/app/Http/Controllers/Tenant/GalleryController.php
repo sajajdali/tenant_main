@@ -130,14 +130,36 @@ class GalleryController extends Controller
             'description' => ['nullable', 'string', 'max:5000'],
             'is_active' => ['required', 'boolean'],
             'sort_order' => ['nullable', 'integer', 'min:0'],
+            'image' => ['nullable', 'file', 'mimes:jpg,jpeg,png,gif,webp,avif', 'max:8192'],
         ]);
 
-        $galleryImage->update([
+        $updateData = [
             'title' => $validated['title'] ?? null,
             'description' => $validated['description'] ?? null,
             'is_active' => (bool) $validated['is_active'],
             'sort_order' => (int) ($validated['sort_order'] ?? 0),
-        ]);
+        ];
+
+        /** @var UploadedFile|null $image */
+        $image = $validated['image'] ?? null;
+        if ($image instanceof UploadedFile) {
+            $oldImage = $galleryImage->replicate();
+            $path = $image->store('gallery', 'media_public');
+            $this->recordTenantMediaFile($path, (int) $image->getSize());
+
+            $updateData = array_merge($updateData, [
+                'disk' => 'media_public',
+                'path' => $path,
+                'mime_type' => $image->getClientMimeType(),
+                'size' => $image->getSize() ?: 0,
+            ]);
+        }
+
+        $galleryImage->update($updateData);
+
+        if (isset($oldImage)) {
+            $this->deletePhysicalFile($oldImage);
+        }
 
         return response()->json([
             'success' => true,
