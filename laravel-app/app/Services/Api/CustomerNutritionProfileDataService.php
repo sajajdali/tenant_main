@@ -505,9 +505,12 @@ class CustomerNutritionProfileDataService
 
     private function hasUsableSubscription(?NutritionPackageSubscription $subscription): bool
     {
+        $onlineRemaining = max(0, (int) ($subscription?->online_diet_total ?? 0) - (int) ($subscription?->online_diet_used ?? 0));
+        $offlineRemaining = max(0, (int) ($subscription?->offline_diet_total ?? 0) - (int) ($subscription?->offline_diet_used ?? 0));
+
         return $subscription !== null
-            && ((int) ($subscription->online_diet_remaining ?? 0) > 0
-                || (int) ($subscription->offline_diet_remaining ?? 0) > 0);
+            && $subscription->status === 'active'
+            && ($onlineRemaining > 0 || $offlineRemaining > 0);
     }
 
     private function banner(?NutritionProfile $profile, bool $hasSubscription, ?NutritionDietRequest $activeRequest, ?NutritionDietPrescription $prescription, int $historyCount): ?array

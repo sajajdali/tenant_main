@@ -10,7 +10,7 @@ use OpenApi\Attributes as OA;
 #[OA\Get(
     path: '/api/v1/app/nutrition/profile',
     operationId: 'customerAppNutritionProfileDashboard',
-    description: 'داده کامل صفحه /nutrition/profile را یکجا برمی گرداند. ترتیب تصمیم گیری داشبورد دقیقاً این است: ۱) رژیم فعال: مشاهده رژیم؛ ۲) درخواست فعال: رژیم در حال تجویز؛ ۳) عضویت ناقص: بنر «عضویت کامل نیست» و actionHref اولین مرحله ناقص عضویت؛ ۴) عضویت کامل بدون بسته قابل استفاده: کلید «دریافت رژیم» و هدایت به خرید بسته؛ ۵) بسته فعال و بدون سابقه رژیم: کلید «دریافت رژیم» و هدایت به انتخاب/ثبت رژیم اول (در صورت ناقص بودن mindset ابتدا همان مرحله)؛ ۶) بسته فعال و دارای سابقه رژیم تمام شده: هدایت مستقیم به /nutrition/diet-followup/1 برای پاسخ به ۱۵ مرحله رژیم دوم. پاسخ های مراحل ۲ تا ۱۴ در repeatDietFeedback و مرحله ۱۵ در repeatDietMedicalConditionsItems/repeatDietMedicalNotes هنگام preview/store ارسال می شوند.',
+    description: 'داده کامل صفحه /nutrition/profile را یکجا برمی گرداند. ترتیب تصمیم گیری داشبورد دقیقاً این است: ۱) رژیم فعال: مشاهده رژیم؛ ۲) درخواست فعال: رژیم در حال تجویز؛ ۳) عضویت ناقص: بنر «عضویت کامل نیست» و actionHref اولین مرحله ناقص عضویت؛ ۴) عضویت کامل بدون بسته قابل استفاده: فقط وقتی subscription نال است یا onlineDietRemaining و offlineDietRemaining هر دو صفر هستند، state برابر needs_package و href برابر /nutrition/membership/packages?direct_buy=1 می شود؛ ۵) اگر subscription فعال باشد و onlineDietRemaining یا offlineDietRemaining بزرگ تر از صفر باشد، کاربر بسته قابل استفاده دارد و نباید به خرید بسته هدایت شود: برای اولین رژیم با mindset ناقص href برابر /nutrition/membership/mindset/1 و state برابر needs_mindset است؛ بعد از تکمیل mindset مسیر انتخاب/ثبت رژیم اول برمی گردد؛ ۶) بسته فعال و دارای سابقه رژیم تمام شده: هدایت مستقیم به /nutrition/diet-followup/1 برای پاسخ به ۱۵ مرحله رژیم دوم. پاسخ های مراحل ۲ تا ۱۴ در repeatDietFeedback و مرحله ۱۵ در repeatDietMedicalConditionsItems/repeatDietMedicalNotes هنگام preview/store ارسال می شوند.',
     security: [['bearerAuth' => []]],
     tags: ['Nutrition Profile'],
     responses: [
@@ -52,7 +52,7 @@ use OpenApi\Attributes as OA;
                                     new OA\Property(
                                         property: 'state',
                                         type: 'string',
-                                        description: 'profile_incomplete یعنی عضویت تا پایان اطلاعات پزشکی/ترجیحات کامل نیست؛ ready_for_first_diet برای اولین رژیم و ready_for_repeat_diet برای رژیم دوم به بعد است.',
+                                        description: 'profile_incomplete یعنی عضویت تا پایان اطلاعات پزشکی/ترجیحات کامل نیست. needs_package فقط زمانی مجاز است که subscription وجود ندارد یا مجموع onlineDietRemaining و offlineDietRemaining صفر است. اگر subscription فعال موجودی مثبت دارد و mindset کامل نیست، state باید needs_mindset باشد. ready_for_first_diet برای اولین رژیم بعد از تکمیل mindset و ready_for_repeat_diet برای رژیم دوم به بعد است.',
                                         enum: ['has_current_prescription', 'prescribing', 'profile_incomplete', 'needs_package', 'needs_mindset', 'ready_for_first_diet', 'ready_for_repeat_diet'],
                                         example: 'ready_for_repeat_diet',
                                     ),
@@ -63,7 +63,7 @@ use OpenApi\Attributes as OA;
                                             new OA\Property(property: 'title', type: 'string', example: 'دریافت رژیم'),
                                             new OA\Property(property: 'description', type: 'string', example: 'برای دریافت رژیم دوم، ابتدا به ۱۵ سؤال پیگیری پاسخ دهید.'),
                                             new OA\Property(property: 'actionLabel', type: 'string', nullable: true, example: 'دریافت رژیم'),
-                                            new OA\Property(property: 'actionHref', description: 'برای عضویت ناقص اولین مرحله ناقص، برای نبود بسته صفحه خرید، برای رژیم اول مسیر انتخاب نوع رژیم و برای رژیم دوم به بعد /nutrition/diet-followup/1 است.', type: 'string', nullable: true, example: '/nutrition/diet-followup/1'),
+                                            new OA\Property(property: 'actionHref', description: 'برای عضویت ناقص اولین مرحله ناقص، برای نبود بسته یا صفر بودن موجودی بسته صفحه خرید، برای بسته فعال با موجودی مثبت و mindset ناقص /nutrition/membership/mindset/1، برای رژیم اول مسیر انتخاب/ثبت رژیم و برای رژیم دوم به بعد /nutrition/diet-followup/1 است.', type: 'string', nullable: true, example: '/nutrition/membership/mindset/1'),
                                         ],
                                         type: 'object',
                                         nullable: true,
@@ -73,7 +73,7 @@ use OpenApi\Attributes as OA;
                                         properties: [
                                             new OA\Property(property: 'type', type: 'string', enum: ['view_current_diet', 'prescribing', 'get_diet'], example: 'get_diet'),
                                             new OA\Property(property: 'title', type: 'string', example: 'دریافت رژیم'),
-                                            new OA\Property(property: 'href', type: 'string', nullable: true, example: '/nutrition/diet-followup/1'),
+                                            new OA\Property(property: 'href', description: 'اگر type برابر get_diet باشد: با بسته ناموجود یا بدون موجودی به /nutrition/membership/packages?direct_buy=1 می رود؛ با بسته فعال و موجودی مثبت ولی mindset ناقص به /nutrition/membership/mindset/1 می رود؛ با رژیم دوم به بعد به /nutrition/diet-followup/1 می رود؛ در حالت prescribing مقدار null است.', type: 'string', nullable: true, example: '/nutrition/membership/mindset/1'),
                                             new OA\Property(property: 'disabled', type: 'boolean', example: false),
                                         ],
                                         type: 'object',

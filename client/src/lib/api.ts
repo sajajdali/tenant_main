@@ -779,11 +779,24 @@ export const api = {
     },
 
     update: async (galleryId: string, payload: {
+      image?: File | null;
       title?: string;
       description?: string;
       sortOrder?: number;
       isActive: boolean;
     }): Promise<ApiResponse<GalleryImage>> => {
+      if (payload.image) {
+        const formData = new FormData();
+        formData.append("_method", "PUT");
+        formData.append("image", payload.image);
+        formData.append("title", normalizeDigits(payload.title ?? ""));
+        formData.append("description", normalizeDigits(payload.description ?? ""));
+        formData.append("sort_order", String(payload.sortOrder ?? 0));
+        formData.append("is_active", payload.isActive ? "1" : "0");
+
+        return requestFormData<GalleryImage>(`/api/v1/gallery-images/${encodeURIComponent(galleryId)}`, "POST", formData);
+      }
+
       return requestJson<GalleryImage>(`/api/v1/gallery-images/${encodeURIComponent(galleryId)}`, "PUT", {
         title: payload.title ?? "",
         description: payload.description ?? "",

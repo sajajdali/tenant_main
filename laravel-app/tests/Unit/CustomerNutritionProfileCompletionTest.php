@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit;
 
 use App\Domain\Tenant\Models\NutritionProfile;
+use App\Domain\Tenant\Models\NutritionPackageSubscription;
 use App\Services\Api\CustomerNutritionProfileDataService;
 use App\Services\NutritionDietRequestSettingsService;
 use App\Services\NutritionPackagePaymentService;
@@ -105,6 +106,32 @@ class CustomerNutritionProfileCompletionTest extends TestCase
             '/nutrition/diet-followup/1',
             $this->invokePrivate('dietStartHref', [$profile, true, 1]),
         );
+    }
+
+    public function test_active_subscription_with_remaining_diet_credit_is_usable(): void
+    {
+        $subscription = (new NutritionPackageSubscription)->forceFill([
+            'status' => 'active',
+            'online_diet_total' => 2,
+            'online_diet_used' => 0,
+            'offline_diet_total' => 0,
+            'offline_diet_used' => 0,
+        ]);
+
+        $this->assertTrue($this->invokePrivate('hasUsableSubscription', [$subscription]));
+    }
+
+    public function test_active_subscription_without_remaining_diet_credit_is_not_usable(): void
+    {
+        $subscription = (new NutritionPackageSubscription)->forceFill([
+            'status' => 'active',
+            'online_diet_total' => 2,
+            'online_diet_used' => 2,
+            'offline_diet_total' => 0,
+            'offline_diet_used' => 0,
+        ]);
+
+        $this->assertFalse($this->invokePrivate('hasUsableSubscription', [$subscription]));
     }
 
     private function invokePrivate(string $method, array $arguments): mixed
