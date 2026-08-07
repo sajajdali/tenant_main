@@ -69,6 +69,11 @@ class CustomerDietRequestFlowService
                 'mindsetCompleted' => $profile?->mindset_completed_at !== null,
                 'hasActiveDietRequest' => $activeRequest !== null,
             ],
+            'autoFirstDiet' => [
+                'enabled' => $this->settings->autoFirstDietEnabled(),
+                'requiresApproval' => $this->settings->autoFirstDietRequiresApproval(),
+                'templateAvailable' => ! $hasHistory && $this->autoFirstDietTemplateId($subscription, $profile) !== null,
+            ],
             'subscription' => $this->packages->serializeSubscription($subscription),
             'modes' => [
                 $this->modeOption('ai', $subscription, $baseReady, $hasHistory),

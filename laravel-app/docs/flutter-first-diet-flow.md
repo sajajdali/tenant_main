@@ -2,26 +2,27 @@
 
 This document describes the required Flutter/API flow for the first nutrition diet request after a customer purchases a package.
 
-The important rule is:
+The core rule is:
 
 **Buying a package does not create a diet request by itself.**
 
-The app must guide the customer through the remaining first-diet steps, then explicitly confirm the diet request.
+The app must guide the customer through the 5 supplementary mindset questions, show a confirmation screen, and only then create the first diet request.
 
 ## High-Level Flow
 
 ```text
 Package purchased
 -> Refresh nutrition profile or diet request options
--> If mindset is incomplete, show the 5-question prompt
--> Submit all mindset answers
--> Open the diet confirmation screen
--> Preview the first diet request
+-> If mindset is incomplete, show the 5-question mindset flow
+-> User taps an answer; the UI automatically moves to the next question
+-> Submit all 5 answers together
+-> If auto-first-diet is available, open confirmation directly
+-> Preview the first AI diet request without nutritionDietTemplateId
 -> Customer confirms
 -> Create the diet request
 -> Show "Your diet is being prescribed"
 -> Refresh profile
--> Keep showing prescribing state until the expert publishes the diet
+-> Keep showing prescribing state until the expert approves/publishes the diet
 -> After publish, show "View diet"
 ```
 
@@ -53,17 +54,27 @@ or:
 
 ```json
 {
+  "flowType": "first_diet",
   "requirements": {
-    "mindsetCompleted": false
-  }
+    "profileCompleted": true,
+    "activePackage": true,
+    "mindsetCompleted": false,
+    "hasActiveDietRequest": false
+  },
+  "autoFirstDiet": {
+    "enabled": true,
+    "requiresApproval": true,
+    "templateAvailable": true
+  },
+  "nextStep": "/nutrition/membership/mindset/1"
 }
 ```
 
-If either indicates that mindset is incomplete, the customer must answer the 5 supplementary questions before confirming the first diet request.
+If `mindsetCompleted` is `false`, the customer must answer the 5 supplementary questions before previewing or confirming the first diet request.
 
 ## Step 2: Show the Mindset Intro Screen
 
-Before opening the questions, show a short screen or modal:
+Before opening the questions, show a short screen or modal.
 
 Title:
 
@@ -93,21 +104,54 @@ Load the questions:
 GET /api/v1/app/membership/mindset
 ```
 
-This endpoint returns all 5 questions. The UI may show them as:
+This endpoint returns all 5 questions.
 
-- A 5-step wizard
-- A single form
-- A paged question flow
+Required UI behavior:
 
-After all answers are collected, submit them together:
+- Show the questions as a 5-step flow.
+- Each question should show its answer choices as tappable options.
+- When the user taps an option, save that answer locally and automatically move to the next question.
+- Do not require a separate "Next" button after choosing an answer.
+- Allow Back so the user can review/change the previous answer.
+- Submit only after all 5 answers are collected.
+
+Submit all answers together:
 
 ```http
 POST /api/v1/app/membership/mindset
 ```
 
-After success, go to the first diet confirmation screen.
+After success, refresh diet request options or go directly to the first diet confirmation route indicated by `nextStep`.
 
-## Step 4: Open the First Diet Confirmation Screen
+## Step 4: Decide Auto-First vs Manual Template
+
+Call:
+
+```http
+GET /api/v1/app/nutrition/diet-requests/options
+```
+
+Use this logic:
+
+```text
+If flowType == first_diet
+and requirements.mindsetCompleted == true
+and autoFirstDiet.enabled == true
+and autoFirstDiet.templateAvailable == true
+and the AI mode is available
+-> open the confirmation screen and preview with {"requestType":"ai"}.
+
+Otherwise
+-> show the normal manual diet type/template selection flow.
+```
+
+Important:
+
+- Auto-first-diet is only for the first diet after package purchase.
+- For the second diet and later, `flowType` becomes `follow_up`; the user must go through the follow-up questions and select the required mode/template manually.
+- The app must still show a confirmation screen before final creation, even in auto-first-diet mode.
+
+## Step 5: Preview the First Diet Request
 
 Before showing the confirmation screen, call preview:
 
@@ -123,9 +167,23 @@ For auto-first-diet mode, use this payload:
 }
 ```
 
-When `autoFirstDietEnabled` is enabled and a valid template exists for the customer goal/package, `nutritionDietTemplateId` is not required. The server resolves the template automatically and returns it in `request.dietTemplate`.
+When `autoFirstDiet.enabled` is true and a valid template exists for the customer goal/package, `nutritionDietTemplateId` is not required. The server resolves the template automatically and returns it in `data.request.dietTemplate`.
 
-If auto-first-diet is not available, the server may require the app to send a selected template:
+If the server returns a validation error for `nutritionDietTemplateId`, fall back silently to manual template selection.
+
+For manual template selection:
+
+```http
+GET /api/v1/app/nutrition/diet-templates?goal=lose-weight
+```
+
+Use the customer's `dietGoal` as `goal` when available:
+
+```text
+lose-weight | gain-weight | maintain-weight
+```
+
+Then preview again with:
 
 ```json
 {
@@ -134,7 +192,9 @@ If auto-first-diet is not available, the server may require the app to send a se
 }
 ```
 
-## Step 5: Design the Confirmation Screen
+Only a final leaf template without children should be sent as `nutritionDietTemplateId`.
+
+## Step 6: Design the Confirmation Screen
 
 Use the preview response to render the confirmation screen.
 
@@ -222,13 +282,15 @@ Disable the primary button if:
 "canConfirm": false
 ```
 
-## Step 6: Confirm the First Diet Request
+## Step 7: Confirm the First Diet Request
 
 When the customer taps the primary button, call:
 
 ```http
 POST /api/v1/app/nutrition/diet-requests
 ```
+
+Use the same payload that succeeded in preview.
 
 For auto-first-diet mode:
 
@@ -266,7 +328,7 @@ Then refresh the profile:
 GET /api/v1/app/nutrition/profile
 ```
 
-## Step 7: Profile State While Prescribing
+## Step 8: Profile State While Prescribing
 
 After confirmation, before the expert publishes the diet, the profile should return:
 
@@ -293,7 +355,7 @@ In this state:
 - Show a clear "Your diet is being prescribed" card.
 - Disable the get-diet button.
 - Do not allow another diet request.
-- The user should wait until the expert publishes the diet.
+- The user should wait until the expert approves and publishes the diet.
 
 Recommended profile card:
 
@@ -309,7 +371,7 @@ Description:
 After your diet is ready, you can view it from this section.
 ```
 
-## Step 8: After Expert Approval / Publish
+## Step 9: After Expert Approval / Publish
 
 After the expert approves and publishes the prescription, the profile changes to:
 
@@ -360,6 +422,12 @@ Submit mindset answers:
 POST /api/v1/app/membership/mindset
 ```
 
+List diet templates for manual fallback:
+
+```http
+GET /api/v1/app/nutrition/diet-templates?goal=lose-weight
+```
+
 Preview first diet request:
 
 ```http
@@ -376,11 +444,13 @@ POST /api/v1/app/nutrition/diet-requests
 
 - Package purchase alone must not create a diet request.
 - The first diet request is created only after `POST /api/v1/app/nutrition/diet-requests`.
-- If auto-first-diet is enabled, Flutter should not require template selection.
+- The 5 mindset questions must auto-advance on answer tap; do not require a separate Next button after each selected option.
+- If auto-first-diet is enabled and `templateAvailable` is true, Flutter should not require template selection.
 - In auto-first-diet mode, send `{ "requestType": "ai" }` to both preview and confirm.
-- The confirmation screen must be driven by the preview response.
+- The confirmation screen is required and must be driven by the preview response.
+- If preview rejects missing `nutritionDietTemplateId`, fall back to manual template selection and call `GET /diet-templates` with the user's `dietGoal` in `goal`.
 - Do not consume quota during preview.
 - Quota is consumed only during final confirmation.
 - After confirmation, always refresh profile and show the `prescribing` state.
 - Once the expert publishes the prescription, the profile action becomes `view_current_diet`.
-
+- For the second diet and later, do not use auto-first-diet. Use the follow-up flow and manual selection rules.

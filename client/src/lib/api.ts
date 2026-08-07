@@ -1894,6 +1894,11 @@ export const api = {
       flowType: "first_diet" | "follow_up";
       hasDietHistory: boolean;
       requiresFollowUpQuestions: boolean;
+      autoFirstDiet: {
+        enabled: boolean;
+        requiresApproval: boolean;
+        templateAvailable: boolean;
+      };
       nextStep: string | null;
       modes: Array<{
         key: "ai" | "expert";
@@ -1909,6 +1914,11 @@ export const api = {
         flowType: "first_diet" | "follow_up";
         hasDietHistory: boolean;
         requiresFollowUpQuestions: boolean;
+        autoFirstDiet: {
+          enabled: boolean;
+          requiresApproval: boolean;
+          templateAvailable: boolean;
+        };
         nextStep: string | null;
         modes: Array<{
           key: "ai" | "expert";
