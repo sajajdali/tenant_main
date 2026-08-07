@@ -8326,6 +8326,7 @@ export const faMessages = {
   "panelNutritionLandingSettings.variantDescription.all_features": "نمایش همزمان رژیم، نوبت‌دهی و فروشگاه.",
   "panelNutritionLandingSettings.variantDescription.diet_priority": "نسخه موبایل‌محور با تمرکز تصویری قوی روی رژیم درمانی.",
   "panelNutritionLandingSettings.field.classic.topbar_badge": "برچسب بالای صفحه",
+  "panelNutritionLandingSettings.field.classic.eyebrow": "تیتر کوچک بالا",
   "panelNutritionLandingSettings.field.classic.title_intro": "تیتر خط اول",
   "panelNutritionLandingSettings.field.classic.title_highlight": "تیتر بخش بولد",
   "panelNutritionLandingSettings.field.classic.title_outro": "تیتر خط آخر",

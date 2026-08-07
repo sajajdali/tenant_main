@@ -8328,6 +8328,7 @@ export const arMessages = {
   "panelNutritionLandingSettings.variantDescription.all_features": "Shows nutrition, booking, and store at the same time.",
   "panelNutritionLandingSettings.variantDescription.diet_priority": "A mobile-first version with a strong visual focus on therapeutic diets.",
   "panelNutritionLandingSettings.field.classic.topbar_badge": "Top page badge",
+  "panelNutritionLandingSettings.field.classic.eyebrow": "Small upper title",
   "panelNutritionLandingSettings.field.classic.title_intro": "Title first line",
   "panelNutritionLandingSettings.field.classic.title_highlight": "Bold title segment",
   "panelNutritionLandingSettings.field.classic.title_outro": "Title final line",

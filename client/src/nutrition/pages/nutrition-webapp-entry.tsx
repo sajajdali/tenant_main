@@ -133,7 +133,7 @@ export default function NutritionWebAppEntryPage({ forcedPreviewPath }: { forced
         <main className="px-5 pt-5">
           <div className="flex items-center justify-end gap-3 text-end text-[13px] font-black tracking-wide text-amber-300">
             <span className="h-px w-11 rounded-full bg-amber-300" />
-            {t("nutritionWebAppEntry.eyebrow")}
+            {content.eyebrow}
           </div>
 
           <div className="mt-5 space-y-4 text-start">
