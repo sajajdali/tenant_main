@@ -13,7 +13,7 @@ use OpenApi\Attributes as OA;
 #[OA\Get(
     path: '/api/v1/app/nutrition/diet-requests/options',
     operationId: 'customerAppDietRequestOptions',
-    description: 'داده مسیر دریافت رژیم را برمی‌گرداند: نوع flow، پیش‌نیازها، پکیج فعال، موجودی کل/مصرف‌شده/باقی‌مانده رژیم آنلاین و کارشناس، امکان انتخاب هر روش و مسیر مرحله بعد. سناریوی رژیم اول بعد از خرید پکیج این است: اگر mindsetCompleted=false باشد، اپ باید پیام «برای دریافت رژیم باید به ۵ سؤال تکمیلی پاسخ دهید» نشان دهد و کاربر را به GET/POST /api/v1/app/membership/mindset ببرد. بعد از تکمیل mindset، اگر autoFirstDietEnabled و قالب معتبر فعال باشد nextStep برابر /nutrition/diet-request/confirm می‌شود و preview/confirm با payload {"requestType":"ai"} کافی است؛ نیازی به nutritionDietTemplateId نیست. این endpoint هیچ سهمیه‌ای مصرف نمی‌کند.',
+    description: 'داده مسیر دریافت رژیم را برمی‌گرداند: نوع flow، پیش‌نیازها، تنظیمات auto-first، پکیج فعال، موجودی کل/مصرف‌شده/باقی‌مانده رژیم آنلاین و کارشناس، امکان انتخاب هر روش و مسیر مرحله بعد. سناریوی رژیم اول بعد از خرید پکیج این است: اگر mindsetCompleted=false باشد، اپ باید پیام «برای دریافت رژیم باید به ۵ سؤال تکمیلی پاسخ دهید» نشان دهد و کاربر را به GET/POST /api/v1/app/membership/mindset ببرد. UI سؤال‌ها باید با انتخاب هر گزینه خودکار به سؤال بعدی برود و نیاز به دکمه مرحله بعد نداشته باشد. بعد از تکمیل mindset، اگر autoFirstDiet.enabled=true و autoFirstDiet.templateAvailable=true باشد nextStep برابر /nutrition/diet-request/confirm می‌شود و preview/confirm با payload {"requestType":"ai"} کافی است؛ نیازی به nutritionDietTemplateId نیست. در این حالت اپ باید قبل از confirm صفحه تأیید نشان دهد. این endpoint هیچ سهمیه‌ای مصرف نمی‌کند.',
     security: [['bearerAuth' => []]],
     tags: ['Diet Request Flow'],
     responses: [
@@ -29,7 +29,7 @@ use OpenApi\Attributes as OA;
 #[OA\Post(
     path: '/api/v1/app/nutrition/diet-requests/preview',
     operationId: 'customerAppDietRequestPreview',
-    description: 'پیش‌نمایش دقیق صفحه تأیید رژیم اول را می‌سازد. بعد از خرید پکیج و پاسخ به ۵ سؤال mindset، اپ باید این endpoint را صدا بزند و داده برگشتی را در صفحه تأیید نشان دهد. اگر autoFirstDietEnabled فعال و قالب معتبر موجود باشد، برای اولین رژیم آنلاین payload {"requestType":"ai"} کافی است و سرور قالب خودکار را resolve کرده و در request.dietTemplate برمی‌گرداند تا در صفحه تأیید نمایش داده شود. تمام قواعد ثبت نهایی بررسی می‌شوند، اما هیچ درخواست، لاگ وزن یا مصرف سهمیه‌ای ثبت نمی‌شود.',
+    description: 'پیش‌نمایش دقیق صفحه تأیید رژیم اول را می‌سازد. بعد از خرید پکیج و پاسخ به ۵ سؤال mindset، اپ باید این endpoint را صدا بزند و داده برگشتی را در صفحه تأیید نشان دهد. اگر autoFirstDiet.enabled=true و autoFirstDiet.templateAvailable=true باشد، برای اولین رژیم آنلاین payload {"requestType":"ai"} کافی است و سرور قالب خودکار را resolve کرده و در request.dietTemplate برمی‌گرداند تا در صفحه تأیید نمایش داده شود. اگر سرور nutritionDietTemplateId را لازم دانست، اپ باید به انتخاب دستی الگو برگردد. تمام قواعد ثبت نهایی بررسی می‌شوند، اما هیچ درخواست، لاگ وزن یا مصرف سهمیه‌ای ثبت نمی‌شود.',
     security: [['bearerAuth' => []]],
     tags: ['Diet Request Flow'],
     requestBody: new OA\RequestBody(
@@ -133,7 +133,7 @@ use OpenApi\Attributes as OA;
 #[OA\Post(
     path: '/api/v1/app/nutrition/diet-requests',
     operationId: 'customerAppFirstDietRequestStore',
-    description: 'مرحله تأیید نهایی صفحه preview است. همان payload تأییدشده preview دوباره بررسی می‌شود و سپس داخل transaction درخواست رژیم ثبت و دقیقاً یک سهمیه از روش انتخابی مصرف می‌شود. برای اولین رژیم آنلاین اگر autoFirstDietEnabled فعال و قالب معتبر موجود باشد، nutritionDietTemplateId اختیاری است و payload {"requestType":"ai"} کافی است؛ سرور قالب خودکار را انتخاب می‌کند. بعد از موفقیت، اپ باید پیام «رژیم شما در حال تجویز است» نشان دهد و صفحه پروفایل را دوباره بگیرد؛ در /api/v1/app/nutrition/profile مقدار dashboard.state برابر prescribing و dietAction.type برابر prescribing می‌شود تا کاربر تا زمان تأیید/انتشار کارشناس رژیم جدیدی ثبت نکند. بعد از تأیید کارشناس و publish نسخه، profile به view_current_diet تغییر می‌کند و رژیم در اپ قابل مشاهده است. برای رژیم دوم به بعد مسیر follow-up شامل ۱۵ مرحله است: currentWeightKg، سیزده پاسخ repeatDietFeedback، و مرحله بیماری/دارو در /nutrition/diet-followup/15. این ۱۳ سؤال جداگانه در دیتابیس ذخیره یا جداگانه submit نمی‌شوند؛ همه جواب‌ها در یک object به نام repeatDietFeedback ارسال می‌شوند و سرور آن object را در snapshot درخواست ذخیره می‌کند. در مرحله بیماری، repeatDietMedicalConditionsItems ساختار اصلی است و repeatDietMedicalNotes summary سازگار با نسخه قبلی را نگه می‌دارد.',
+    description: 'مرحله تأیید نهایی صفحه preview است. همان payload تأییدشده preview دوباره بررسی می‌شود و سپس داخل transaction درخواست رژیم ثبت و دقیقاً یک سهمیه از روش انتخابی مصرف می‌شود. برای اولین رژیم آنلاین اگر autoFirstDiet.enabled=true و autoFirstDiet.templateAvailable=true باشد، nutritionDietTemplateId اختیاری است و payload {"requestType":"ai"} کافی است؛ سرور قالب خودکار را انتخاب می‌کند. بعد از موفقیت، اپ باید پیام «رژیم شما در حال تجویز است» نشان دهد و صفحه پروفایل را دوباره بگیرد؛ در /api/v1/app/nutrition/profile مقدار dashboard.state برابر prescribing و dietAction.type برابر prescribing می‌شود تا کاربر تا زمان تأیید/انتشار کارشناس رژیم جدیدی ثبت نکند. بعد از تأیید کارشناس و publish نسخه، profile به view_current_diet تغییر می‌کند و رژیم در اپ قابل مشاهده است. رژیم دوم به بعد هیچ‌وقت auto-first نیست و کاربر باید روش/قالب را خودش انتخاب کند. مسیر follow-up شامل ۱۵ مرحله است: currentWeightKg، سیزده پاسخ repeatDietFeedback، و مرحله بیماری/دارو در /nutrition/diet-followup/15. این ۱۳ سؤال جداگانه در دیتابیس ذخیره یا جداگانه submit نمی‌شوند؛ همه جواب‌ها در یک object به نام repeatDietFeedback ارسال می‌شوند و سرور آن object را در snapshot درخواست ذخیره می‌کند. در مرحله بیماری، repeatDietMedicalConditionsItems ساختار اصلی است و repeatDietMedicalNotes summary سازگار با نسخه قبلی را نگه می‌دارد.',
     security: [['bearerAuth' => []]],
     tags: ['Diet Request Flow'],
     requestBody: new OA\RequestBody(
@@ -303,6 +303,7 @@ use OpenApi\Attributes as OA;
                 'hasDietHistory',
                 'requiresFollowUpQuestions',
                 'requirements',
+                'autoFirstDiet',
                 'modes',
                 'canChooseMode',
                 'nextStep',
@@ -321,6 +322,17 @@ use OpenApi\Attributes as OA;
                         new OA\Property(property: 'activePackage', type: 'boolean', example: true),
                         new OA\Property(property: 'mindsetCompleted', type: 'boolean', example: true),
                         new OA\Property(property: 'hasActiveDietRequest', type: 'boolean', example: false),
+                    ],
+                    type: 'object',
+                ),
+                new OA\Property(
+                    property: 'autoFirstDiet',
+                    description: 'تنظیمات و قابلیت اجرای خودکار رژیم اول. فقط برای flowType=first_diet معنی دارد؛ رژیم دوم به بعد باید مسیر انتخاب دستی/سؤال‌های follow-up را طی کند.',
+                    required: ['enabled', 'requiresApproval', 'templateAvailable'],
+                    properties: [
+                        new OA\Property(property: 'enabled', description: 'برابر تنظیم autoFirstDietEnabled در پنل تنظیمات تغذیه.', type: 'boolean', example: true),
+                        new OA\Property(property: 'requiresApproval', description: 'اگر true باشد درخواست بعد از ثبت برای تأیید/انتشار کارشناس نگه داشته می‌شود.', type: 'boolean', example: true),
+                        new OA\Property(property: 'templateAvailable', description: 'وقتی true باشد سرور برای هدف/پکیج کاربر قالب معتبر دارد و preview/confirm رژیم اول آنلاین می‌تواند بدون nutritionDietTemplateId انجام شود.', type: 'boolean', example: true),
                     ],
                     type: 'object',
                 ),
