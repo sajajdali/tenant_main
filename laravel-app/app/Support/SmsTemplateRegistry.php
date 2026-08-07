@@ -76,6 +76,11 @@ class SmsTemplateRegistry
                 'default_enabled' => true,
                 'default_body' => "{{customer_name}} عزیز\nرژیم شما بعد از تایید کارشناس در پنل شما قرار خواهد گرفت..\nپس از تایید یک پیامک به شما ارسال میشود\n{{business_name}}\nلغو11",
             ],
+            'expertAfterDietRequest' => [
+                'title' => 'پیامک به کارشناس پس از درخواست رژیم',
+                'default_enabled' => false,
+                'default_body' => "کارشناس گرامی\n{{customer_name}} درخواست رژیم {{diet_title}} ثبت کرده است و نیاز به تایید دستی دارد.\nبرای بررسی وارد پنل شوید:\n{{panel_url}}\n{{business_name}}\nلغو۱۱",
+            ],
             'dietEndingTomorrow' => [
                 'title' => '۱ روز مانده به اتمام رژیم',
                 'default_enabled' => true,

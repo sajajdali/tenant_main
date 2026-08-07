@@ -6,6 +6,7 @@ import {
   Calculator,
   CalendarDays,
   CheckCircle2,
+  ChevronDown,
   ClipboardList,
   Dumbbell,
   Flame,
@@ -473,7 +474,6 @@ function NutritionProfileDailyOverviewCard({
   summary,
   activeDate,
   dailyCalorieTarget,
-  onOpenDiet,
   progressLabel,
   t,
   format,
@@ -481,11 +481,11 @@ function NutritionProfileDailyOverviewCard({
   summary: DailyNutritionSummary;
   activeDate: string;
   dailyCalorieTarget: number;
-  onOpenDiet: () => void;
   progressLabel?: string | null;
   t: Translator;
   format: LocaleFormatter;
 }) {
+  const [macrosOpen, setMacrosOpen] = useState(false);
   const chartItems = [
     { key: "carbohydrate", label: t("nutritionProfileHome.dailyOverview.macro.carbohydrate"), value: summary.carbohydrateGrams, color: "#fbbf24", shellClassName: "border-amber-300/18 bg-amber-300/10 text-amber-100" },
     { key: "protein", label: t("nutritionProfileHome.dailyOverview.macro.protein"), value: summary.proteinGrams, color: "#34d399", shellClassName: "border-emerald-300/18 bg-emerald-300/10 text-emerald-100" },
@@ -508,22 +508,6 @@ function NutritionProfileDailyOverviewCard({
 
   return (
     <section className="space-y-3">
-      <div className="flex items-end justify-between gap-3">
-        <div>
-          <div className="text-[17px] font-black text-white">{t("nutritionProfileHome.dailyOverview.title")}</div>
-          <div className="mt-1 text-[11px] leading-6 text-slate-400">
-            {t("nutritionProfileHome.dailyOverview.subtitle", {
-              date: formatProfileDate(activeDate, format),
-              meals: format.number(summary.loggedMeals, { maximumFractionDigits: 0 }),
-              exercises: format.number(summary.loggedExercises, { maximumFractionDigits: 0 }),
-            })}
-          </div>
-        </div>
-        <div className="text-[11px] font-bold text-slate-500">
-          {t("nutritionProfileHome.dailyOverview.todayConsumption")} {progressLabel ? <span>{progressLabel}</span> : null}
-        </div>
-      </div>
-
       <div className="overflow-hidden rounded-[24px] border border-white/10 bg-[linear-gradient(160deg,#191b16,#11130f)] p-4 shadow-[0_30px_80px_-54px_rgba(0,0,0,0.95)]">
         <div className="grid grid-cols-[72px_1fr] items-center gap-3">
           <div className="relative flex h-[68px] w-[68px] items-center justify-center rounded-full border border-white/8 bg-white/[0.035] shadow-[inset_0_0_0_7px_rgba(255,255,255,0.035)]">
@@ -568,32 +552,37 @@ function NutritionProfileDailyOverviewCard({
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-2.5">
-        {chartItems.map((item) => (
-          <div key={item.key} className="rounded-[17px] border border-[#2c2f28] bg-[#171914] px-3 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.025)]">
-            <div className="flex items-center justify-between gap-2">
-              <div className="flex items-center gap-2 text-xs font-black text-white">
-                <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: item.color }} />
-                {item.label}
+      <div className="overflow-hidden rounded-[18px] border border-[#2c2f28] bg-[#171914] shadow-[inset_0_1px_0_rgba(255,255,255,0.025)]">
+        <button
+          type="button"
+          onClick={() => setMacrosOpen((current) => !current)}
+          className="flex w-full items-center justify-between gap-3 px-4 py-3 text-start"
+          aria-expanded={macrosOpen}
+        >
+          <span className="text-xs font-black text-stone-200">{t("nutritionProfileHome.dailyOverview.macrosToggle")}</span>
+          <ChevronDown className={`h-4 w-4 text-amber-300 transition-transform ${macrosOpen ? "rotate-180" : ""}`} />
+        </button>
+
+        {macrosOpen ? (
+          <div className="grid grid-cols-2 gap-2.5 border-t border-white/8 p-3">
+            {chartItems.map((item) => (
+              <div key={item.key} className="rounded-[15px] border border-[#2c2f28] bg-black/10 px-3 py-3">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 text-xs font-black text-white">
+                    <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: item.color }} />
+                    {item.label}
+                  </div>
+                  <div className="text-xs font-black text-stone-400">
+                    {formatProfileNumber(format, item.value)}
+                    <span className="ms-1 text-[10px] font-bold text-stone-500">g</span>
+                  </div>
+                </div>
               </div>
-              <div className="text-xs font-black text-stone-400">
-                {formatProfileNumber(format, item.value)}
-                <span className="ms-1 text-[10px] font-bold text-stone-500">g</span>
-              </div>
-            </div>
+            ))}
           </div>
-        ))}
+        ) : null}
       </div>
 
-      <button
-        type="button"
-        onClick={onOpenDiet}
-        className="flex h-12 w-full items-center justify-center rounded-[16px] border border-amber-200/30 bg-[linear-gradient(135deg,#f5c64e,#e9a91f)] px-4 text-[13px] font-black text-[#281a03] shadow-[0_20px_44px_-27px_rgba(251,191,36,0.8)] transition hover:brightness-105"
-      >
-        <span className="flex items-center gap-2">
-          {t("nutritionProfileHome.dailyOverview.viewDiet")}
-        </span>
-      </button>
     </section>
   );
 }
@@ -742,19 +731,6 @@ function NutritionProfileMealShortcutsCard({
   const ForwardArrow = isRtl ? ArrowLeft : ArrowRight;
   return (
     <section className="space-y-4">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <div className="text-[11px] font-bold text-slate-500">{t("nutritionProfileHome.mealShortcuts.eyebrow")}</div>
-          <div className="mt-1 text-[17px] font-black text-white">{t("nutritionProfileHome.mealShortcuts.title")}</div>
-          <div className="mt-2 text-xs leading-6 text-slate-400">
-            {t("nutritionProfileHome.mealShortcuts.description")}
-          </div>
-        </div>
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[15px] border border-amber-300/16 bg-amber-300/10 text-amber-200">
-          <UtensilsCrossed className="h-5 w-5" />
-        </div>
-      </div>
-
       <div className="grid grid-cols-1 gap-2.5">
         {items.map((item) => (
           <button
@@ -1482,7 +1458,6 @@ export default function NutritionProfileHomePage() {
               summary={profileDailySummary}
               activeDate={profileActiveDate}
               dailyCalorieTarget={profileDailyCalorieTarget}
-              onOpenDiet={() => setLocation("/nutrition/my-diet")}
               progressLabel={prescriptionProgressLabel}
               t={t}
               format={format}

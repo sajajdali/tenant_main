@@ -116,6 +116,19 @@ class NutritionDietNotificationService
         }
     }
 
+    public function notifyExpertsDietRequestNeedsManualApproval(NutritionDietRequest $request): void
+    {
+        if (! (bool) $request->requires_manual_delivery_approval) {
+            return;
+        }
+
+        $admins = $this->admins();
+
+        foreach ($admins as $admin) {
+            $this->sendAdminNutritionSms($admin, $request, 'expertAfterDietRequest');
+        }
+    }
+
     public function notifyAdminsPrescriptionFailed(NutritionDietRequest $request, string $error): void
     {
         $admins = $this->admins();
@@ -210,6 +223,48 @@ class NutritionDietNotificationService
             'template_key' => $templateKey,
             'recipient_mobile' => (string) $user->mobile,
             'recipient_name' => (string) ($user->name ?? ''),
+            'message' => $message,
+        ]);
+    }
+
+    private function sendAdminNutritionSms(TenantUser $admin, NutritionDietRequest $request, string $templateKey): void
+    {
+        if (trim((string) $admin->mobile) === '') {
+            return;
+        }
+
+        $smsSetting = SmsSetting::query()->first();
+
+        if (! $smsSetting || ! (bool) $smsSetting->enabled || trim((string) $smsSetting->provider) === '') {
+            return;
+        }
+
+        $templates = is_array($smsSetting->templates['nutrition_v2'] ?? null) ? $smsSetting->templates['nutrition_v2'] : [];
+        $template = SmsTemplateRegistry::approvedNutritionTemplate($templates, $templateKey);
+        $nutritionEnabled = (bool) ($smsSetting->templates['nutrition_enabled'] ?? false);
+
+        if (! $nutritionEnabled || ! $template || ! (bool) ($template['enabled'] ?? false)) {
+            return;
+        }
+
+        $message = strtr((string) ($template['body'] ?? ''), [
+            '{{customer_name}}' => trim((string) ($request->user?->name ?? 'کاربر')),
+            '{{business_name}}' => $this->businessName(),
+            '{{panel_url}}' => url('/panel/nutrition/requests/'.$request->id),
+            '{{purchase_url}}' => url('/nutrition/packages'),
+            '{{diet_title}}' => trim((string) ($request->diet_template_name ?? 'رژیم جدید')),
+            '{{package_name}}' => trim((string) ($request->subscription?->package?->name ?? '')),
+        ]);
+
+        if (trim($message) === '') {
+            return;
+        }
+
+        $this->smsDispatch->dispatchQueued($smsSetting, [
+            'type' => 'nutrition_diet_admin',
+            'template_key' => $templateKey,
+            'recipient_mobile' => (string) $admin->mobile,
+            'recipient_name' => (string) ($admin->name ?? ''),
             'message' => $message,
         ]);
     }

@@ -1190,6 +1190,7 @@ export type StoreSmsTemplateKey = "afterOrder" | "afterApproval" | "afterShippin
 export type NutritionSmsTemplateKey =
   | "afterAiPrescription"
   | "afterAiApproval"
+  | "expertAfterDietRequest"
   | "dietEndingTomorrow"
   | "dietEndsToday"
   | "dietExpiredNoRequestDay1"

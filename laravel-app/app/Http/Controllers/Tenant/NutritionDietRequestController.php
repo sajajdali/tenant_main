@@ -467,6 +467,10 @@ class NutritionDietRequestController extends Controller
             /** @var NutritionDietRequest $rewardRequest */
             $rewardRequest = $rewardContext['request'];
 
+            if ((bool) $rewardRequest->requires_manual_delivery_approval) {
+                $this->notifications->notifyExpertsDietRequestNeedsManualApproval($rewardRequest);
+            }
+
             if (($rewardContext['requestType'] ?? null) === 'ai') {
                 $this->customerClubRewards->awardForOnlineDietRequest($user, $rewardRequest);
             }
