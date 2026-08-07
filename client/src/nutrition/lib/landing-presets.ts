@@ -61,6 +61,7 @@ export const NUTRITION_LANDING_VARIANTS: Array<{
 export const NUTRITION_LANDING_FIELD_DEFS: Record<NutritionLandingVariant, NutritionLandingField[]> = {
   classic: [
     { key: "topbar_badge", label: "برچسب بالای صفحه" },
+    { key: "eyebrow", label: "تیتر کوچک بالا" },
     { key: "title_intro", label: "تیتر خط اول" },
     { key: "title_highlight", label: "تیتر بخش بولد" },
     { key: "title_outro", label: "تیتر خط آخر" },
@@ -121,6 +122,7 @@ export const NUTRITION_LANDING_DEFAULTS: Record<NutritionLandingVariant, Nutriti
   classic: {
     content: {
       topbar_badge: "وب اپلیکیشن دریافت رژیم",
+      eyebrow: "شروع سبک زندگی دقیق‌تر",
       title_intro: "برای دریافت رژیم اختصاصی",
       title_highlight: "نسخه اختصاصی رژیم",
       title_outro: "شروع کنید",

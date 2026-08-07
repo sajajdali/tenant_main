@@ -8328,6 +8328,7 @@ export const deMessages = {
   "panelNutritionLandingSettings.variantDescription.all_features": "Zeigt Ernährung, Buchung und gleichzeitig zu speichern.",
   "panelNutritionLandingSettings.variantDescription.diet_priority": "Eine mobile erste Version mit einem starken visuellen Fokus auf therapeutische Ernährung.",
   "panelNutritionLandingSettings.field.classic.topbar_badge": "Abzeichen auf der Oberseite",
+  "panelNutritionLandingSettings.field.classic.eyebrow": "Kleine obere Überschrift",
   "panelNutritionLandingSettings.field.classic.title_intro": "Titel 1 Zeile",
   "panelNutritionLandingSettings.field.classic.title_highlight": "Fett hervorgehobener Titelabschnitt",
   "panelNutritionLandingSettings.field.classic.title_outro": "Titel letzter Satz",
