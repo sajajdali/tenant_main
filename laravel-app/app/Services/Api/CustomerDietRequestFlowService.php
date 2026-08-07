@@ -243,8 +243,8 @@ class CustomerDietRequestFlowService
 
     private function resolveTemplate(mixed $templateId, bool $isFirstDiet = false, ?NutritionProfile $profile = null): ?NutritionDietTemplate
     {
-        if (! is_numeric($templateId) && $isFirstDiet && $this->autoFirstDietTemplateId(null, $profile) !== null) {
-            return null;
+        if (! is_numeric($templateId) && $isFirstDiet) {
+            $templateId = $this->autoFirstDietTemplateId(null, $profile);
         }
 
         if (! is_numeric($templateId)) {

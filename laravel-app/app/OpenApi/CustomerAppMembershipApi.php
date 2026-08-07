@@ -929,7 +929,7 @@ use OpenApi\Attributes as OA;
 #[OA\Get(
     path: '/api/v1/app/membership/packages',
     operationId: 'customerAppMembershipPackages',
-    description: 'داده های صفحه لیست پکیج ها، متناظر با /nutrition/membership/packages. همه پکیج های فعال را به صورت درختی همراه زیرمجموعه ها برمی گرداند و اگر پکیجی تعریف نشده باشد emptyState.message مقدار «پکیجی برای شما تعریف نشده است.» دارد.',
+    description: 'داده های صفحه لیست پکیج ها، متناظر با /nutrition/membership/packages. همه پکیج های فعال را به صورت درختی همراه زیرمجموعه ها برمی گرداند و اگر پکیجی تعریف نشده باشد emptyState.message مقدار «پکیجی برای شما تعریف نشده است.» دارد. سناریوی رژیم اول برای اپ Flutter: بعد از خرید موفق پکیج، اگر /api/v1/app/nutrition/profile یا /api/v1/app/nutrition/diet-requests/options نشان داد mindsetCompleted=false یا state=needs_mindset، اپ باید پیام «برای دریافت رژیم باید به ۵ سؤال تکمیلی پاسخ دهید» نمایش دهد و کاربر را به GET/POST /api/v1/app/membership/mindset ببرد. خرید پکیج به تنهایی رژیم نمی‌سازد؛ بعد از ۵ سؤال باید preview و سپس confirm درخواست رژیم زده شود.',
     security: [['bearerAuth' => []]],
     tags: ['Package Purchase'],
     responses: [
