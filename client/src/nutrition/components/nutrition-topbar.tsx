@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useLocation } from "wouter";
 import { ArrowLeft, ArrowRight, Calculator, ClipboardList, Home, LayoutDashboard, LogIn, Menu, Package2, Plus, Settings, UserRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -7,7 +7,9 @@ import { useAuth } from "@/lib/auth";
 import { NotificationBell } from "@/components/notification-bell";
 import { isAppointmentBookingDisabled } from "@/lib/audience";
 import { usePublicSiteMenuItems } from "@/hooks/use-public-site-menu-items";
+import { api } from "@/lib/api";
 import { useLocale, useT } from "@/i18n/locale";
+import type { Barber } from "@/lib/types";
 
 interface NutritionTopbarProps {
   backHref?: string;
@@ -31,7 +33,10 @@ export function NutritionTopbar({
   const { isRtl } = useLocale();
   const [, setLocation] = useLocation();
   const { user, logout } = useAuth();
-  const isManager = user?.role === "admin" || user?.role === "barber";
+  const isAdmin = user?.role === "admin";
+  const isBarber = user?.role === "barber";
+  const isManager = isAdmin || isBarber;
+  const [barbers, setBarbers] = useState<Barber[]>([]);
   const [menuOpen, setMenuOpen] = useState(false);
   const { tenantMeta, publicMenuItems } = usePublicSiteMenuItems({
     includeBooking: true,
@@ -39,6 +44,11 @@ export function NutritionTopbar({
     showCustomerClub: !!user && !isManager,
   });
   const bookingDisabled = isAppointmentBookingDisabled(tenantMeta);
+  const barberCanAccessPanel = useMemo(
+    () => isBarber && barbers.some((barber) => barber.userId === user?.id && barber.canAccessPanel),
+    [barbers, isBarber, user?.id],
+  );
+  const canOpenManagementSettings = isAdmin || user?.isPrimaryAdmin === true || barberCanAccessPanel;
   const shouldShowBackButton = !hideBack && !(bookingDisabled && backHref === "/booking");
   const backLabel = backHref === "/booking" ? t("nutritionTopbar.backToBooking") : t("common.back");
   const menuTitle = title ?? t("nutritionTopbar.menuTitle");
@@ -51,6 +61,17 @@ export function NutritionTopbar({
     { key: "nutrition-packages", title: t("nutritionProfileHome.menu.packages"), icon: Package2, href: "/nutrition/membership/my-package" },
     { key: "nutrition-bmi", title: t("nutritionProfileHome.menu.bmi"), icon: Calculator, href: "/nutrition/bmi" },
   ] : [];
+
+  useEffect(() => {
+    if (!isBarber || !user?.id) {
+      setBarbers([]);
+      return;
+    }
+
+    api.barbers.list().then((res) => {
+      setBarbers(res.success ? res.data : []);
+    }).catch(() => setBarbers([]));
+  }, [isBarber, user?.id]);
 
   const navigate = (href: string) => {
     setMenuOpen(false);
@@ -80,13 +101,13 @@ export function NutritionTopbar({
   const actionButtons = (
     <div className="flex items-center gap-2">
       {user ? <NotificationBell onClick={() => setLocation("/notifications")} className={compact ? "text-white [&_button]:h-[44px] [&_button]:w-[44px] [&_button]:rounded-[17px] [&_svg]:h-4 [&_svg]:w-4 max-[400px]:[&_button]:h-[40px] max-[400px]:[&_button]:w-[40px] max-[400px]:[&_button]:rounded-[15px]" : "text-white [&_button]:h-[50px] [&_button]:w-[50px] [&_button]:rounded-[19px] [&_svg]:h-5 [&_svg]:w-5 max-[400px]:[&_button]:h-[44px] max-[400px]:[&_button]:w-[44px] max-[400px]:[&_button]:rounded-[17px] max-[400px]:[&_svg]:h-4 max-[400px]:[&_svg]:w-4"} /> : null}
-      {isManager ? (
+      {canOpenManagementSettings ? (
         <Button
           type="button"
           variant="outline"
           size="icon"
           title={t("nutritionTopbar.settingsTitle")}
-          onClick={() => setLocation("/panel")}
+          onClick={() => setLocation("/settings")}
           className={
             isHero
               ? compact
@@ -149,6 +170,8 @@ export function NutritionTopbar({
               icon: LayoutDashboard,
               onSelect: () => navigate("/panel"),
             },
+          ] : []),
+          ...(canOpenManagementSettings ? [
             {
               key: "settings",
               title: t("nutritionTopbar.settingsTitle"),

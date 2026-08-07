@@ -127,6 +127,14 @@ const createDefaultSmsSettings = (t: TFunction): PaymentSettings => ({
       approved_enabled: true,
       rejection_reason: null,
     },
+    expertAfterDietRequest: {
+      enabled: false,
+      body: t("panelSms.default.nutrition.expertAfterDietRequest"),
+      approval_status: "approved",
+      approved_body: t("panelSms.default.nutrition.expertAfterDietRequest"),
+      approved_enabled: false,
+      rejection_reason: null,
+    },
     dietEndingTomorrow: {
       enabled: true,
       body: t("panelSms.default.nutrition.dietEndingTomorrow"),
@@ -351,6 +359,12 @@ const createNutritionTemplateMeta = (t: TFunction): Array<{
     placeholder: t("panelSms.nutritionTemplate.afterAiApproval.placeholder"),
   },
   {
+    key: "expertAfterDietRequest",
+    title: t("panelSms.nutritionTemplate.expertAfterDietRequest.title"),
+    description: t("panelSms.nutritionTemplate.expertAfterDietRequest.description"),
+    placeholder: t("panelSms.nutritionTemplate.expertAfterDietRequest.placeholder"),
+  },
+  {
     key: "dietEndingTomorrow",
     title: t("panelSms.nutritionTemplate.dietEndingTomorrow.title"),
     description: t("panelSms.nutritionTemplate.dietEndingTomorrow.description"),
@@ -425,6 +439,7 @@ const normalizeNutritionSmsTemplates = (
 ): NonNullable<PaymentSettings["nutritionSmsTemplatesV2"]> => ({
   afterAiPrescription: value?.afterAiPrescription ?? defaults.nutritionSmsTemplatesV2!.afterAiPrescription,
   afterAiApproval: value?.afterAiApproval ?? defaults.nutritionSmsTemplatesV2!.afterAiApproval,
+  expertAfterDietRequest: value?.expertAfterDietRequest ?? defaults.nutritionSmsTemplatesV2!.expertAfterDietRequest,
   dietEndingTomorrow: value?.dietEndingTomorrow ?? defaults.nutritionSmsTemplatesV2!.dietEndingTomorrow,
   dietEndsToday: value?.dietEndsToday ?? defaults.nutritionSmsTemplatesV2!.dietEndsToday,
   dietExpiredNoRequestDay1: value?.dietExpiredNoRequestDay1 ?? defaults.nutritionSmsTemplatesV2!.dietExpiredNoRequestDay1,

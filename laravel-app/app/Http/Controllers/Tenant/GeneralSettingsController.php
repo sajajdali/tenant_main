@@ -111,6 +111,8 @@ class GeneralSettingsController extends Controller
             'nutritionSmsTemplatesV2.afterAiPrescription.body' => ['nullable', 'string', 'max:2000'],
             'nutritionSmsTemplatesV2.afterAiApproval.enabled' => ['nullable', 'boolean'],
             'nutritionSmsTemplatesV2.afterAiApproval.body' => ['nullable', 'string', 'max:2000'],
+            'nutritionSmsTemplatesV2.expertAfterDietRequest.enabled' => ['nullable', 'boolean'],
+            'nutritionSmsTemplatesV2.expertAfterDietRequest.body' => ['nullable', 'string', 'max:2000'],
             'nutritionSmsTemplatesV2.dietEndingTomorrow.enabled' => ['nullable', 'boolean'],
             'nutritionSmsTemplatesV2.dietEndingTomorrow.body' => ['nullable', 'string', 'max:2000'],
             'nutritionSmsTemplatesV2.dietEndsToday.enabled' => ['nullable', 'boolean'],
