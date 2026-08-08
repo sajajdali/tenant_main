@@ -9,7 +9,7 @@ use OpenApi\Attributes as OA;
 #[OA\Post(
     path: '/api/v1/app/nutrition/package-checkout/preview',
     operationId: 'nutritionPackageCheckoutPreview',
-    description: 'پیش نمایش خرید پکیج تغذیه را بر اساس پکیج انتخاب شده و کد تخفیف اختیاری برمی گرداند.',
+    description: 'پیش نمایش خرید پکیج تغذیه را برای مسیر وب/درگاه مستقیم بر اساس پکیج انتخاب شده و کد تخفیف اختیاری برمی گرداند. اگر settings.cafebazaarEnabled=true باشد، اپلیکیشن Flutter برای پرداخت بازار باید از مسیر جداگانه /api/v1/app/nutrition/iap/cafebazaar استفاده کند؛ تخفیف وب در مسیر بازار اعمال نمی شود.',
     security: [['bearerAuth' => []]],
     tags: ['Package Purchase'],
     requestBody: new OA\RequestBody(
@@ -53,7 +53,7 @@ use OpenApi\Attributes as OA;
 #[OA\Post(
     path: '/api/v1/app/nutrition/package-checkout/pay',
     operationId: 'nutritionPackageCheckoutPay',
-    description: 'سفارش خرید پکیج تغذیه را ایجاد می کند و در حالت پرداخت آنلاین فرم/آدرس انتقال به درگاه را برمی گرداند. در sandbox اشتراک بلافاصله فعال می شود.',
+    description: 'سفارش خرید پکیج تغذیه برای مسیر وب/درگاه مستقیم را ایجاد می کند و در حالت پرداخت آنلاین فرم/آدرس انتقال به درگاه را برمی گرداند. این endpoint برای پرداخت درون برنامه ای بازار نیست. برای بازار از مسیرهای Cafe Bazaar IAP استفاده شود.',
     security: [['bearerAuth' => []]],
     tags: ['Package Purchase'],
     requestBody: new OA\RequestBody(

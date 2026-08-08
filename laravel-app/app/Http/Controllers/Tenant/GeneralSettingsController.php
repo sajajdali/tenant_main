@@ -51,6 +51,8 @@ class GeneralSettingsController extends Controller
             'country' => ['nullable', 'in:'.implode(',', TenantLocale::selectableCountries())],
             'provider' => ['nullable', 'in:'.implode(',', TenantPaymentGateways::supportedKeys())],
             'sandboxEnabled' => ['nullable', 'boolean'],
+            'cafebazaarEnabled' => ['nullable', 'boolean'],
+            'cafebazaarPublicKey' => ['nullable', 'string', 'max:8000'],
             'enamadCode' => ['nullable', 'string'],
             'managementPanelNote' => ['nullable', 'string'],
             'siteAnnouncementEnabled' => ['nullable', 'boolean'],
@@ -170,6 +172,10 @@ class GeneralSettingsController extends Controller
                 'enamad_code' => $validated['enamadCode'] ?? '',
                 'enamad_verification_file_name' => $payment->meta['enamad_verification_file_name'] ?? '',
                 'sandbox_enabled' => (bool) ($validated['sandboxEnabled'] ?? false),
+                'cafebazaar_iap' => [
+                    'enabled' => (bool) ($validated['cafebazaarEnabled'] ?? false),
+                    'public_key' => trim((string) ($validated['cafebazaarPublicKey'] ?? data_get($payment->meta, 'cafebazaar_iap.public_key', ''))),
+                ],
             ],
         ]);
 
@@ -360,6 +366,8 @@ class GeneralSettingsController extends Controller
             'localization' => TenantLocale::meta($general, request()),
             'provider' => $tenantMaliartEnabled ? 'maliart' : ($payment?->provider ?: ($enabledGateways[0] ?? null)),
             'sandboxEnabled' => TenantSandboxMode::paymentEnabled(null, (bool) ($paymentMeta['sandbox_enabled'] ?? false)),
+            'cafebazaarEnabled' => (bool) data_get($paymentMeta, 'cafebazaar_iap.enabled', false),
+            'cafebazaarPublicKey' => (string) data_get($paymentMeta, 'cafebazaar_iap.public_key', ''),
             'maliartEnabled' => $this->maliart->enabled(),
             'tenantMaliartEnabled' => $tenantMaliartEnabled,
             'enabledGateways' => $tenantMaliartEnabled ? ['maliart'] : $enabledGateways,

@@ -135,6 +135,7 @@ class NutritionPackageController extends Controller
             'duration_days' => (int) $validated['duration_days'],
             'price_amount' => (int) $validated['price_amount'],
             'discounted_price_amount' => $this->normalizeDiscountedPrice($validated['discounted_price_amount'] ?? null, (int) $validated['price_amount']),
+            'cafebazaar_product_id' => $this->normalizeBazaarProductId($validated['cafebazaar_product_id'] ?? null),
             'badge_title' => $this->normalizeBadgeTitle($validated['badge_title'] ?? null),
             'is_recommended' => (bool) ($validated['is_recommended'] ?? false),
             'visual_style' => $this->normalizeVisualStyle($validated['visual_style'] ?? 'normal'),
@@ -190,6 +191,7 @@ class NutritionPackageController extends Controller
             'duration_days' => (int) $validated['duration_days'],
             'price_amount' => (int) $validated['price_amount'],
             'discounted_price_amount' => $this->normalizeDiscountedPrice($validated['discounted_price_amount'] ?? null, (int) $validated['price_amount']),
+            'cafebazaar_product_id' => $this->normalizeBazaarProductId($validated['cafebazaar_product_id'] ?? null),
             'badge_title' => $this->normalizeBadgeTitle($validated['badge_title'] ?? null),
             'is_recommended' => (bool) ($validated['is_recommended'] ?? false),
             'visual_style' => $this->normalizeVisualStyle($validated['visual_style'] ?? 'normal'),
@@ -250,6 +252,7 @@ class NutritionPackageController extends Controller
             'duration_days' => ['required', 'integer', 'min:1'],
             'price_amount' => ['required', 'integer', 'min:0'],
             'discounted_price_amount' => ['nullable', 'integer', 'min:0'],
+            'cafebazaar_product_id' => ['nullable', 'string', 'max:191'],
             'badge_title' => ['nullable', 'string', 'max:80'],
             'is_recommended' => ['nullable', 'boolean'],
             'visual_style' => ['nullable', 'string', 'in:' . implode(',', self::VISUAL_STYLES)],
@@ -321,6 +324,7 @@ class NutritionPackageController extends Controller
             'durationDays' => (int) $item->duration_days,
             'priceAmount' => (int) $item->price_amount,
             'discountedPriceAmount' => $item->discounted_price_amount !== null ? (int) $item->discounted_price_amount : null,
+            'cafebazaarProductId' => $item->cafebazaar_product_id,
             'badgeTitle' => $item->badge_title,
             'isRecommended' => (bool) $item->is_recommended,
             'visualStyle' => $this->normalizeVisualStyle($item->visual_style ?? 'normal'),
@@ -418,6 +422,13 @@ class NutritionPackageController extends Controller
     }
 
     private function normalizeBadgeTitle(null|string $value): ?string
+    {
+        $normalized = trim((string) $value);
+
+        return $normalized !== '' ? $normalized : null;
+    }
+
+    private function normalizeBazaarProductId(null|string $value): ?string
     {
         $normalized = trim((string) $value);
 

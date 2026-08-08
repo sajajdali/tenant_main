@@ -6,6 +6,7 @@ namespace App\Domain\Tenant\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class NutritionPackageOrder extends Model
@@ -63,5 +64,10 @@ class NutritionPackageOrder extends Model
     public function subscription(): HasOne
     {
         return $this->hasOne(NutritionPackageSubscription::class, 'nutrition_package_order_id');
+    }
+
+    public function inAppPurchaseReceipts(): HasMany
+    {
+        return $this->hasMany(NutritionInAppPurchaseReceipt::class, 'nutrition_package_order_id');
     }
 }
