@@ -388,6 +388,8 @@ export default function SettingsPage({ forcedTab }: SettingsPageProps) {
       country: "IR",
       provider: null,
       sandboxEnabled: false,
+      cafebazaarEnabled: false,
+      cafebazaarPublicKey: "",
       enabledGateways: [],
       gateways: Object.fromEntries(
           PAYMENT_GATEWAYS.map((gateway) => [gateway.key, { enabled: false }]),
@@ -3670,6 +3672,37 @@ export default function SettingsPage({ forcedTab }: SettingsPageProps) {
                                                 }
                                             />
                                         </div>
+
+                                        <div className="flex items-center justify-between rounded-lg border bg-card/30 p-4">
+                                            <div className="space-y-1">
+                                                <Label className="font-bold">{t("settings.onlinePayment.cafebazaarTitle")}</Label>
+                                                <p className="text-sm text-muted-foreground">
+                                                    {t("settings.onlinePayment.cafebazaarDescription")}
+                                                </p>
+                                            </div>
+                                            <Switch
+                                                checked={paymentSettings.cafebazaarEnabled ?? false}
+                                                onCheckedChange={(checked) =>
+                                                    setPaymentSettings((current) => ({ ...current, cafebazaarEnabled: checked }))
+                                                }
+                                            />
+                                        </div>
+
+                                        {paymentSettings.cafebazaarEnabled && (
+                                            <div className="space-y-2">
+                                                <Label>{t("settings.onlinePayment.cafebazaarPublicKey")}</Label>
+                                                <Textarea
+                                                    dir="ltr"
+                                                    value={paymentSettings.cafebazaarPublicKey ?? ""}
+                                                    onChange={(event) =>
+                                                        setPaymentSettings((current) => ({ ...current, cafebazaarPublicKey: event.target.value }))
+                                                    }
+                                                    placeholder="MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8A..."
+                                                    className="min-h-[120px] font-mono text-xs"
+                                                />
+                                                <p className="text-xs text-muted-foreground">{t("settings.onlinePayment.cafebazaarPublicKeyHint")}</p>
+                                            </div>
+                                        )}
 
                                         <div className="space-y-3">
                                             <Label>{t("settings.onlinePayment.gatewaysLabel")}</Label>

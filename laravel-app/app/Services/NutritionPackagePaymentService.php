@@ -57,6 +57,7 @@ class NutritionPackagePaymentService
             'enabled_gateways' => $enabledGateways,
             'card_note' => (string) ($bookingRules['management_panel_note'] ?? ''),
             'maliart_enabled' => false,
+            'cafebazaar_enabled' => (bool) data_get($meta, 'cafebazaar_iap.enabled', false),
         ];
     }
 
@@ -79,6 +80,8 @@ class NutritionPackagePaymentService
                 'provider' => $settings['provider'],
                 'enabledGateways' => $settings['enabled_gateways'],
                 'maliartEnabled' => (bool) ($settings['maliart_enabled'] ?? false),
+                'cafebazaarEnabled' => (bool) ($settings['cafebazaar_enabled'] ?? false),
+                'cafebazaarRoute' => '/api/v1/app/nutrition/iap/cafebazaar',
                 'gatewayOptions' => collect(TenantPaymentGateways::definitions())
                     ->map(fn (array $item, string $key): array => [
                         'key' => $key,
@@ -383,6 +386,9 @@ class NutritionPackagePaymentService
             'invoiceNumber' => $order?->invoice_number ?? 'SUB-'.$subscription->id,
             'status' => $isManualGrant ? 'manual' : $order->status,
             'gateway' => $order?->gateway ?? 'manual',
+            'gatewayLabel' => $this->gatewayLabel($order?->gateway ?? 'manual'),
+            'paymentChannel' => (string) ($order?->gateway ?? 'manual') === 'cafebazaar' ? 'in_app_purchase' : 'direct_gateway',
+            'paymentChannelLabel' => (string) ($order?->gateway ?? 'manual') === 'cafebazaar' ? 'پرداخت درون‌برنامه‌ای بازار' : 'درگاه مستقیم/وب',
             'sandboxMode' => (bool) ($order?->sandbox_mode ?? false),
             'amount' => (int) ($order?->amount ?? $subscription->price_amount),
             'discountAmount' => (int) ($order?->discount_amount ?? max(0, $subscription->price_amount - $subscription->payable_amount)),
@@ -409,7 +415,7 @@ class NutritionPackagePaymentService
         ];
     }
 
-    private function markSuccessful(NutritionPackageOrder $order, string $referenceId): NutritionPackageOrder
+    public function markSuccessful(NutritionPackageOrder $order, string $referenceId): NutritionPackageOrder
     {
         return DB::transaction(function () use ($order, $referenceId): NutritionPackageOrder {
             $locked = NutritionPackageOrder::query()->with('package')->lockForUpdate()->findOrFail($order->id);
@@ -532,6 +538,7 @@ class NutritionPackagePaymentService
             'durationDays' => (int) $package->duration_days,
             'priceAmount' => (int) $package->price_amount,
             'discountedPriceAmount' => $package->discounted_price_amount !== null ? (int) $package->discounted_price_amount : null,
+            'cafebazaarProductId' => $package->cafebazaar_product_id,
         ];
     }
 
@@ -549,5 +556,18 @@ class NutritionPackagePaymentService
     private function makeInvoiceNumber(): string
     {
         return 'NPK-' . now()->format('Ymd') . '-' . Str::upper(Str::random(6));
+    }
+
+    private function gatewayLabel(?string $gateway): string
+    {
+        return match ((string) $gateway) {
+            'cafebazaar' => 'کافه‌بازار',
+            'maliart' => 'درگاه مستقیم',
+            'sandbox' => 'سندباکس',
+            'free' => 'رایگان',
+            'manual' => 'ثبت دستی',
+            '' => '—',
+            default => (string) $gateway,
+        };
     }
 }

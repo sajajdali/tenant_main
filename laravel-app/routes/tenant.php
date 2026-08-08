@@ -47,6 +47,7 @@ use App\Http\Controllers\Tenant\NutritionExerciseAdminController;
 use App\Http\Controllers\Tenant\NutritionExerciseCatalogController;
 use App\Http\Controllers\Tenant\NutritionLandingSettingsController;
 use App\Http\Controllers\Tenant\NutritionPackageController;
+use App\Http\Controllers\Tenant\NutritionCafeBazaarPurchaseController;
 use App\Http\Controllers\Tenant\NutritionPackagePurchaseController;
 use App\Http\Controllers\Tenant\NutritionProfileController;
 use App\Http\Controllers\Tenant\NutritionProfileDashboardController;
@@ -178,6 +179,20 @@ Route::middleware([
                 ->name('tenant.api.app.nutrition.package-checkout.pay');
             Route::get('/summary', [NutritionPackagePurchaseController::class, 'mySummary'])
                 ->name('tenant.api.app.nutrition.package-checkout.summary');
+        });
+        Route::middleware('auth:sanctum')->prefix('/nutrition/iap/cafebazaar')->group(function () {
+            Route::get('/settings', [NutritionCafeBazaarPurchaseController::class, 'settings'])
+                ->name('tenant.api.app.nutrition.iap.cafebazaar.settings');
+            Route::get('/packages', [NutritionCafeBazaarPurchaseController::class, 'packages'])
+                ->name('tenant.api.app.nutrition.iap.cafebazaar.packages');
+            Route::post('/package-orders', [NutritionCafeBazaarPurchaseController::class, 'createOrder'])
+                ->name('tenant.api.app.nutrition.iap.cafebazaar.orders.create');
+            Route::post('/package-orders/{order}/verify', [NutritionCafeBazaarPurchaseController::class, 'verify'])
+                ->name('tenant.api.app.nutrition.iap.cafebazaar.orders.verify');
+            Route::post('/purchases/recover', [NutritionCafeBazaarPurchaseController::class, 'recover'])
+                ->name('tenant.api.app.nutrition.iap.cafebazaar.purchases.recover');
+            Route::post('/purchases/consumed', [NutritionCafeBazaarPurchaseController::class, 'markConsumed'])
+                ->name('tenant.api.app.nutrition.iap.cafebazaar.purchases.consumed');
         });
 
         Route::middleware('auth:sanctum')->prefix('/nutrition')->group(function () {

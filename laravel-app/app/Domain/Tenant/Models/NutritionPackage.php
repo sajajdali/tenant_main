@@ -30,6 +30,7 @@ class NutritionPackage extends Model
         'duration_days',
         'price_amount',
         'discounted_price_amount',
+        'cafebazaar_product_id',
         'badge_title',
         'is_recommended',
         'visual_style',

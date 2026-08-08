@@ -391,6 +391,8 @@ const getDefaultPaymentSettings = (): PaymentSettings => ({
   country: "IR",
   provider: null,
   sandboxEnabled: false,
+  cafebazaarEnabled: false,
+  cafebazaarPublicKey: "",
   enabledGateways: [],
   gateways: Object.fromEntries(
     PAYMENT_GATEWAYS.map((gateway) => [gateway.key, { enabled: false }]),
@@ -1163,6 +1165,7 @@ export const api = {
       description?: string;
       priceAmount: number;
       discountedPriceAmount?: number | null;
+      cafebazaarProductId?: string | null;
       stockQuantity: number;
       sortOrder: number;
       isActive: boolean;
@@ -1692,6 +1695,7 @@ export const api = {
       durationDays: number;
       priceAmount: number;
       discountedPriceAmount?: number | null;
+      cafebazaarProductId?: string | null;
       badgeTitle?: string | null;
       isRecommended?: boolean;
       visualStyle?: string;
@@ -1719,6 +1723,7 @@ export const api = {
       formData.append("duration_days", String(payload.durationDays));
       formData.append("price_amount", String(payload.priceAmount));
       formData.append("discounted_price_amount", payload.discountedPriceAmount == null ? "" : String(payload.discountedPriceAmount));
+      formData.append("cafebazaar_product_id", payload.cafebazaarProductId ?? "");
       formData.append("badge_title", payload.badgeTitle ?? "");
       formData.append("is_recommended", payload.isRecommended ? "1" : "0");
       formData.append("visual_style", payload.visualStyle ?? "normal");
@@ -1752,6 +1757,7 @@ export const api = {
       durationDays: number;
       priceAmount: number;
       discountedPriceAmount?: number | null;
+      cafebazaarProductId?: string | null;
       badgeTitle?: string | null;
       isRecommended?: boolean;
       visualStyle?: string;
@@ -1779,6 +1785,7 @@ export const api = {
       formData.append("duration_days", String(payload.durationDays));
       formData.append("price_amount", String(payload.priceAmount));
       formData.append("discounted_price_amount", payload.discountedPriceAmount == null ? "" : String(payload.discountedPriceAmount));
+      formData.append("cafebazaar_product_id", payload.cafebazaarProductId ?? "");
       formData.append("badge_title", payload.badgeTitle ?? "");
       formData.append("is_recommended", payload.isRecommended ? "1" : "0");
       formData.append("visual_style", payload.visualStyle ?? "normal");

@@ -213,6 +213,7 @@ class PaymentManagementController extends Controller
     {
         return match ((string) $gateway) {
             'maliart' => 'درگاه مستقیم',
+            'cafebazaar' => 'کافه‌بازار',
             'manual_card_to_card' => 'کارت به کارت',
             'manual_online' => 'پرداخت آنلاین',
             'manual_no_charge' => 'بدون واریز مبلغ',

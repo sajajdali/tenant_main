@@ -146,6 +146,7 @@ export interface NutritionPackageItem {
   durationDays: number;
   priceAmount: number;
   discountedPriceAmount?: number | null;
+  cafebazaarProductId?: string | null;
   badgeTitle?: string | null;
   isRecommended?: boolean;
   visualStyle?: "normal" | "gold" | "vip" | string;
@@ -264,6 +265,8 @@ export interface NutritionPackageCheckoutPreview {
     enabledGateways: string[];
     gatewayOptions: { key: string; label: string }[];
     maliartEnabled?: boolean;
+    cafebazaarEnabled?: boolean;
+    cafebazaarRoute?: string;
   };
 }
 
@@ -1246,6 +1249,8 @@ export interface PaymentSettings {
   localization?: Pick<TenantMeta, "locale" | "fallbackLocale" | "supportedLocales" | "country" | "defaultCountry" | "supportedCountries" | "dir" | "htmlLang" | "ogLocale" | "dateLocale" | "calendar" | "numberingSystem" | "currency">;
   provider: PaymentProvider | null;
   sandboxEnabled?: boolean;
+  cafebazaarEnabled?: boolean;
+  cafebazaarPublicKey?: string;
   maliartEnabled?: boolean;
   tenantMaliartEnabled?: boolean;
   enabledGateways?: PaymentProvider[];

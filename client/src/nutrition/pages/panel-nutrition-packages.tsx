@@ -97,6 +97,7 @@ export default function PanelNutritionPackagesPage() {
   const [durationDays, setDurationDays] = useState("30");
   const [priceAmount, setPriceAmount] = useState("0");
   const [discountedPriceAmount, setDiscountedPriceAmount] = useState("");
+  const [cafebazaarProductId, setCafebazaarProductId] = useState("");
   const [badgeTitle, setBadgeTitle] = useState("");
   const [isRecommended, setIsRecommended] = useState(false);
   const [visualStyle, setVisualStyle] = useState("normal");
@@ -122,6 +123,7 @@ export default function PanelNutritionPackagesPage() {
   const [editDurationDays, setEditDurationDays] = useState("30");
   const [editPriceAmount, setEditPriceAmount] = useState("0");
   const [editDiscountedPriceAmount, setEditDiscountedPriceAmount] = useState("");
+  const [editCafebazaarProductId, setEditCafebazaarProductId] = useState("");
   const [editBadgeTitle, setEditBadgeTitle] = useState("");
   const [editIsRecommended, setEditIsRecommended] = useState(false);
   const [editVisualStyle, setEditVisualStyle] = useState("normal");
@@ -175,6 +177,7 @@ export default function PanelNutritionPackagesPage() {
     setDurationDays("30");
     setPriceAmount("0");
     setDiscountedPriceAmount("");
+    setCafebazaarProductId("");
     setBadgeTitle("");
     setIsRecommended(false);
     setVisualStyle("normal");
@@ -399,6 +402,18 @@ export default function PanelNutritionPackagesPage() {
               </div>
 
               <div className="space-y-2">
+                <Label htmlFor="package-cafebazaar-product-id">{t("panelNutritionPackages.fields.cafebazaarProductId")}</Label>
+                <Input
+                  id="package-cafebazaar-product-id"
+                  dir="ltr"
+                  value={cafebazaarProductId}
+                  onChange={(e) => setCafebazaarProductId(e.target.value)}
+                  placeholder="nutrition_package_basic"
+                />
+                <div className="text-xs text-muted-foreground">{t("panelNutritionPackages.cafebazaarProductHint")}</div>
+              </div>
+
+              <div className="space-y-2">
                 <Label htmlFor="package-badge-title">{t("panelNutritionPackages.fields.badgeTitle")}</Label>
                 <Input
                   id="package-badge-title"
@@ -460,6 +475,7 @@ export default function PanelNutritionPackagesPage() {
                     durationDays: Number(durationDays) || 30,
                     priceAmount: Number(priceAmount) || 0,
                     discountedPriceAmount: discountedPriceAmount.trim() === "" ? null : Number(discountedPriceAmount) || 0,
+                    cafebazaarProductId: cafebazaarProductId.trim() || null,
                     badgeTitle: badgeTitle.trim() || null,
                     isRecommended,
                     visualStyle,
@@ -523,6 +539,7 @@ export default function PanelNutritionPackagesPage() {
                         setEditDurationDays(String(selected.durationDays));
                         setEditPriceAmount(String(selected.priceAmount));
                         setEditDiscountedPriceAmount(selected.discountedPriceAmount !== null && selected.discountedPriceAmount !== undefined ? String(selected.discountedPriceAmount) : "");
+                        setEditCafebazaarProductId(selected.cafebazaarProductId ?? "");
                         setEditBadgeTitle(selected.badgeTitle ?? "");
                         setEditIsRecommended(Boolean(selected.isRecommended));
                         setEditVisualStyle(selected.visualStyle ?? "normal");
@@ -702,6 +719,16 @@ export default function PanelNutritionPackagesPage() {
               </div>
             </div>
             <div className="space-y-2">
+              <Label>{t("panelNutritionPackages.fields.cafebazaarProductId")}</Label>
+              <Input
+                dir="ltr"
+                value={editCafebazaarProductId}
+                onChange={(e) => setEditCafebazaarProductId(e.target.value)}
+                placeholder="nutrition_package_basic"
+              />
+              <div className="text-xs text-muted-foreground">{t("panelNutritionPackages.cafebazaarProductHint")}</div>
+            </div>
+            <div className="space-y-2">
               <Label>{t("panelNutritionPackages.fields.badgeTitle")}</Label>
               <Input
                 value={editBadgeTitle}
@@ -758,6 +785,7 @@ export default function PanelNutritionPackagesPage() {
                   durationDays: Number(editDurationDays) || 30,
                   priceAmount: Number(editPriceAmount) || 0,
                   discountedPriceAmount: editDiscountedPriceAmount.trim() === "" ? null : Number(editDiscountedPriceAmount) || 0,
+                  cafebazaarProductId: editCafebazaarProductId.trim() || null,
                   badgeTitle: editBadgeTitle.trim() || null,
                   isRecommended: editIsRecommended,
                   visualStyle: editVisualStyle,
@@ -965,6 +993,11 @@ function PackageAdminCard({
               <div className="text-xs text-muted-foreground">{t("panelNutritionPackages.fields.discountedPrice")}</div>
               <div className="mt-2 text-lg font-black text-primary">{item.discountedPriceAmount ? formatTomans(item.discountedPriceAmount, t, format) : t("panelNutritionPackages.noDiscount")}</div>
             </div>
+          </div>
+
+          <div className="rounded-2xl border border-border/70 bg-background/40 p-4">
+            <div className="text-xs text-muted-foreground">{t("panelNutritionPackages.fields.cafebazaarProductId")}</div>
+            <div className="mt-2 font-mono text-sm" dir="ltr">{item.cafebazaarProductId || t("panelNutritionPackages.notConfigured")}</div>
           </div>
 
           <div className="text-xs text-muted-foreground">{t("panelNutritionPackages.card.sortOrder", { value: format.number(item.sortOrder) })}</div>
