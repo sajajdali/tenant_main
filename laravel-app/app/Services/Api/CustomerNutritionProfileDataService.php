@@ -259,6 +259,7 @@ class CustomerNutritionProfileDataService
     {
         $expired = $prescription->ends_at ? ! $prescription->ends_at->isFuture() : false;
         $content = is_array($prescription->content_snapshot) ? $prescription->content_snapshot : [];
+        $content = $this->filterDisabledTemplateMealSlots($prescription, $content);
 
         return [
             'id' => (string) $prescription->id,
@@ -345,6 +346,7 @@ class CustomerNutritionProfileDataService
     private function prescriptionDays(NutritionDietPrescription $prescription, string $activeDate): ?array
     {
         $content = is_array($prescription->content_snapshot) ? $prescription->content_snapshot : [];
+        $content = $this->filterDisabledTemplateMealSlots($prescription, $content);
         $plans = collect(is_array($content['day_plans'] ?? null) ? $content['day_plans'] : [])
             ->filter(fn ($plan): bool => is_array($plan))
             ->values();
@@ -668,6 +670,7 @@ class CustomerNutritionProfileDataService
     private function dailyCalorieTarget(NutritionDietPrescription $prescription): ?int
     {
         $content = is_array($prescription->content_snapshot) ? $prescription->content_snapshot : [];
+        $content = $this->filterDisabledTemplateMealSlots($prescription, $content);
         $plan = is_array($content['calorie_plan'] ?? null) ? $content['calorie_plan'] : [];
         $target = (int) ($plan['prescribed_calories'] ?? $plan['base_calories'] ?? 0);
 
@@ -683,6 +686,69 @@ class CustomerNutritionProfileDataService
         $plans = is_array($content['day_plans'] ?? null) ? $content['day_plans'] : [];
 
         return $plans !== [] ? count($plans) : null;
+    }
+
+    /**
+     * @param array<string, mixed> $content
+     * @return array<string, mixed>
+     */
+    private function filterDisabledTemplateMealSlots(NutritionDietPrescription $prescription, array $content): array
+    {
+        $enabledSlotKeys = $this->enabledTemplateMealSlotKeys($prescription);
+
+        if ($enabledSlotKeys === []) {
+            return $content;
+        }
+
+        if (is_array($content['meal_slots'] ?? null)) {
+            $content['meal_slots'] = collect($content['meal_slots'])
+                ->filter(fn ($slot): bool => is_array($slot)
+                    && in_array(trim((string) ($slot['slot_key'] ?? '')), $enabledSlotKeys, true))
+                ->values()
+                ->all();
+        }
+
+        if (is_array($content['day_plans'] ?? null)) {
+            $content['day_plans'] = collect($content['day_plans'])
+                ->filter(fn ($plan): bool => is_array($plan))
+                ->map(function (array $plan) use ($enabledSlotKeys): array {
+                    $plan['meals'] = collect(is_array($plan['meals'] ?? null) ? $plan['meals'] : [])
+                        ->filter(fn ($meal): bool => is_array($meal)
+                            && in_array(trim((string) ($meal['slot_key'] ?? '')), $enabledSlotKeys, true))
+                        ->values()
+                        ->all();
+
+                    return $plan;
+                })
+                ->values()
+                ->all();
+        }
+
+        return $content;
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function enabledTemplateMealSlotKeys(NutritionDietPrescription $prescription): array
+    {
+        $template = is_array($prescription->template_snapshot) ? $prescription->template_snapshot : [];
+        $slots = is_array($template['mealSlots'] ?? null) ? $template['mealSlots'] : [];
+
+        return collect($slots)
+            ->filter(fn ($slot): bool => is_array($slot))
+            ->filter(function (array $slot): bool {
+                if (array_key_exists('enabled', $slot)) {
+                    return (bool) $slot['enabled'];
+                }
+
+                return true;
+            })
+            ->map(fn (array $slot): string => trim((string) ($slot['key'] ?? $slot['slot_key'] ?? '')))
+            ->filter(fn (string $slotKey): bool => $slotKey !== '')
+            ->unique()
+            ->values()
+            ->all();
     }
 
     private function extractLoggedCalories(string $notes): int
