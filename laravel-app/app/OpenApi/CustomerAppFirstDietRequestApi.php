@@ -13,7 +13,7 @@ use OpenApi\Attributes as OA;
 #[OA\Get(
     path: '/api/v1/app/nutrition/diet-requests/options',
     operationId: 'customerAppDietRequestOptions',
-    description: 'داده مسیر دریافت رژیم را برمی‌گرداند: نوع flow، پیش‌نیازها، تنظیمات auto-first، پکیج فعال، موجودی کل/مصرف‌شده/باقی‌مانده رژیم آنلاین و کارشناس، امکان انتخاب هر روش و مسیر مرحله بعد. سناریوی رژیم اول بعد از خرید پکیج این است: اگر mindsetCompleted=false باشد، اپ باید پیام «برای دریافت رژیم باید به ۵ سؤال تکمیلی پاسخ دهید» نشان دهد و کاربر را به GET/POST /api/v1/app/membership/mindset ببرد. UI سؤال‌ها باید با انتخاب هر گزینه خودکار به سؤال بعدی برود و نیاز به دکمه مرحله بعد نداشته باشد. بعد از تکمیل mindset، اگر autoFirstDiet.enabled=true و autoFirstDiet.templateAvailable=true باشد nextStep برابر /nutrition/diet-request/confirm می‌شود و preview/confirm با payload {"requestType":"ai"} کافی است؛ نیازی به nutritionDietTemplateId نیست. در این حالت اپ باید قبل از confirm صفحه تأیید نشان دهد. این endpoint هیچ سهمیه‌ای مصرف نمی‌کند.',
+    description: 'داده مسیر دریافت رژیم را برمی‌گرداند: نوع flow، پیش‌نیازها، تنظیمات auto-first، پکیج فعال، موجودی کل/مصرف‌شده/باقی‌مانده رژیم آنلاین و کارشناس، امکان انتخاب هر روش و مسیر مرحله بعد. تصمیم UI باید از همین response گرفته شود، نه از route ثابت. سناریوی رژیم اول بعد از خرید پکیج این است: اگر mindsetCompleted=false باشد، اپ باید پیام «برای دریافت رژیم باید به ۵ سؤال تکمیلی پاسخ دهید» نشان دهد و کاربر را به GET/POST /api/v1/app/membership/mindset ببرد. UI سؤال‌ها باید با انتخاب هر گزینه خودکار به سؤال بعدی برود و نیاز به دکمه مرحله بعد نداشته باشد. بعد از تکمیل mindset، اگر flowType=first_diet و autoFirstDiet.enabled=true و autoFirstDiet.templateAvailable=true و mode ai در modes available=true باشد، اپ نباید صفحه انتخاب «هوش مصنوعی یا کارشناس» و نباید صفحه انتخاب الگو را نشان دهد؛ باید مستقیم صفحه تأیید را باز کند و preview/confirm را با payload {"requestType":"ai"} انجام دهد. در این حالت nutritionDietTemplateId لازم نیست و سرور قالب را resolve می‌کند. قانون تک‌حالته بودن پکیج نیز عمومی است: اگر فقط یکی از modes دارای included=true و remaining>0 باشد، صفحه انتخاب روش هیچ‌وقت نباید نمایش داده شود؛ مخصوصاً اگر پکیج فقط رژیم آنلاین/AI دارد، در رژیم اول و رژیم‌های بعدی مرحله انتخاب AI/کارشناس حذف می‌شود و اپ مستقیم وارد nextStep همان mode می‌شود. این endpoint هیچ سهمیه‌ای مصرف نمی‌کند.',
     security: [['bearerAuth' => []]],
     tags: ['Diet Request Flow'],
     responses: [
@@ -29,7 +29,7 @@ use OpenApi\Attributes as OA;
 #[OA\Post(
     path: '/api/v1/app/nutrition/diet-requests/preview',
     operationId: 'customerAppDietRequestPreview',
-    description: 'پیش‌نمایش دقیق صفحه تأیید رژیم اول را می‌سازد. بعد از خرید پکیج و پاسخ به ۵ سؤال mindset، اپ باید این endpoint را صدا بزند و داده برگشتی را در صفحه تأیید نشان دهد. اگر autoFirstDiet.enabled=true و autoFirstDiet.templateAvailable=true باشد، برای اولین رژیم آنلاین payload {"requestType":"ai"} کافی است و سرور قالب خودکار را resolve کرده و در request.dietTemplate برمی‌گرداند تا در صفحه تأیید نمایش داده شود. اگر سرور nutritionDietTemplateId را لازم دانست، اپ باید به انتخاب دستی الگو برگردد. تمام قواعد ثبت نهایی بررسی می‌شوند، اما هیچ درخواست، لاگ وزن یا مصرف سهمیه‌ای ثبت نمی‌شود.',
+    description: 'پیش‌نمایش دقیق صفحه تأیید را می‌سازد و باید قبل از هر POST نهایی صدا زده شود. بعد از خرید پکیج و پاسخ به ۵ سؤال mindset، اگر auto-first برقرار است اپ باید این endpoint را با payload {"requestType":"ai"} صدا بزند و داده برگشتی را در صفحه تأیید نشان دهد؛ صفحه انتخاب «هوش مصنوعی یا کارشناس» و صفحه انتخاب الگو در این مسیر ممنوع است. اگر autoFirstDiet.enabled=true و autoFirstDiet.templateAvailable=true باشد، برای اولین رژیم آنلاین nutritionDietTemplateId لازم نیست و سرور قالب خودکار را resolve کرده و در request.dietTemplate برمی‌گرداند. اگر سرور nutritionDietTemplateId را لازم دانست، فقط در این حالت اپ به انتخاب دستی الگو برمی‌گردد. برای رژیم دوم به بعد auto-first اعمال نمی‌شود، اما اگر پکیج فقط یک mode قابل استفاده دارد باز هم صفحه انتخاب mode حذف می‌شود و preview با همان mode انجام می‌شود. تمام قواعد ثبت نهایی بررسی می‌شوند، اما هیچ درخواست، لاگ وزن یا مصرف سهمیه‌ای ثبت نمی‌شود.',
     security: [['bearerAuth' => []]],
     tags: ['Diet Request Flow'],
     requestBody: new OA\RequestBody(
@@ -133,7 +133,7 @@ use OpenApi\Attributes as OA;
 #[OA\Post(
     path: '/api/v1/app/nutrition/diet-requests',
     operationId: 'customerAppFirstDietRequestStore',
-    description: 'مرحله تأیید نهایی صفحه preview است. همان payload تأییدشده preview دوباره بررسی می‌شود و سپس داخل transaction درخواست رژیم ثبت و دقیقاً یک سهمیه از روش انتخابی مصرف می‌شود. برای اولین رژیم آنلاین اگر autoFirstDiet.enabled=true و autoFirstDiet.templateAvailable=true باشد، nutritionDietTemplateId اختیاری است و payload {"requestType":"ai"} کافی است؛ سرور قالب خودکار را انتخاب می‌کند. بعد از موفقیت، اپ باید پیام «رژیم شما در حال تجویز است» نشان دهد و صفحه پروفایل را دوباره بگیرد؛ در /api/v1/app/nutrition/profile مقدار dashboard.state برابر prescribing و dietAction.type برابر prescribing می‌شود تا کاربر تا زمان تأیید/انتشار کارشناس رژیم جدیدی ثبت نکند. بعد از تأیید کارشناس و publish نسخه، profile به view_current_diet تغییر می‌کند و رژیم در اپ قابل مشاهده است. رژیم دوم به بعد هیچ‌وقت auto-first نیست و کاربر باید روش/قالب را خودش انتخاب کند. مسیر follow-up شامل ۱۵ مرحله است: currentWeightKg، سیزده پاسخ repeatDietFeedback، و مرحله بیماری/دارو در /nutrition/diet-followup/15. این ۱۳ سؤال جداگانه در دیتابیس ذخیره یا جداگانه submit نمی‌شوند؛ همه جواب‌ها در یک object به نام repeatDietFeedback ارسال می‌شوند و سرور آن object را در snapshot درخواست ذخیره می‌کند. در مرحله بیماری، repeatDietMedicalConditionsItems ساختار اصلی است و repeatDietMedicalNotes summary سازگار با نسخه قبلی را نگه می‌دارد.',
+    description: 'مرحله تأیید نهایی صفحه preview است. همان payload تأییدشده preview دوباره بررسی می‌شود و سپس داخل transaction درخواست رژیم ثبت و دقیقاً یک سهمیه از روش انتخابی مصرف می‌شود. برای اولین رژیم آنلاین اگر autoFirstDiet.enabled=true و autoFirstDiet.templateAvailable=true باشد، nutritionDietTemplateId اختیاری است و payload {"requestType":"ai"} کافی است؛ سرور قالب خودکار را انتخاب می‌کند. در این مسیر اپ فقط بعد از نمایش صفحه تأیید حق دارد این POST را بزند و نباید قبل از آن صفحه انتخاب AI/کارشناس یا انتخاب الگو نشان دهد. بعد از موفقیت، اپ باید پیام «رژیم شما در حال تجویز است» نشان دهد و صفحه پروفایل را دوباره بگیرد؛ در /api/v1/app/nutrition/profile مقدار dashboard.state برابر prescribing و dietAction.type برابر prescribing می‌شود تا کاربر تا زمان تأیید/انتشار کارشناس رژیم جدیدی ثبت نکند. بعد از تأیید کارشناس و publish نسخه، profile به view_current_diet تغییر می‌کند و رژیم در اپ قابل مشاهده است. رژیم دوم به بعد هیچ‌وقت auto-first نیست و ابتدا باید currentWeightKg و سؤال‌های follow-up پرسیده شود؛ سپس روش/قالب طبق modes انتخاب می‌شود. اگر پکیج فقط یک mode قابل استفاده داشته باشد، صفحه انتخاب روش حتی در رژیم‌های بعدی هم نباید نمایش داده شود و اپ مستقیم مسیر همان mode را ادامه می‌دهد. مسیر follow-up شامل ۱۵ مرحله است: currentWeightKg، سیزده پاسخ repeatDietFeedback، و مرحله بیماری/دارو در /nutrition/diet-followup/15. این ۱۳ سؤال جداگانه در دیتابیس ذخیره یا جداگانه submit نمی‌شوند؛ همه جواب‌ها در یک object به نام repeatDietFeedback ارسال می‌شوند و سرور آن object را در snapshot درخواست ذخیره می‌کند. در مرحله بیماری، repeatDietMedicalConditionsItems ساختار اصلی است و repeatDietMedicalNotes summary سازگار با نسخه قبلی را نگه می‌دارد.',
     security: [['bearerAuth' => []]],
     tags: ['Diet Request Flow'],
     requestBody: new OA\RequestBody(
@@ -286,7 +286,7 @@ use OpenApi\Attributes as OA;
         new OA\Property(property: 'used', type: 'integer', example: 1),
         new OA\Property(property: 'remaining', type: 'integer', example: 2),
         new OA\Property(property: 'available', type: 'boolean', example: true),
-        new OA\Property(property: 'nextStep', type: 'string', example: '/nutrition/select-diet'),
+        new OA\Property(property: 'nextStep', description: 'مسیر پیشنهادی همان mode. اگر فقط همین mode قابل استفاده باشد، اپ باید مستقیم به این مسیر برود و صفحه انتخاب mode را نشان ندهد.', type: 'string', example: '/nutrition/select-diet'),
     ],
     type: 'object',
 )]
@@ -340,7 +340,7 @@ use OpenApi\Attributes as OA;
                 new OA\Property(property: 'modes', type: 'array', items: new OA\Items(ref: '#/components/schemas/DietRequestModeOption')),
                 new OA\Property(property: 'activeRequest', type: 'object', nullable: true),
                 new OA\Property(property: 'canChooseMode', type: 'boolean', example: true),
-                new OA\Property(property: 'nextStep', description: 'برای رژیم اول پس از خرید پکیج: اگر mindset کامل نیست /nutrition/membership/mindset/1؛ اگر auto-first فعال و قالب معتبر موجود است /nutrition/diet-request/confirm؛ در غیر این صورت /nutrition/diet-type.', type: 'string', nullable: true, example: '/nutrition/diet-request/confirm'),
+                new OA\Property(property: 'nextStep', description: 'برای رژیم اول پس از خرید پکیج: اگر mindset کامل نیست /nutrition/membership/mindset/1؛ اگر auto-first فعال و قالب معتبر موجود است /nutrition/diet-request/confirm؛ در غیر این صورت /nutrition/diet-type. اگر فقط یک mode قابل استفاده در modes وجود دارد، اپ باید از nextStep همان mode استفاده کند و /nutrition/diet-type را نشان ندهد.', type: 'string', nullable: true, example: '/nutrition/diet-request/confirm'),
                 new OA\Property(property: 'previewEndpoint', type: 'string', example: '/api/v1/app/nutrition/diet-requests/preview'),
                 new OA\Property(property: 'confirmEndpoint', type: 'string', example: '/api/v1/app/nutrition/diet-requests'),
             ],
@@ -639,7 +639,7 @@ use OpenApi\Attributes as OA;
 )]
 #[OA\Schema(
     schema: 'FollowUpAiDietRequest',
-    description: 'payload ثبت نهایی رژیم دوم به بعد برای حالت آنلاین. سؤال‌های follow-up جداگانه submit نمی‌شوند؛ currentWeightKg، ۱۳ پاسخ repeatDietFeedback و وضعیت بیماری/دارو یکجا با همین درخواست ارسال می‌شوند.',
+    description: 'payload preview/ثبت نهایی رژیم دوم به بعد برای حالت آنلاین. سؤال‌های follow-up جداگانه submit نمی‌شوند؛ currentWeightKg، ۱۳ پاسخ repeatDietFeedback و وضعیت بیماری/دارو یکجا با همین درخواست ارسال می‌شوند. auto-first برای این payload معنی ندارد، اما اگر پکیج فقط AI داشته باشد، اپ نباید صفحه انتخاب AI/کارشناس را نشان دهد و باید بعد از تکمیل follow-up مستقیم وارد انتخاب الگوی AI/preview شود.',
     required: ['requestType', 'nutritionDietTemplateId', 'currentWeightKg', 'repeatDietFeedback', 'repeatDietMedicalNotes'],
     properties: [
         new OA\Property(property: 'requestType', type: 'string', enum: ['ai'], example: 'ai'),
@@ -658,7 +658,7 @@ use OpenApi\Attributes as OA;
 )]
 #[OA\Schema(
     schema: 'FollowUpExpertDietRequest',
-    description: 'payload ثبت نهایی رژیم دوم به بعد برای حالت کارشناس. سؤال‌های follow-up جداگانه submit نمی‌شوند؛ currentWeightKg، ۱۳ پاسخ repeatDietFeedback و وضعیت بیماری/دارو یکجا با همین درخواست ارسال می‌شوند.',
+    description: 'payload preview/ثبت نهایی رژیم دوم به بعد برای حالت کارشناس. سؤال‌های follow-up جداگانه submit نمی‌شوند؛ currentWeightKg، ۱۳ پاسخ repeatDietFeedback و وضعیت بیماری/دارو یکجا با همین درخواست ارسال می‌شوند. اگر پکیج فقط کارشناس داشته باشد، اپ نباید صفحه انتخاب AI/کارشناس را نشان دهد و باید بعد از تکمیل follow-up مستقیم وارد مسیر expert/preview شود.',
     required: ['requestType', 'currentWeightKg', 'repeatDietFeedback', 'repeatDietMedicalNotes'],
     properties: [
         new OA\Property(property: 'requestType', type: 'string', enum: ['expert'], example: 'expert'),

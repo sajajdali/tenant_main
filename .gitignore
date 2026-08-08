@@ -11,6 +11,7 @@ diet-landing-design-html/
 special-design-tmp/
 tmp_images/
 **/tmp_images/
+laravel-app/docs/flutter-*-guide.md
 
 
 .DS_Store
