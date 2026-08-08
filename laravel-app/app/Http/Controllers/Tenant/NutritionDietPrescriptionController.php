@@ -865,6 +865,7 @@ class NutritionDietPrescriptionController extends Controller
         $content = is_array($item->content_snapshot) ? $item->content_snapshot : [];
         $profile = is_array($item->profile_snapshot) ? $item->profile_snapshot : [];
         $template = is_array($item->template_snapshot) ? $item->template_snapshot : [];
+        $content = $this->filterDisabledTemplateMealSlots($item, $content);
 
         if (! is_array($content['water_plan'] ?? null)) {
             $weightKg = isset($profile['weightKg']) ? (float) $profile['weightKg'] : 0.0;
@@ -900,6 +901,69 @@ class NutritionDietPrescriptionController extends Controller
         unset($content['audio_guidance']);
 
         return $content;
+    }
+
+    /**
+     * @param array<string, mixed> $content
+     * @return array<string, mixed>
+     */
+    private function filterDisabledTemplateMealSlots(NutritionDietPrescription $prescription, array $content): array
+    {
+        $enabledSlotKeys = $this->enabledTemplateMealSlotKeys($prescription);
+
+        if ($enabledSlotKeys === []) {
+            return $content;
+        }
+
+        if (is_array($content['meal_slots'] ?? null)) {
+            $content['meal_slots'] = collect($content['meal_slots'])
+                ->filter(fn ($slot): bool => is_array($slot)
+                    && in_array(trim((string) ($slot['slot_key'] ?? '')), $enabledSlotKeys, true))
+                ->values()
+                ->all();
+        }
+
+        if (is_array($content['day_plans'] ?? null)) {
+            $content['day_plans'] = collect($content['day_plans'])
+                ->filter(fn ($plan): bool => is_array($plan))
+                ->map(function (array $plan) use ($enabledSlotKeys): array {
+                    $plan['meals'] = collect(is_array($plan['meals'] ?? null) ? $plan['meals'] : [])
+                        ->filter(fn ($meal): bool => is_array($meal)
+                            && in_array(trim((string) ($meal['slot_key'] ?? '')), $enabledSlotKeys, true))
+                        ->values()
+                        ->all();
+
+                    return $plan;
+                })
+                ->values()
+                ->all();
+        }
+
+        return $content;
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function enabledTemplateMealSlotKeys(NutritionDietPrescription $prescription): array
+    {
+        $template = is_array($prescription->template_snapshot) ? $prescription->template_snapshot : [];
+        $slots = is_array($template['mealSlots'] ?? null) ? $template['mealSlots'] : [];
+
+        return collect($slots)
+            ->filter(fn ($slot): bool => is_array($slot))
+            ->filter(function (array $slot): bool {
+                if (array_key_exists('enabled', $slot)) {
+                    return (bool) $slot['enabled'];
+                }
+
+                return true;
+            })
+            ->map(fn (array $slot): string => trim((string) ($slot['key'] ?? $slot['slot_key'] ?? '')))
+            ->filter(fn (string $slotKey): bool => $slotKey !== '')
+            ->unique()
+            ->values()
+            ->all();
     }
 
     /**

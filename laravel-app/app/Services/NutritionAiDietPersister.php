@@ -335,6 +335,7 @@ class NutritionAiDietPersister
         }
 
         $content = $this->normalizeDailyPlans($request, $content);
+        $content = $this->filterDisabledTemplateMealSlots($request, $content);
         $content = $this->normalizeMacroTargets($content);
         $content['water_plan'] = $this->waterPlan($content['water_plan'] ?? null, $profile);
         $content['supplement_plan'] = $this->supplementPlan($content['supplement_plan'] ?? null, $template, $request);
@@ -481,6 +482,69 @@ class NutritionAiDietPersister
         $content['duration_days'] = max(1, $requiredDurationDays);
 
         return $content;
+    }
+
+    /**
+     * @param array<string, mixed> $content
+     * @return array<string, mixed>
+     */
+    private function filterDisabledTemplateMealSlots(NutritionDietRequest $request, array $content): array
+    {
+        $enabledSlotKeys = $this->enabledTemplateMealSlotKeys($request);
+
+        if ($enabledSlotKeys === []) {
+            return $content;
+        }
+
+        if (is_array($content['meal_slots'] ?? null)) {
+            $content['meal_slots'] = collect($content['meal_slots'])
+                ->filter(fn ($slot): bool => is_array($slot)
+                    && in_array(trim((string) ($slot['slot_key'] ?? '')), $enabledSlotKeys, true))
+                ->values()
+                ->all();
+        }
+
+        if (is_array($content['day_plans'] ?? null)) {
+            $content['day_plans'] = collect($content['day_plans'])
+                ->filter(fn ($plan): bool => is_array($plan))
+                ->map(function (array $plan) use ($enabledSlotKeys): array {
+                    $plan['meals'] = collect(is_array($plan['meals'] ?? null) ? $plan['meals'] : [])
+                        ->filter(fn ($meal): bool => is_array($meal)
+                            && in_array(trim((string) ($meal['slot_key'] ?? '')), $enabledSlotKeys, true))
+                        ->values()
+                        ->all();
+
+                    return $plan;
+                })
+                ->values()
+                ->all();
+        }
+
+        return $content;
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function enabledTemplateMealSlotKeys(NutritionDietRequest $request): array
+    {
+        $template = is_array($request->template_snapshot) ? $request->template_snapshot : [];
+        $slots = is_array($template['mealSlots'] ?? null) ? $template['mealSlots'] : [];
+
+        return collect($slots)
+            ->filter(fn ($slot): bool => is_array($slot))
+            ->filter(function (array $slot): bool {
+                if (array_key_exists('enabled', $slot)) {
+                    return (bool) $slot['enabled'];
+                }
+
+                return true;
+            })
+            ->map(fn (array $slot): string => trim((string) ($slot['key'] ?? $slot['slot_key'] ?? '')))
+            ->filter(fn (string $slotKey): bool => $slotKey !== '')
+            ->unique()
+            ->values()
+            ->all();
     }
 
     /**
