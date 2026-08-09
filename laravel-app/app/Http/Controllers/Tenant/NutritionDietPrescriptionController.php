@@ -5,7 +5,10 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Tenant;
 
 use App\Domain\Tenant\Models\NutritionDietPrescription;
+use App\Domain\Tenant\Models\NutritionDietRequest;
 use App\Domain\Tenant\Models\NutritionMealReplacementSuggestion;
+use App\Domain\Tenant\Models\NutritionPackageSubscription;
+use App\Domain\Tenant\Models\NutritionProfile;
 use App\Domain\Tenant\Models\TenantUser;
 use App\Http\Controllers\Controller;
 use App\Services\NutritionAiManualMealNutritionService;
@@ -53,6 +56,7 @@ class NutritionDietPrescriptionController extends Controller
             'success' => true,
             'data' => [
                 'items' => $items->map(fn (NutritionDietPrescription $item): array => $this->serializePrescription($item))->values()->all(),
+                'action' => $this->listAction($user, $items->count()),
             ],
         ]);
     }
@@ -680,7 +684,7 @@ class NutritionDietPrescriptionController extends Controller
 
     private function serializePrescription(NutritionDietPrescription $item, ?string $activeDate = null): array
     {
-        $effectiveExpired = $item->ends_at ? ! $item->ends_at->isFuture() : false;
+        $effectiveExpired = $item->ends_at ? $item->ends_at->toDateString() < Carbon::today('Asia/Tehran')->toDateString() : false;
         $effectiveCurrent = (bool) $item->is_current && ! $effectiveExpired;
         $contentSnapshot = $this->normalizeContentSnapshot($item);
         $activeDate ??= $this->currentNutritionDate();
@@ -791,7 +795,10 @@ class NutritionDietPrescriptionController extends Controller
             'deliveryChannel' => $item->delivery_channel,
             'prescriptionMode' => $item->prescription_mode,
             'status' => $item->status,
+            'statusLabel' => $this->prescriptionStatusLabel((string) $item->status),
             'expired' => $effectiveExpired,
+            'usageStatus' => $effectiveExpired ? 'finished' : 'in_use',
+            'usageStatusLabel' => $effectiveExpired ? 'تمام شده' : 'در حال استفاده',
             'allowFoodReplacement' => (bool) $item->allow_food_replacement,
             'suggestDailyReplacements' => (bool) $item->suggest_daily_replacements,
             'exerciseLoggingEnabled' => $this->settings->exerciseLoggingEnabled(),
@@ -804,6 +811,8 @@ class NutritionDietPrescriptionController extends Controller
             'endsAt' => $item->ends_at?->toDateString(),
             'version' => (int) $item->version,
             'isCurrent' => $effectiveCurrent,
+            'currentStatus' => $effectiveCurrent ? 'active' : 'inactive',
+            'currentStatusLabel' => $effectiveCurrent ? 'فعال' : 'غیر فعال',
             'summaryText' => $item->summary_text,
             'notes' => $item->notes,
             'durationDays' => $item->started_at && $item->ends_at ? max(1, $item->ends_at->diffInDays($item->started_at) + 1) : null,
@@ -816,6 +825,127 @@ class NutritionDietPrescriptionController extends Controller
             'exerciseLogs' => $exerciseLogs,
             'publishedAt' => $item->published_at?->toIso8601String(),
         ];
+    }
+
+    private function listAction(TenantUser $user, int $historyCount): array
+    {
+        $profile = NutritionProfile::query()
+            ->where('user_id', $user->id)
+            ->first();
+        $activeRequest = NutritionDietRequest::query()
+            ->where('user_id', $user->id)
+            ->whereIn('status', ['sent', 'in_progress', 'not_sent'])
+            ->whereDoesntHave('prescriptions', function ($query): void {
+                $query->whereNotNull('published_at');
+            })
+            ->latest('id')
+            ->first();
+        $currentPrescription = NutritionDietPrescription::query()
+            ->where('user_id', $user->id)
+            ->where('is_current', true)
+            ->whereNotNull('published_at')
+            ->where(function ($query): void {
+                $query->whereNull('ends_at')
+                    ->orWhereDate('ends_at', '>=', Carbon::today('Asia/Tehran')->toDateString());
+            })
+            ->latest('id')
+            ->first();
+
+        if ($currentPrescription !== null) {
+            return [
+                'type' => 'view_current_diet',
+                'title' => 'مشاهده رژیم فعلی',
+                'href' => '/nutrition/my-diet',
+                'disabled' => false,
+            ];
+        }
+
+        if ($activeRequest !== null) {
+            return [
+                'type' => 'prescribing',
+                'title' => 'رژیم در حال تجویز',
+                'href' => null,
+                'disabled' => true,
+            ];
+        }
+
+        $hasSubscription = $this->hasUsableSubscription($user);
+
+        return [
+            'type' => $hasSubscription ? ($historyCount > 0 ? 'get_repeat_diet' : 'get_first_diet') : 'needs_package',
+            'title' => $hasSubscription ? 'دریافت رژیم' : 'خرید بسته و دریافت رژیم',
+            'href' => $this->dietStartHref($profile, $hasSubscription, $historyCount),
+            'disabled' => false,
+        ];
+    }
+
+    private function hasUsableSubscription(TenantUser $user): bool
+    {
+        $subscription = NutritionPackageSubscription::query()
+            ->where('user_id', $user->id)
+            ->where('status', 'active')
+            ->where(function ($query): void {
+                $query->whereNull('starts_at')
+                    ->orWhereDate('starts_at', '<=', Carbon::today('Asia/Tehran')->toDateString());
+            })
+            ->where(function ($query): void {
+                $query->whereNull('ends_at')
+                    ->orWhereDate('ends_at', '>=', Carbon::today('Asia/Tehran')->toDateString());
+            })
+            ->latest('id')
+            ->first();
+
+        if (! $subscription) {
+            return false;
+        }
+
+        $onlineRemaining = max(0, (int) $subscription->online_diet_total - (int) $subscription->online_diet_used);
+        $offlineRemaining = max(0, (int) $subscription->offline_diet_total - (int) $subscription->offline_diet_used);
+
+        return $onlineRemaining > 0 || $offlineRemaining > 0;
+    }
+
+    private function dietStartHref(?NutritionProfile $profile, bool $hasSubscription, int $historyCount): string
+    {
+        if ($profile === null || ! $this->profileCompleted($profile)) {
+            return '/nutrition/membership/profile';
+        }
+
+        if (! $hasSubscription) {
+            return '/nutrition/membership/packages?direct_buy=1';
+        }
+
+        if ($historyCount > 0) {
+            return '/nutrition/diet-followup/1';
+        }
+
+        if ($profile->mindset_completed_at === null) {
+            return '/nutrition/membership/mindset/1';
+        }
+
+        return '/nutrition/diet-type';
+    }
+
+    private function profileCompleted(NutritionProfile $profile): bool
+    {
+        return $profile->onboarding_completed_at !== null
+            || (
+                $profile->birth_date !== null
+                && $profile->height_cm !== null
+                && $profile->weight_kg !== null
+                && $profile->target_weight_kg !== null
+                && $profile->preferences_completed_at !== null
+            );
+    }
+
+    private function prescriptionStatusLabel(string $status): string
+    {
+        return match ($status) {
+            'active' => 'فعال',
+            'completed' => 'تکمیل شده',
+            'cancelled' => 'لغو شده',
+            default => $status,
+        };
     }
 
     private function serializeMealReplacementSuggestion(NutritionMealReplacementSuggestion $suggestion): array

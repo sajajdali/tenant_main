@@ -46,6 +46,7 @@ class NutritionPackagePaymentService
             return [
                 'enabled' => true, 'provider' => 'maliart', 'sandbox_enabled' => false,
                 'gateways' => [], 'enabled_gateways' => ['maliart'], 'card_note' => '', 'maliart_enabled' => true,
+                'cafebazaar_enabled' => (bool) data_get($meta, 'cafebazaar_iap.enabled', false),
             ];
         }
 

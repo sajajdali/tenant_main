@@ -1196,6 +1196,8 @@ export type NutritionSmsTemplateKey =
   | "expertAfterDietRequest"
   | "dietEndingTomorrow"
   | "dietEndsToday"
+  | "mealLogInactiveThreeDaysFirst"
+  | "mealLogInactiveThreeDaysSecond"
   | "dietExpiredNoRequestDay1"
   | "packageFinished"
   | "packageFinishedWeek1"

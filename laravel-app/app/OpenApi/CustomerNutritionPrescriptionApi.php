@@ -10,7 +10,7 @@ use OpenApi\Attributes as OA;
 #[OA\Get(
     path: '/api/v1/app/nutrition/prescriptions',
     operationId: 'nutritionPrescriptionsIndex',
-    description: 'تاریخچه رژیم های منتشرشده کاربر جاری را برای صفحه /nutrition/my-diets برمی گرداند. هر آیتم همان ساختار کامل prescription صفحه مشاهده رژیم را دارد و می تواند daily_prescription یا user_choice باشد.',
+    description: 'لیست کامل رژیم های منتشرشده کاربر جاری را برای صفحه /nutrition/my-diets برمی گرداند. data.items همیشه برمی گردد؛ اگر کاربر هیچ رژیمی نداشته باشد آرایه خالی است. هر آیتم همان ساختار کامل NutritionPrescription صفحه مشاهده رژیم را دارد و شامل وزن زمان رژیم، تاریخ شروع، تاریخ پایان، وضعیت استفاده، فعال/غیرفعال بودن، محتوای رژیم، لاگ غذا، آب، ورزش و جایگزین هاست. data.action مستقل از لیست است و همیشه دکمه/هدایت مناسب صفحه را مشخص می کند: اگر رژیم فعال دارد view_current_diet، اگر درخواست در حال تجویز دارد prescribing، اگر پکیج قابل استفاده ندارد needs_package، اگر پکیج دارد و هیچ رژیمی ندارد get_first_diet، و اگر پکیج دارد و رژیم قبلی دارد get_repeat_diet. در UI لیست رژیم ها را در هر حالت نمایش بدهید و action را به عنوان CTA بالای صفحه یا empty state استفاده کنید.',
     security: [['bearerAuth' => []]],
     tags: ['Nutrition Prescriptions'],
     responses: [
@@ -239,9 +239,10 @@ use OpenApi\Attributes as OA;
         new OA\Property(property: 'success', type: 'boolean', example: true),
         new OA\Property(
             property: 'data',
-            required: ['items'],
+            required: ['items', 'action'],
             properties: [
                 new OA\Property(property: 'items', type: 'array', items: new OA\Items(ref: '#/components/schemas/NutritionPrescription')),
+                new OA\Property(property: 'action', ref: '#/components/schemas/NutritionPrescriptionListAction'),
             ],
             type: 'object',
         ),
@@ -249,8 +250,20 @@ use OpenApi\Attributes as OA;
     type: 'object',
 )]
 #[OA\Schema(
+    schema: 'NutritionPrescriptionListAction',
+    description: 'اقدام پیشنهادی کنار لیست رژیم ها. لیست همیشه در data.items برمی گردد و نباید با action جایگزین شود. action فقط CTA صفحه را مشخص می کند: view_current_diet یعنی مشاهده رژیم فعال، prescribing یعنی درخواست ثبت شده و هنوز آماده نیست و دکمه غیرفعال است، needs_package یعنی هدایت به خرید بسته، get_first_diet یعنی شروع مسیر دریافت رژیم اول، get_repeat_diet یعنی شروع مسیر دریافت رژیم بعدی بعد از پایان رژیم قبلی.',
+    required: ['type', 'title', 'disabled'],
+    properties: [
+        new OA\Property(property: 'type', type: 'string', enum: ['view_current_diet', 'prescribing', 'needs_package', 'get_first_diet', 'get_repeat_diet'], example: 'get_repeat_diet'),
+        new OA\Property(property: 'title', type: 'string', example: 'دریافت رژیم'),
+        new OA\Property(property: 'href', type: 'string', nullable: true, example: '/nutrition/diet-followup/1'),
+        new OA\Property(property: 'disabled', type: 'boolean', example: false),
+    ],
+    type: 'object',
+)]
+#[OA\Schema(
     schema: 'NutritionPrescription',
-    required: ['id', 'deliveryChannel', 'prescriptionMode', 'status', 'expired', 'isCurrent', 'contentSnapshot', 'mealLogs', 'waterLogs', 'exerciseLogs', 'mealReplacementSuggestions'],
+    required: ['id', 'deliveryChannel', 'prescriptionMode', 'status', 'statusLabel', 'expired', 'usageStatus', 'usageStatusLabel', 'isCurrent', 'currentStatus', 'currentStatusLabel', 'contentSnapshot', 'mealLogs', 'waterLogs', 'exerciseLogs', 'mealReplacementSuggestions'],
     properties: [
         new OA\Property(property: 'id', type: 'string', example: '42'),
         new OA\Property(property: 'requestId', type: 'string', nullable: true, example: '18'),
@@ -258,7 +271,10 @@ use OpenApi\Attributes as OA;
         new OA\Property(property: 'deliveryChannel', type: 'string', enum: ['ai', 'expert_file', 'manual'], example: 'ai'),
         new OA\Property(property: 'prescriptionMode', type: 'string', enum: ['daily_prescription', 'user_choice', 'fixed_text'], example: 'daily_prescription'),
         new OA\Property(property: 'status', type: 'string', example: 'active'),
+        new OA\Property(property: 'statusLabel', type: 'string', example: 'فعال'),
         new OA\Property(property: 'expired', type: 'boolean', example: false),
+        new OA\Property(property: 'usageStatus', type: 'string', enum: ['in_use', 'finished'], example: 'in_use'),
+        new OA\Property(property: 'usageStatusLabel', type: 'string', example: 'در حال استفاده'),
         new OA\Property(property: 'allowFoodReplacement', type: 'boolean', example: true),
         new OA\Property(property: 'suggestDailyReplacements', type: 'boolean', example: false),
         new OA\Property(property: 'exerciseLoggingEnabled', type: 'boolean', example: true),
@@ -272,6 +288,8 @@ use OpenApi\Attributes as OA;
         new OA\Property(property: 'durationDays', type: 'integer', nullable: true, example: 15),
         new OA\Property(property: 'version', type: 'integer', example: 1),
         new OA\Property(property: 'isCurrent', type: 'boolean', example: true),
+        new OA\Property(property: 'currentStatus', type: 'string', enum: ['active', 'inactive'], example: 'active'),
+        new OA\Property(property: 'currentStatusLabel', type: 'string', example: 'فعال'),
         new OA\Property(property: 'summaryText', type: 'string', nullable: true, example: 'برنامه ۱۵ روزه کاهش وزن با وعده های ساده'),
         new OA\Property(property: 'notes', type: 'string', nullable: true),
         new OA\Property(property: 'contentSnapshot', ref: '#/components/schemas/NutritionPrescriptionContentSnapshot'),

@@ -9,7 +9,7 @@ use OpenApi\Attributes as OA;
 #[OA\Post(
     path: '/api/v1/app/nutrition/package-checkout/preview',
     operationId: 'nutritionPackageCheckoutPreview',
-    description: 'پیش نمایش خرید پکیج تغذیه را برای مسیر وب/درگاه مستقیم بر اساس پکیج انتخاب شده و کد تخفیف اختیاری برمی گرداند. اگر settings.cafebazaarEnabled=true باشد، اپلیکیشن Flutter برای پرداخت بازار باید از مسیر جداگانه /api/v1/app/nutrition/iap/cafebazaar استفاده کند؛ تخفیف وب در مسیر بازار اعمال نمی شود.',
+    description: 'پیش نمایش خرید پکیج تغذیه را برمی گرداند و هر دو وضعیت پرداخت را جدا اعلام می کند: settings.enabled/settings.enabledGateways برای وب اپلیکیشن و درگاه آنلاین/مستقیم است، و settings.cafebazaarEnabled برای اپلیکیشن Android نصب شده از کافه بازار است. فعال بودن بازار نباید درگاه اصلی را غیرفعال کند. اگر کلاینت وب بود از /package-checkout/pay استفاده شود؛ اگر کلاینت Android و نصب شده از بازار بود و settings.cafebazaarEnabled=true بود، از مسیر جداگانه /api/v1/app/nutrition/iap/cafebazaar استفاده شود. تخفیف وب در مسیر بازار اعمال نمی شود.',
     security: [['bearerAuth' => []]],
     tags: ['Package Purchase'],
     requestBody: new OA\RequestBody(
@@ -38,7 +38,20 @@ use OpenApi\Attributes as OA;
                             new OA\Property(property: 'discountAmount', type: 'integer', example: 150000),
                             new OA\Property(property: 'payableAmount', type: 'integer', example: 750000),
                             new OA\Property(property: 'discountCode', type: 'object', nullable: true),
-                            new OA\Property(property: 'settings', type: 'object'),
+                            new OA\Property(
+                                property: 'settings',
+                                properties: [
+                                    new OA\Property(property: 'enabled', description: 'فعال بودن پرداخت آنلاین/درگاه اصلی برای وب اپلیکیشن.', type: 'boolean', example: true),
+                                    new OA\Property(property: 'sandboxEnabled', type: 'boolean', example: false),
+                                    new OA\Property(property: 'provider', type: 'string', nullable: true, example: 'zarinpal'),
+                                    new OA\Property(property: 'enabledGateways', description: 'درگاه های قابل استفاده برای مسیر وب/درگاه اصلی.', type: 'array', items: new OA\Items(type: 'string'), example: ['zarinpal']),
+                                    new OA\Property(property: 'maliartEnabled', type: 'boolean', example: false),
+                                    new OA\Property(property: 'cafebazaarEnabled', description: 'فعال بودن پرداخت درون برنامه ای بازار برای Flutter Android نصب شده از بازار. این مقدار مستقل از درگاه اصلی است.', type: 'boolean', example: true),
+                                    new OA\Property(property: 'cafebazaarRoute', type: 'string', example: '/api/v1/app/nutrition/iap/cafebazaar'),
+                                    new OA\Property(property: 'gatewayOptions', type: 'array', items: new OA\Items(type: 'object')),
+                                ],
+                                type: 'object',
+                            ),
                         ],
                         type: 'object',
                     ),
@@ -53,7 +66,7 @@ use OpenApi\Attributes as OA;
 #[OA\Post(
     path: '/api/v1/app/nutrition/package-checkout/pay',
     operationId: 'nutritionPackageCheckoutPay',
-    description: 'سفارش خرید پکیج تغذیه برای مسیر وب/درگاه مستقیم را ایجاد می کند و در حالت پرداخت آنلاین فرم/آدرس انتقال به درگاه را برمی گرداند. این endpoint برای پرداخت درون برنامه ای بازار نیست. برای بازار از مسیرهای Cafe Bazaar IAP استفاده شود.',
+    description: 'سفارش خرید پکیج تغذیه برای مسیر وب/درگاه مستقیم را ایجاد می کند و در حالت پرداخت آنلاین فرم/آدرس انتقال به درگاه را برمی گرداند. این endpoint همچنان باید برای وب اپلیکیشن استفاده شود، حتی اگر بازار هم فعال باشد. این endpoint برای پرداخت درون برنامه ای بازار نیست؛ Android نصب شده از بازار باید از مسیرهای Cafe Bazaar IAP استفاده کند.',
     security: [['bearerAuth' => []]],
     tags: ['Package Purchase'],
     requestBody: new OA\RequestBody(
