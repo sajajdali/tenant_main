@@ -9,7 +9,7 @@ use OpenApi\Attributes as OA;
 #[OA\Get(
     path: '/api/v1/app/nutrition/iap/cafebazaar/settings',
     operationId: 'nutritionCafeBazaarIapSettings',
-    description: 'وضعیت فعال بودن پرداخت درون برنامه ای کافه بازار را برمی گرداند. اگر enabled برابر false بود، اپلیکیشن Flutter نباید مسیر بازار را شروع کند و باید از مسیر عادی package-checkout استفاده کند.',
+    description: 'وضعیت فعال بودن پرداخت درون برنامه ای کافه بازار را برمی گرداند. این درگاه مستقل از درگاه اصلی وب است و فعال بودن آن نباید باعث حذف یا غیرفعال شدن پرداخت آنلاین وب شود. فقط اپلیکیشن Android که از کافه بازار نصب شده است باید در صورت enabled=true و public_key_configured=true از این مسیر استفاده کند؛ وب اپلیکیشن همیشه از package-checkout استفاده می کند.',
     security: [['bearerAuth' => []]],
     tags: ['Cafe Bazaar IAP'],
     responses: [
@@ -41,7 +41,7 @@ use OpenApi\Attributes as OA;
 #[OA\Get(
     path: '/api/v1/app/nutrition/iap/cafebazaar/packages',
     operationId: 'nutritionCafeBazaarIapPackages',
-    description: 'لیست پکیج های فعال قابل خرید با بازار را همراه شناسه محصول بازار برمی گرداند. قیمت پرداخت در بازار از پنل بازار خوانده می شود و این API قیمت وب سایت را مبنای شارژ بازار نمی داند.',
+    description: 'لیست پکیج های فعال قابل خرید با بازار را همراه شناسه محصول بازار برمی گرداند. این لیست مخصوص Flutter Android نصب شده از بازار است. وب اپلیکیشن برای نمایش/پرداخت پکیج ها از مسیرهای عادی پکیج و package-checkout استفاده می کند. قیمت پرداخت در بازار از پنل بازار خوانده می شود و این API قیمت وب سایت را مبنای شارژ بازار نمی داند.',
     security: [['bearerAuth' => []]],
     tags: ['Cafe Bazaar IAP'],
     responses: [

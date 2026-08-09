@@ -56,3 +56,8 @@ Schedule::command('nutrition:expire-offline-diets')
     ->timezone('Asia/Tehran')
     ->dailyAt('00:10')
     ->withoutOverlapping();
+
+Schedule::command('nutrition:queue-meal-log-reminders')
+    ->timezone('Asia/Tehran')
+    ->dailyAt('10:20')
+    ->withoutOverlapping();

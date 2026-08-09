@@ -91,6 +91,16 @@ class SmsTemplateRegistry
                 'default_enabled' => true,
                 'default_body' => "{{customer_name}} عزیز\nامروز آخرین روز رژیم شماست.\nلطفاً وزن جدیدتان را ثبت کنید تا برنامه بعدی برای شما آماده شود.\n{{business_name}}\nلغو۱۱",
             ],
+            'mealLogInactiveThreeDaysFirst' => [
+                'title' => 'اولین پیامک ۳ روز ثبت نشدن غذای کاربر رژیم',
+                'default_enabled' => true,
+                'default_body' => "{{customer_name}} عزیز\n۳ روز هست که هیچ غذایی ثبت نکردی.\nرژیمت رو کامل رعایت می‌کنی؟\nاگه مشکلی داری حتما با ما در ارتباط باش.\n{{business_name}}\nلغو۱۱",
+            ],
+            'mealLogInactiveThreeDaysSecond' => [
+                'title' => 'دومین پیامک ۳ روز ثبت نشدن غذای کاربر رژیم',
+                'default_enabled' => true,
+                'default_body' => "{{customer_name}} عزیز\nچند روزه غذایی ثبت نکردی و هنوز رژیمت فعاله.\nاگه رعایت رژیم برات سخت شده یا سوالی داری، حتما با ما در ارتباط باش.\n{{business_name}}\nلغو۱۱",
+            ],
             'dietExpiredNoRequestDay1' => [
                 'title' => 'یک روز از اتمام رژیم گذشته و درخواست جدید ثبت نشده',
                 'default_enabled' => true,
