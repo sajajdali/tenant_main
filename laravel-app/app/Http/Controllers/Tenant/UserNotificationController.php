@@ -66,10 +66,10 @@ class UserNotificationController extends Controller
         ]);
     }
 
-    public function show(Request $request, UserNotification $notification): JsonResponse
+    public function show(Request $request, string $notification): JsonResponse
     {
         $actor = $this->actor($request);
-        abort_unless((int) $notification->tenant_user_id === (int) $actor->id, 403);
+        $notification = $this->findActorNotification($actor, $notification);
 
         return response()->json([
             'success' => true,
@@ -78,10 +78,10 @@ class UserNotificationController extends Controller
         ]);
     }
 
-    public function markRead(Request $request, UserNotification $notification): JsonResponse
+    public function markRead(Request $request, string $notification): JsonResponse
     {
         $actor = $this->actor($request);
-        abort_unless((int) $notification->tenant_user_id === (int) $actor->id, 403);
+        $notification = $this->findActorNotification($actor, $notification);
 
         if (! $notification->is_read) {
             $notification->forceFill([
@@ -133,6 +133,21 @@ class UserNotificationController extends Controller
         abort_unless($actor !== null, 401, 'Unauthenticated.');
 
         return $actor;
+    }
+
+    private function findActorNotification(TenantUser $actor, string $notificationId): UserNotification
+    {
+        abort_unless(ctype_digit($notificationId) && (int) $notificationId > 0, 404, 'Notification not found.');
+
+        /** @var UserNotification|null $notification */
+        $notification = UserNotification::query()
+            ->whereKey((int) $notificationId)
+            ->where('tenant_user_id', $actor->id)
+            ->first();
+
+        abort_unless($notification !== null, 404, 'Notification not found.');
+
+        return $notification;
     }
 
     private function transform(UserNotification $notification): array
