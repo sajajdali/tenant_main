@@ -90,6 +90,7 @@ import PanelStoreOrderDetailPage from "@/pages/panel-store-order-detail";
 import PanelStoreReviewsPage from "@/pages/panel-store-reviews";
 import PanelStoreOrdersPage from "@/pages/panel-store-orders";
 import PanelBrandKitPage from "@/pages/panel-brand-kit";
+import PanelBusinessResumePage from "@/pages/panel-business-resume";
 import PanelFinancePage from "@/pages/panel-finance";
 import PanelManualFinancePage from "@/pages/panel-manual-finance";
 import PanelCommissionReportPage from "@/pages/panel-commission-report";
@@ -307,6 +308,7 @@ function Router() {
       <Route path="/panel/store-settings/general/base" component={PanelStoreSettingsGeneralBasePage} />
       <Route path="/panel/store-settings/general/base/core" component={PanelStoreSettingsGeneralCorePage} />
       <Route path="/panel/brand-kit" component={PanelBrandKitPage} />
+      <Route path="/panel/business-resume" component={PanelBusinessResumePage} />
       <Route path="/panel/finance" component={PanelFinancePage} />
       <Route path="/panel/manual-finance" component={PanelManualFinancePage} />
       <Route path="/panel/commission-report" component={PanelCommissionReportPage} />
