@@ -66,7 +66,7 @@ use OpenApi\Attributes as OA;
 #[OA\Post(
     path: '/api/v1/app/nutrition/package-checkout/pay',
     operationId: 'nutritionPackageCheckoutPay',
-    description: 'سفارش خرید پکیج تغذیه برای مسیر وب/درگاه مستقیم را ایجاد می کند و در حالت پرداخت آنلاین فرم/آدرس انتقال به درگاه را برمی گرداند. این endpoint همچنان باید برای وب اپلیکیشن استفاده شود، حتی اگر بازار هم فعال باشد. این endpoint برای پرداخت درون برنامه ای بازار نیست؛ Android نصب شده از بازار باید از مسیرهای Cafe Bazaar IAP استفاده کند.',
+    description: 'سفارش خرید پکیج تغذیه برای مسیر وب/درگاه مستقیم را ایجاد می کند و در حالت پرداخت آنلاین فرم/آدرس انتقال به درگاه را برمی گرداند. این endpoint همچنان باید برای وب اپلیکیشن استفاده شود، حتی اگر بازار هم فعال باشد. این endpoint برای پرداخت درون برنامه ای بازار نیست؛ Android نصب شده از بازار باید از مسیرهای Cafe Bazaar IAP استفاده کند. قانون بسیار مهم تمدید/جایگزینی: اگر کاربر پکیج فعال قبلی داشته باشد، خرید موفق پکیج جدید، همه subscription های فعال قبلی همان کاربر را expired می کند و subscription جدید با startsAt برابر تاریخ خرید و endsAt برابر تاریخ خرید + durationDays پکیج جدید ساخته می شود. اعتبار پکیج جدید به روزهای باقی مانده پکیج قبلی اضافه نمی شود. اگر پکیج قبلی بیش از ۱۰ روز اعتبار داشته باشد، سرور بدون replace_active_subscription=true خطای 422 می دهد تا Flutter تأیید کاربر را بگیرد.',
     security: [['bearerAuth' => []]],
     tags: ['Package Purchase'],
     requestBody: new OA\RequestBody(
@@ -77,6 +77,7 @@ use OpenApi\Attributes as OA;
                 new OA\Property(property: 'nutrition_package_id', type: 'integer', example: 12),
                 new OA\Property(property: 'gateway', type: 'string', nullable: true, example: 'zarinpal'),
                 new OA\Property(property: 'discount_code', type: 'string', nullable: true, example: 'SUMMER20'),
+                new OA\Property(property: 'replace_active_subscription', description: 'اگر کاربر پکیج فعال با بیش از ۱۰ روز اعتبار باقی مانده دارد، برای تأیید جایگزینی و شروع پکیج جدید از تاریخ خرید باید true ارسال شود.', type: 'boolean', nullable: true, example: true),
             ],
             type: 'object',
         ),

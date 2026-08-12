@@ -21,9 +21,14 @@ use OpenApi\Attributes as OA;
 #[OA\Get(
     path: '/api/v1/app/nutrition/prescriptions/current',
     operationId: 'nutritionPrescriptionsCurrent',
-    description: 'رژیم فعال صفحه /nutrition/my-diet و /nutrition/my-diet/exercises?date=YYYY-MM-DD را برمی گرداند. اگر رژیم فعال وجود نداشته باشد یا تاریخ پایان گذشته باشد prescription برابر null است. query string date برای dailyMacroSummary استفاده می شود؛ اگر ارسال نشود تاریخ امروز مبناست. صفحه ثبت ورزش، exerciseLogs همین پاسخ را بر اساس query string date فیلتر می کند و با mealLogs همان روز summary کالری مصرف شده، کالری ورزش، خالص امروز و اضافه مصرف باقی مانده را می سازد. جابه جایی روز قبل/بعد در UI با startedAt، endsAt، durationDays و contentSnapshot.day_plans انجام می شود.',
+    description: 'رژیم فعال صفحه /nutrition/my-diet و /nutrition/my-diet/exercises?date=YYYY-MM-DD را برمی گرداند. اگر رژیم فعال وجود نداشته باشد یا تاریخ پایان گذشته باشد prescription برابر null است. query string date برای dailyMacroSummary استفاده می شود؛ اگر ارسال نشود تاریخ امروز مبناست. برای deep-link داشبورد روی «وعده بعدی»، Flutter می تواند همین endpoint را با date، focusMealSlot و compact=meal_only صدا بزند یا حداقل همین queryها را در route داخلی صفحه نگه دارد؛ API کل prescription را برمی گرداند اما UI باید فقط همان وعده focusMealSlot را با جدول خلاصه روز نمایش دهد، راهنماها و توضیحات اضافه را مخفی کند و بعد از لود با اسکرول نرم به همان وعده برود. صفحه ثبت ورزش، exerciseLogs همین پاسخ را بر اساس query string date فیلتر می کند و با mealLogs همان روز summary کالری مصرف شده، کالری ورزش، خالص امروز و اضافه مصرف باقی مانده را می سازد. جابه جایی روز قبل/بعد در UI با startedAt، endsAt، durationDays و contentSnapshot.day_plans انجام می شود.',
     security: [['bearerAuth' => []]],
     tags: ['Nutrition Prescriptions'],
+    parameters: [
+        new OA\Parameter(name: 'date', description: 'تاریخ فعال برای dailyMacroSummary و انتخاب روز رژیم.', in: 'query', required: false, schema: new OA\Schema(type: 'string', format: 'date'), example: '2026-08-12'),
+        new OA\Parameter(name: 'focusMealSlot', description: 'کلید وعده برای deep-link از داشبورد؛ مانند breakfast، lunch، dinner یا snack. UI باید فقط همین وعده را در حالت compact نمایش دهد.', in: 'query', required: false, schema: new OA\Schema(type: 'string'), example: 'lunch'),
+        new OA\Parameter(name: 'compact', description: 'قرارداد UI برای باز کردن رژیم در حالت خلوت. مقدار meal_only یعنی فقط خلاصه روز و وعده focus شده نمایش داده شود.', in: 'query', required: false, schema: new OA\Schema(type: 'string', enum: ['meal_only']), example: 'meal_only'),
+    ],
     responses: [
         new OA\Response(response: 200, description: 'Current prescription', content: new OA\JsonContent(ref: '#/components/schemas/NutritionPrescriptionResponse')),
         new OA\Response(response: 401, description: 'Unauthenticated'),
@@ -32,7 +37,7 @@ use OpenApi\Attributes as OA;
 #[OA\Get(
     path: '/api/v1/app/nutrition/prescriptions/{nutritionDietPrescription}',
     operationId: 'nutritionPrescriptionsShow',
-    description: 'نمایش یک رژیم منتشرشده از تاریخچه کاربر. برای /nutrition/my-diets/{prescriptionId} و /nutrition/my-diets/{prescriptionId}/exercises?date=YYYY-MM-DD استفاده می شود و مالکیت نسخه بررسی می شود. query string date برای dailyMacroSummary استفاده می شود؛ اگر ارسال نشود تاریخ امروز مبناست. لاگ های ورزش در exerciseLogs برمی گردند و صفحه تاریخ انتخابی را سمت کلاینت فیلتر می کند.',
+    description: 'نمایش یک رژیم منتشرشده از تاریخچه کاربر. برای /nutrition/my-diets/{prescriptionId} و /nutrition/my-diets/{prescriptionId}/exercises?date=YYYY-MM-DD استفاده می شود و مالکیت نسخه بررسی می شود. query string date برای dailyMacroSummary استفاده می شود؛ اگر ارسال نشود تاریخ امروز مبناست. برای deep-link به یک وعده خاص، queryهای focusMealSlot و compact=meal_only مثل endpoint current قرارداد UI هستند: API کل prescription را برمی گرداند ولی Flutter فقط همان وعده و summary روز را نشان می دهد. لاگ های ورزش در exerciseLogs برمی گردند و صفحه تاریخ انتخابی را سمت کلاینت فیلتر می کند.',
     security: [['bearerAuth' => []]],
     tags: ['Nutrition Prescriptions'],
     parameters: [
@@ -44,6 +49,9 @@ use OpenApi\Attributes as OA;
             schema: new OA\Schema(type: 'integer', minimum: 1),
             example: 42,
         ),
+        new OA\Parameter(name: 'date', description: 'تاریخ فعال برای dailyMacroSummary و انتخاب روز رژیم.', in: 'query', required: false, schema: new OA\Schema(type: 'string', format: 'date'), example: '2026-08-12'),
+        new OA\Parameter(name: 'focusMealSlot', description: 'کلید وعده برای deep-link؛ UI در حالت compact فقط همین وعده را نشان دهد.', in: 'query', required: false, schema: new OA\Schema(type: 'string'), example: 'breakfast'),
+        new OA\Parameter(name: 'compact', description: 'قرارداد UI. مقدار meal_only یعنی فقط خلاصه روز و وعده focus شده نمایش داده شود.', in: 'query', required: false, schema: new OA\Schema(type: 'string', enum: ['meal_only']), example: 'meal_only'),
     ],
     responses: [
         new OA\Response(response: 200, description: 'Prescription details', content: new OA\JsonContent(ref: '#/components/schemas/NutritionPrescriptionResponse')),
@@ -319,7 +327,7 @@ use OpenApi\Attributes as OA;
         new OA\Property(property: 'calorie_plan', ref: '#/components/schemas/NutritionCaloriePlan', nullable: true),
         new OA\Property(property: 'water_plan', ref: '#/components/schemas/NutritionWaterPlan', nullable: true),
         new OA\Property(property: 'supplement_plan', ref: '#/components/schemas/NutritionSupplementPlan', nullable: true),
-        new OA\Property(property: 'guidance_sections', type: 'array', items: new OA\Items(ref: '#/components/schemas/NutritionGuidanceSection')),
+        new OA\Property(property: 'guidance_sections', description: 'راهنمایی های رژیم. در اپ Flutter همه این بخش ها باید در حالت اولیه بسته/collapsed باشند و با ضربه کاربر همراه فلش کوچک باز شوند.', type: 'array', items: new OA\Items(ref: '#/components/schemas/NutritionGuidanceSection')),
         new OA\Property(property: 'meal_slots', description: 'برای user_choice؛ هر وعده چند option انتخابی دارد.', type: 'array', items: new OA\Items(ref: '#/components/schemas/NutritionMealSlot')),
         new OA\Property(property: 'day_plans', description: 'برای daily_prescription؛ هر روز شامل وعده های همان روز و replacementهای اولیه احتمالی است.', type: 'array', items: new OA\Items(ref: '#/components/schemas/NutritionDayPlan')),
         new OA\Property(property: 'text_sections', description: 'برای fixed_text یا توضیحات متنی نسخه.', type: 'array', items: new OA\Items(ref: '#/components/schemas/NutritionTextSection')),
@@ -395,7 +403,7 @@ use OpenApi\Attributes as OA;
     properties: [
         new OA\Property(property: 'title', type: 'string', example: 'املت گوجه'),
         new OA\Property(property: 'description', type: 'string', example: 'با نان سبوس دار و سبزی خوردن'),
-        new OA\Property(property: 'quantity_text', type: 'string', example: '۲ عدد تخم مرغ | ۱ کف دست نان'),
+        new OA\Property(property: 'quantity_text', description: 'متن مقدار غذا. Flutter نباید این مقدار را پشت سر متن غذا بچسباند؛ باید در جدول دو ستونه با عنوان «مقدار» در ستون راست و مقدار در ستون چپ نمایش دهد.', type: 'string', example: '۲ عدد تخم مرغ | ۱ کف دست نان'),
         new OA\Property(property: 'calories', type: 'integer', nullable: true, example: 410),
         new OA\Property(property: 'protein_grams', type: 'number', nullable: true, format: 'float', example: 24),
         new OA\Property(property: 'fat_grams', type: 'number', nullable: true, format: 'float', example: 18),
@@ -423,7 +431,7 @@ use OpenApi\Attributes as OA;
         new OA\Property(property: 'title', type: 'string', example: 'ناهار'),
         new OA\Property(property: 'meal_text', type: 'string', example: 'مرغ گریل، برنج قهوه ای و سالاد'),
         new OA\Property(property: 'description', type: 'string', nullable: true),
-        new OA\Property(property: 'quantity_text', type: 'string', nullable: true, example: '۱۵۰ گرم مرغ | ۶ قاشق برنج | سالاد آزاد'),
+        new OA\Property(property: 'quantity_text', description: 'متن مقدار غذا. در UI مشاهده رژیم باید به صورت ردیف جدول دو ستونه نمایش داده شود: سمت راست عنوان «مقدار»، سمت چپ مقدار.', type: 'string', nullable: true, example: '۱۵۰ گرم مرغ | ۶ قاشق برنج | سالاد آزاد'),
         new OA\Property(property: 'calories', type: 'integer', nullable: true, example: 560),
         new OA\Property(property: 'protein_grams', type: 'number', nullable: true, format: 'float', example: 42),
         new OA\Property(property: 'fat_grams', type: 'number', nullable: true, format: 'float', example: 14),

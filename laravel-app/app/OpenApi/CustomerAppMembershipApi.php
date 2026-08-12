@@ -929,7 +929,7 @@ use OpenApi\Attributes as OA;
 #[OA\Get(
     path: '/api/v1/app/membership/packages',
     operationId: 'customerAppMembershipPackages',
-    description: 'داده های صفحه لیست پکیج ها، متناظر با /nutrition/membership/packages. همه پکیج های فعال را به صورت درختی همراه زیرمجموعه ها برمی گرداند و اگر پکیجی تعریف نشده باشد emptyState.message مقدار «پکیجی برای شما تعریف نشده است.» دارد. سناریوی رژیم اول برای اپ Flutter: بعد از خرید موفق پکیج، اگر /api/v1/app/nutrition/profile یا /api/v1/app/nutrition/diet-requests/options نشان داد mindsetCompleted=false یا state=needs_mindset، اپ باید پیام «برای دریافت رژیم باید به ۵ سؤال تکمیلی پاسخ دهید» نمایش دهد و کاربر را به GET/POST /api/v1/app/membership/mindset ببرد. خرید پکیج به تنهایی رژیم نمی‌سازد؛ بعد از ۵ سؤال باید preview و سپس confirm درخواست رژیم زده شود.',
+    description: 'داده های صفحه لیست پکیج ها، متناظر با /nutrition/membership/packages. همه پکیج های فعال را به صورت درختی همراه زیرمجموعه ها برمی گرداند و اگر پکیجی تعریف نشده باشد emptyState.message مقدار «پکیجی برای شما تعریف نشده است.» دارد. اگر کاربر پکیج فعال قابل استفاده داشته باشد، activePackageNotice پر می شود و Flutter باید بالای لیست پکیج ها خیلی مشخص بنویسد «شما یک پکیج فعال دارید» و تعداد روز/موجودی باقی مانده را نشان دهد. این notice فقط وقتی باید نمایش داده شود که subscription هم از نظر تاریخ فعال باشد و هم onlineDietRemaining یا offlineDietRemaining بزرگ تر از صفر باشد؛ اگر تاریخ دارد ولی موجودی رژیم صفر است، notice نباید نمایش داده شود. کاربر همچنان می تواند پکیج جدید بخرد، اما خرید جدید پکیج قبلی را expired می کند و اعتبار پکیج جدید از تاریخ خرید محاسبه می شود، نه از پایان پکیج قبلی. سناریوی رژیم اول برای اپ Flutter: بعد از خرید موفق پکیج، اگر /api/v1/app/nutrition/profile یا /api/v1/app/nutrition/diet-requests/options نشان داد mindsetCompleted=false یا state=needs_mindset، اپ باید پیام «برای دریافت رژیم باید به ۵ سؤال تکمیلی پاسخ دهید» نمایش دهد و کاربر را به GET/POST /api/v1/app/membership/mindset ببرد. خرید پکیج به تنهایی رژیم نمی‌سازد؛ بعد از ۵ سؤال باید preview و سپس confirm درخواست رژیم زده شود.',
     security: [['bearerAuth' => []]],
     tags: ['Package Purchase'],
     responses: [
@@ -955,6 +955,25 @@ use OpenApi\Attributes as OA;
                                     new OA\Property(property: 'completedAt', type: 'string', format: 'date-time', nullable: true, example: '2026-06-14T12:00:00+03:30'),
                                 ],
                                 type: 'object',
+                            ),
+                            new OA\Property(
+                                property: 'activePackageNotice',
+                                description: 'فقط وقتی پر است که کاربر پکیج فعال قابل استفاده داشته باشد: status=active، تاریخ شروع/پایان معتبر، و حداقل یکی از onlineDietRemaining/offlineDietRemaining بزرگ تر از صفر. اگر null بود هیچ هشدار پکیج فعال نشان ندهید.',
+                                properties: [
+                                    new OA\Property(property: 'type', type: 'string', example: 'active_package'),
+                                    new OA\Property(property: 'title', type: 'string', example: 'شما یک پکیج فعال دارید'),
+                                    new OA\Property(property: 'description', type: 'string', example: 'این پکیج تا ۴ روز دیگر اعتبار دارد.'),
+                                    new OA\Property(property: 'packageName', type: 'string', nullable: true, example: 'پکیج ماهانه کاهش وزن'),
+                                    new OA\Property(property: 'startsAt', type: 'string', nullable: true, format: 'date', example: '2026-08-01'),
+                                    new OA\Property(property: 'endsAt', type: 'string', nullable: true, format: 'date', example: '2026-08-16'),
+                                    new OA\Property(property: 'daysRemaining', type: 'integer', nullable: true, example: 4),
+                                    new OA\Property(property: 'onlineDietRemaining', type: 'integer', example: 1),
+                                    new OA\Property(property: 'offlineDietRemaining', type: 'integer', example: 0),
+                                    new OA\Property(property: 'canStillBuy', type: 'boolean', example: true),
+                                    new OA\Property(property: 'replacementPolicy', type: 'string', example: 'اگر کاربر پکیج جدید بخرد، پکیج فعال قبلی expired می شود و اعتبار پکیج جدید از تاریخ خرید محاسبه می شود؛ به پکیج قبلی اضافه نمی شود.'),
+                                ],
+                                type: 'object',
+                                nullable: true,
                             ),
                             new OA\Property(
                                 property: 'items',

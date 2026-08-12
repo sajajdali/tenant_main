@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Api\V1\Customer\Membership;
 
 use App\Domain\Tenant\Models\NutritionProfile;
 use App\Domain\Tenant\Models\NutritionPackage;
+use App\Domain\Tenant\Models\NutritionPackageSubscription;
 use App\Domain\Tenant\Models\TenantUser;
 use App\Http\Controllers\Controller;
 use App\Support\JalaliDate;
@@ -13,6 +14,7 @@ use App\Support\NutritionMedicalConditionSupport;
 use App\Support\NutritionWeightGoalCalculator;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
@@ -1302,6 +1304,7 @@ class MembershipController extends Controller
 
     private function packagesStepData(NutritionProfile $profile): array
     {
+        $user = $profile->user()->first();
         $packages = NutritionPackage::query()
             ->where('is_active', true)
             ->orderBy('depth')
@@ -1320,6 +1323,7 @@ class MembershipController extends Controller
                 'selectedNutritionPackageName' => $profile->selectedPackage?->name,
                 'completedAt' => $profile->package_selected_at?->toIso8601String(),
             ],
+            'activePackageNotice' => $user instanceof TenantUser ? $this->activePackageNotice($user) : null,
             'items' => $items,
             'emptyState' => [
                 'isEmpty' => $items === [],
@@ -1331,6 +1335,56 @@ class MembershipController extends Controller
                 'previewEndpoint' => '/api/v1/app/nutrition/package-checkout/preview',
                 'payEndpoint' => '/api/v1/app/nutrition/package-checkout/pay',
             ],
+        ];
+    }
+
+    private function activePackageNotice(TenantUser $user): ?array
+    {
+        $today = Carbon::today('Asia/Tehran');
+        $subscription = NutritionPackageSubscription::query()
+            ->with('package')
+            ->where('user_id', $user->id)
+            ->where('status', 'active')
+            ->where(function ($query) use ($today): void {
+                $query->whereNull('starts_at')
+                    ->orWhereDate('starts_at', '<=', $today->toDateString());
+            })
+            ->where(function ($query) use ($today): void {
+                $query->whereNull('ends_at')
+                    ->orWhereDate('ends_at', '>=', $today->toDateString());
+            })
+            ->latest('id')
+            ->first();
+
+        if (! $subscription) {
+            return null;
+        }
+
+        $onlineRemaining = max(0, (int) $subscription->online_diet_total - (int) $subscription->online_diet_used);
+        $offlineRemaining = max(0, (int) $subscription->offline_diet_total - (int) $subscription->offline_diet_used);
+
+        if ($onlineRemaining <= 0 && $offlineRemaining <= 0) {
+            return null;
+        }
+
+        $daysRemaining = $subscription->ends_at
+            ? max(0, (int) $today->diffInDays($subscription->ends_at->copy()->startOfDay(), false))
+            : null;
+
+        return [
+            'type' => 'active_package',
+            'title' => 'شما یک پکیج فعال دارید',
+            'description' => $daysRemaining !== null
+                ? "این پکیج تا {$daysRemaining} روز دیگر اعتبار دارد."
+                : 'این پکیج بدون تاریخ پایان ثبت شده است.',
+            'packageName' => $subscription->package?->name,
+            'startsAt' => $subscription->starts_at?->toDateString(),
+            'endsAt' => $subscription->ends_at?->toDateString(),
+            'daysRemaining' => $daysRemaining,
+            'onlineDietRemaining' => $onlineRemaining,
+            'offlineDietRemaining' => $offlineRemaining,
+            'canStillBuy' => true,
+            'replacementPolicy' => 'اگر کاربر پکیج جدید بخرد، پکیج فعال قبلی expired می شود و اعتبار پکیج جدید از تاریخ خرید محاسبه می شود؛ به پکیج قبلی اضافه نمی شود.',
         ];
     }
 

@@ -11,6 +11,8 @@
 
       $cssFile = $pickLatestAsset(public_path('booking-app/assets/index-*.css'));
       $jsFile = $pickLatestAsset(public_path('booking-app/assets/index-*.js'));
+      $landingFaviconUrl = $bootstrapMeta['landingSiteSettings']['faviconUrl'] ?? global_asset('favicon.png');
+      $landingFaviconType = $bootstrapMeta['landingSiteSettings']['faviconType'] ?? 'image/png';
     @endphp
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
@@ -18,9 +20,9 @@
     <meta name="theme-color" content="{{ ($bootstrapMeta['themeMode'] ?? 'dark') === 'light' ? '#f8fafc' : '#0f172a' }}" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="{{ $bootstrapMeta['name'] ?? $landingSite->name }}" />
-    <link rel="manifest" href="{{ global_asset('manifest.webmanifest') }}" />
-    <link rel="apple-touch-icon" href="{{ global_asset('apple-touch-icon.png') }}" />
+    <meta name="apple-mobile-web-app-title" content="{{ $pageMeta['siteName'] }}" />
+    <link rel="manifest" href="/landing-site.webmanifest" />
+    <link rel="apple-touch-icon" href="{{ $landingFaviconUrl }}" />
     <script>
       window.__BOOKING_BOOTSTRAP__ = {
         meta: @json($bootstrapMeta),
@@ -46,7 +48,7 @@
     <meta name="twitter:description" content="{{ $pageMeta['description'] }}" />
     <meta name="twitter:image" content="{{ $pageMeta['image'] }}" />
 
-    <link rel="icon" type="image/png" href="{{ global_asset('favicon.png') }}" />
+    <link rel="icon" type="{{ $landingFaviconType }}" href="{{ $landingFaviconUrl }}" />
     <link rel="alternate icon" type="image/x-icon" href="{{ global_asset('favicon.ico') }}" />
     @if ($cssFile)
       <link rel="stylesheet" crossorigin href="{{ global_asset('booking-app/assets/' . $cssFile) }}?v={{ @filemtime(public_path('booking-app/assets/' . $cssFile)) ?: time() }}">

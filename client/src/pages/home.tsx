@@ -1598,15 +1598,33 @@ export default function Home() {
       return buildTimeSlots(selectedSection, appointments, currentDate, minimumBookableAt, currentBarber?.blockedTimeRanges);
   }, [selectedSection, appointments, currentDate, isDateDisabled, minimumBookableAt, currentBarber?.blockedTimeRanges]);
 
+  const hasOwnAppointmentOnSelectedDay = useMemo(() => {
+      if (!user || !selectedSection) {
+          return false;
+      }
+
+      return appointments.some((appointment) =>
+        appointment.sectionId === selectedSection.id &&
+        appointment.date === currentDate &&
+        appointment.status !== "cancelled" &&
+        (
+          appointment.userPhone === user.phone ||
+          appointment.bookedByPhone === user.phone ||
+          appointment.bookedByUserId === user.id
+        )
+      );
+  }, [appointments, currentDate, selectedSection, user]);
+
   const isDayFullyBooked = useMemo(() => {
       if (isCurrentBarberPanelBlocked) return false;
+      if (hasOwnAppointmentOnSelectedDay) return false;
       if (!selectedSection || isDateDisabled || loading) return false;
       return daySlots.length > 0 && !daySlots.some((slot) =>
         slot.status === "free" ||
         (isAdmin && slot.status === "overlapped") ||
         (canStaffBookInBreaks && slot.status === "break")
       );
-  }, [selectedSection, isDateDisabled, loading, daySlots, isAdmin, isCurrentBarberPanelBlocked, canStaffBookInBreaks]);
+  }, [selectedSection, isDateDisabled, loading, daySlots, isAdmin, isCurrentBarberPanelBlocked, canStaffBookInBreaks, hasOwnAppointmentOnSelectedDay]);
 
   const nextActiveDate = useMemo(
     () =>

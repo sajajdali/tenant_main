@@ -22,7 +22,7 @@ use OpenApi\Attributes as OA;
 #[OA\Post(
     path: '/api/v1/app/nutrition/prescriptions/current/exercise-log',
     operationId: 'nutritionExercisesStoreLog',
-    description: 'ثبت ورزش برای رژیم فعلی و تاریخ انتخاب شده در صفحه /nutrition/my-diet/exercises?date=YYYY-MM-DD. exercise_ref باید از GET /api/v1/nutrition/exercises بیاید. کالری سوزانده شده در سرور محاسبه و در caloriesBurned برمی گردد: ابتدا MET بر اساس شدت یا سرعت resolve می شود؛ اگر speed_kmh ارسال نشود ولی distance_km وجود داشته باشد، سرعت از distance/duration محاسبه می شود؛ سپس calories = MET * weight_kg * duration_hours. برای daily_prescription فقط روز جاری قابل ثبت است. پاسخ نسخه تازه را برای آپدیت کالری سوزانده شده و درصدهای روز برمی گرداند.',
+    description: 'ثبت ورزش برای رژیم فعلی و تاریخ انتخاب شده در صفحه /nutrition/my-diet/exercises?date=YYYY-MM-DD. exercise_ref باید از GET /api/v1/nutrition/exercises بیاید. کالری سوزانده شده در سرور محاسبه و در caloriesBurned برمی گردد: ابتدا MET بر اساس شدت یا سرعت resolve می شود؛ اگر speed_kmh ارسال نشود ولی distance_km وجود داشته باشد، سرعت از distance/duration محاسبه می شود؛ سپس calories = MET * weight_kg * duration_hours. برای daily_prescription فقط روز جاری قابل ثبت است. پاسخ نسخه تازه را برای آپدیت کالری سوزانده شده و درصدهای روز برمی گرداند. بعد از response موفق، اپ Flutter باید به جای toast ساده یک modal موفقیت نمایش دهد: «ورزش شما با موفقیت ثبت شد» و با دکمه تأیید بسته شود.',
     security: [['bearerAuth' => []]],
     tags: ['Nutrition Exercises'],
     requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(ref: '#/components/schemas/NutritionExerciseLogStoreRequest')),

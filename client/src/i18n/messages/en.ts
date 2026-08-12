@@ -2904,6 +2904,7 @@ export const enMessages = {
   "appointment.cancel.detailsDescription": "Review the appointment details and available actions here.",
   "appointment.cancel.customer": "Customer:",
   "appointment.cancel.phone": "Phone:",
+  "appointment.cancel.callCustomer": "Call customer",
   "appointment.cancel.bookedBy": "Booked by:",
   "appointment.cancel.admin": "Admin",
   "appointment.cancel.siteUser": "Site user",
