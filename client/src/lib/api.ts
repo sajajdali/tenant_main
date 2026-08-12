@@ -3576,6 +3576,10 @@ export const api = {
       return getJson<{ count: number }>("/api/v1/notifications/unread-count");
     },
 
+    show: async (notificationId: string): Promise<ApiResponse<UserNotificationItem>> => {
+      return getJson<UserNotificationItem>(`/api/v1/notifications/${encodeURIComponent(notificationId)}`);
+    },
+
     markRead: async (notificationId: string): Promise<ApiResponse<UserNotificationItem>> => {
       return postJson<UserNotificationItem>(`/api/v1/notifications/${encodeURIComponent(notificationId)}/read`);
     },

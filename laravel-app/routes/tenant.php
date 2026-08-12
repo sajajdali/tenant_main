@@ -540,6 +540,7 @@ Route::middleware([
         Route::get('/notifications', [UserNotificationController::class, 'index']);
         Route::get('/notifications/unread-count', [UserNotificationController::class, 'unreadCount']);
         Route::post('/notifications/read-all', [UserNotificationController::class, 'markAllRead']);
+        Route::get('/notifications/{notification}', [UserNotificationController::class, 'show']);
         Route::post('/notifications/{notification}/read', [UserNotificationController::class, 'markRead']);
         Route::middleware('tenant.module:online-chat')->group(function () {
             Route::get('/online-chat/conversation', [OnlineChatController::class, 'show']);

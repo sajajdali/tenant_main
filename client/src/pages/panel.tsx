@@ -1,6 +1,6 @@
 import { Link } from "wouter";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { AlertTriangle, ArrowRight, BookOpenText, Bot, BriefcaseBusiness, CalendarDays, CalendarX2, ChefHat, ClipboardList, ClipboardPlus, Coins, CreditCard, DatabaseBackup, Dumbbell, FileArchive, FileText, FolderOpen, Gem, Gift, Globe, HardDrive, Headset, HeartHandshake, ImageIcon, Info, Link2, Lock, LockOpen, Megaphone, MessageCircleMore, MonitorSmartphone, Paintbrush, Percent, PhoneCall, Salad, Settings, Settings2, ShieldAlert, ShoppingBag, ShoppingCart, Sparkles, Star, Stethoscope, TicketPercent, Users, WalletCards } from "lucide-react";
+import { AlertTriangle, ArrowRight, BookOpenText, Bot, BriefcaseBusiness, CalendarDays, CalendarX2, ChefHat, ClipboardList, ClipboardPlus, Coins, CreditCard, DatabaseBackup, Dumbbell, FileArchive, FileText, FolderOpen, Gem, Gift, Globe, HardDrive, Headset, HeartHandshake, IdCard, ImageIcon, Info, Link2, Lock, LockOpen, Megaphone, MessageCircleMore, MonitorSmartphone, Paintbrush, Percent, PhoneCall, Salad, Settings, Settings2, ShieldAlert, ShoppingBag, ShoppingCart, Sparkles, Star, Stethoscope, TicketPercent, Users, WalletCards } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -339,6 +339,14 @@ export default function PanelPage() {
             description: t("panelDashboard.managementCards.brandKit.description"),
             href: "/panel/brand-kit",
             icon: ImageIcon,
+            disabled: supportExpired,
+          } satisfies PanelCard,
+          {
+            title: t("panelDashboard.managementCards.businessResume.title"),
+            description: t("panelDashboard.managementCards.businessResume.description"),
+            href: "/panel/business-resume",
+            icon: IdCard,
+            badge: t("panelDashboard.managementCards.badge.new"),
             disabled: supportExpired,
           } satisfies PanelCard,
           {

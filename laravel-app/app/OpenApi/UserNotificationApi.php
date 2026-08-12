@@ -59,7 +59,7 @@ use OpenApi\Attributes as OA;
 #[OA\Get(
     path: '/api/v1/app/notifications/{notification}',
     operationId: 'userNotificationsShow',
-    description: 'جزئیات یک اعلان متعلق به کاربر جاری را برای صفحه/مودال جزئیات اعلان برمی گرداند. این endpoint به تنهایی اعلان را خوانده شده نمی کند؛ بعد از باز شدن موفق، Flutter باید در صورت نیاز POST /api/v1/app/notifications/{notification}/read را صدا بزند.',
+    description: 'جزئیات یک اعلان متعلق به کاربر جاری را برای صفحه/مودال جزئیات اعلان برمی گرداند. مسیر دقیق اپلیکیشن GET /api/v1/app/notifications/{notification} است. این endpoint به تنهایی اعلان را خوانده شده نمی کند؛ بعد از باز شدن موفق، Flutter باید در صورت نیاز POST /api/v1/app/notifications/{notification}/read را صدا بزند. اگر ۴۰۴ برگشت یعنی یا route cache سرور قدیمی است، یا اعلان با این شناسه در دیتابیس همین tenant وجود ندارد.',
     security: [['bearerAuth' => []]],
     tags: ['User Notifications'],
     parameters: [
