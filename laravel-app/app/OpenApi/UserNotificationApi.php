@@ -59,7 +59,7 @@ use OpenApi\Attributes as OA;
 #[OA\Get(
     path: '/api/v1/app/notifications/{notification}',
     operationId: 'userNotificationsShow',
-    description: 'جزئیات یک اعلان متعلق به کاربر جاری را برای صفحه/مودال جزئیات اعلان برمی گرداند. مسیر دقیق اپلیکیشن GET /api/v1/app/notifications/{notification} است. این endpoint به تنهایی اعلان را خوانده شده نمی کند؛ بعد از باز شدن موفق، Flutter باید در صورت نیاز POST /api/v1/app/notifications/{notification}/read را صدا بزند. اگر ۴۰۴ برگشت یعنی یا route cache سرور قدیمی است، یا اعلان با این شناسه در دیتابیس همین tenant وجود ندارد.',
+    description: 'جزئیات یک اعلان متعلق به کاربر جاری را برای صفحه/مودال جزئیات اعلان برمی گرداند. مقدار {notification} باید دقیقا همان id برگشتی از GET /api/v1/app/notifications باشد. مسیر دقیق اپلیکیشن GET /api/v1/app/notifications/{notification} است. این endpoint به تنهایی اعلان را خوانده شده نمی کند؛ بعد از باز شدن موفق، Flutter باید در صورت نیاز POST /api/v1/app/notifications/{notification}/read را صدا بزند. اگر ۴۰۴ برگشت یعنی یا route cache سرور قدیمی است، یا اعلان با این شناسه برای کاربر لاگین شده در دیتابیس همین tenant وجود ندارد.',
     security: [['bearerAuth' => []]],
     tags: ['User Notifications'],
     parameters: [
@@ -75,8 +75,7 @@ use OpenApi\Attributes as OA;
     responses: [
         new OA\Response(response: 200, description: 'Notification details', content: new OA\JsonContent(ref: '#/components/schemas/UserNotificationItemResponse')),
         new OA\Response(response: 401, description: 'Unauthenticated'),
-        new OA\Response(response: 403, description: 'Notification belongs to another user'),
-        new OA\Response(response: 404, description: 'Notification not found'),
+        new OA\Response(response: 404, description: 'Notification not found for current user in current tenant'),
     ],
 )]
 #[OA\Post(
@@ -98,8 +97,7 @@ use OpenApi\Attributes as OA;
     responses: [
         new OA\Response(response: 200, description: 'Notification marked as read', content: new OA\JsonContent(ref: '#/components/schemas/UserNotificationItemResponse')),
         new OA\Response(response: 401, description: 'Unauthenticated'),
-        new OA\Response(response: 403, description: 'Notification belongs to another user'),
-        new OA\Response(response: 404, description: 'Notification not found'),
+        new OA\Response(response: 404, description: 'Notification not found for current user in current tenant'),
     ],
 )]
 #[OA\Post(

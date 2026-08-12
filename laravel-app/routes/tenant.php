@@ -222,8 +222,8 @@ Route::middleware([
             Route::get('/', [UserNotificationController::class, 'index'])->name('tenant.api.app.notifications.index');
             Route::get('/unread-count', [UserNotificationController::class, 'unreadCount'])->name('tenant.api.app.notifications.unread-count');
             Route::post('/read-all', [UserNotificationController::class, 'markAllRead'])->name('tenant.api.app.notifications.read-all');
-            Route::get('/{notification}', [UserNotificationController::class, 'show'])->name('tenant.api.app.notifications.show');
-            Route::post('/{notification}/read', [UserNotificationController::class, 'markRead'])->name('tenant.api.app.notifications.read');
+            Route::get('/{notification}', [UserNotificationController::class, 'show'])->whereNumber('notification')->name('tenant.api.app.notifications.show');
+            Route::post('/{notification}/read', [UserNotificationController::class, 'markRead'])->whereNumber('notification')->name('tenant.api.app.notifications.read');
         });
 
         Route::middleware(['auth:sanctum', 'tenant.module:online-chat'])->prefix('/online-chat')->group(function () {
@@ -540,8 +540,8 @@ Route::middleware([
         Route::get('/notifications', [UserNotificationController::class, 'index']);
         Route::get('/notifications/unread-count', [UserNotificationController::class, 'unreadCount']);
         Route::post('/notifications/read-all', [UserNotificationController::class, 'markAllRead']);
-        Route::get('/notifications/{notification}', [UserNotificationController::class, 'show']);
-        Route::post('/notifications/{notification}/read', [UserNotificationController::class, 'markRead']);
+        Route::get('/notifications/{notification}', [UserNotificationController::class, 'show'])->whereNumber('notification');
+        Route::post('/notifications/{notification}/read', [UserNotificationController::class, 'markRead'])->whereNumber('notification');
         Route::middleware('tenant.module:online-chat')->group(function () {
             Route::get('/online-chat/conversation', [OnlineChatController::class, 'show']);
             Route::get('/online-chat/conversation/summary', [OnlineChatController::class, 'summary']);
