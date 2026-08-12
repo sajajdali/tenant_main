@@ -2904,6 +2904,7 @@ export const arMessages = {
   "appointment.cancel.detailsDescription": "راجع تفاصيل الموعد والإجراءات المتاحة من هنا.",
   "appointment.cancel.customer": "العميل:",
   "appointment.cancel.phone": "الهاتف:",
+  "appointment.cancel.callCustomer": "الاتصال بالعميل",
   "appointment.cancel.bookedBy": "تم الحجز بواسطة:",
   "appointment.cancel.admin": "المدير",
   "appointment.cancel.siteUser": "مستخدم الموقع",

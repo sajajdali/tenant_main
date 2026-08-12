@@ -98,17 +98,17 @@ export function MyAppointmentsModal({ isOpen, onClose }: MyAppointmentsModalProp
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-3xl max-h-[85vh] overflow-hidden p-0 text-start" dir={dir}>
+      <DialogContent className="max-h-[85vh] max-w-3xl overflow-hidden p-0 text-start" dir={dir}>
         <div className="flex max-h-[85vh] flex-col text-start">
-          <div className="space-y-4 border-b border-border/60 px-6 pb-4 pt-6">
+          <div className="space-y-4 border-b border-border/60 px-6 pb-4 pt-6 text-start">
             <DialogHeader className="text-start sm:text-start">
-              <DialogTitle>{t("appointment.mine.title")}</DialogTitle>
-              <DialogDescription>
+              <DialogTitle className="text-start">{t("appointment.mine.title")}</DialogTitle>
+              <DialogDescription className="text-start">
                 {t("appointment.mine.description")}
               </DialogDescription>
             </DialogHeader>
 
-            <div className="flex flex-wrap justify-start gap-2">
+            <div className="flex flex-wrap justify-start gap-2" dir={dir}>
               <Button variant={scope === "upcoming" ? "default" : "outline"} onClick={() => setScope("upcoming")}>
                 {t("appointment.mine.upcomingTab")}
               </Button>
@@ -144,12 +144,12 @@ export function MyAppointmentsModal({ isOpen, onClose }: MyAppointmentsModalProp
                   className="rounded-2xl border border-border/70 bg-gradient-to-br from-card via-card/95 to-card/70 p-4 text-start shadow-sm transition-colors hover:border-primary/30"
                 >
                   <div className="space-y-4 text-start">
-                  <div className="flex flex-wrap items-start justify-between gap-3 text-start">
-                    <div className="space-y-1 text-start">
+                  <div className="grid gap-3 text-start sm:grid-cols-[1fr_auto] sm:items-start">
+                    <div className="min-w-0 space-y-1 text-start">
                       <div className="font-bold">{appointment.barberName || labels.singular}</div>
                       <div className="text-sm text-muted-foreground">{appointment.sectionName || t("appointment.mine.serviceFallback")}</div>
                     </div>
-                    <div className="flex items-center gap-2 self-start">
+                    <div className="flex flex-wrap items-center justify-start gap-2 sm:justify-end">
                       <Badge variant={appointment.status === "cancelled" ? "secondary" : "outline"}>
                         {appointment.status === "cancelled"
                           ? t("appointment.mine.status.cancelled")
@@ -178,18 +178,20 @@ export function MyAppointmentsModal({ isOpen, onClose }: MyAppointmentsModalProp
 
                   <div className="grid gap-3 text-sm text-muted-foreground md:grid-cols-3">
                     <div className="flex items-center justify-start gap-2 text-start">
-                      <span>{format.date(appointment.date)}</span>
                       <CalendarDays className="h-4 w-4 shrink-0" />
+                      <span>{format.date(appointment.date)}</span>
                     </div>
                     <div className="flex items-center justify-start gap-2 text-start">
-                      <span>
-                        <LtrText>{appointment.startTime}</LtrText> {t("appointment.mine.timeRangeSeparator")} <LtrText>{appointment.endTime}</LtrText>
-                      </span>
                       <Clock className="h-4 w-4 shrink-0" />
+                      <span className="inline-flex items-center gap-1.5" dir={dir}>
+                        <LtrText>{appointment.startTime}</LtrText>
+                        <span>{t("appointment.mine.timeRangeSeparator")}</span>
+                        <LtrText>{appointment.endTime}</LtrText>
+                      </span>
                     </div>
                     <div className="flex items-center justify-start gap-2 text-start">
-                      <span>{appointment.userName}</span>
                       <User className="h-4 w-4 shrink-0" />
+                      <span>{appointment.userName}</span>
                     </div>
                   </div>
 
@@ -215,8 +217,8 @@ export function MyAppointmentsModal({ isOpen, onClose }: MyAppointmentsModalProp
               <div className="text-sm text-muted-foreground">
                 {t("appointment.mine.totalCount", { count: format.number(data.total) })}
               </div>
-              <Pagination className="mx-0 w-auto justify-start">
-                <PaginationContent>
+              <Pagination className="mx-0 w-auto justify-start md:justify-end" dir={dir}>
+                <PaginationContent className="gap-2">
                   <PaginationItem>
                     <PaginationPrevious
                       href="#"

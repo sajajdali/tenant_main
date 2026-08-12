@@ -2902,6 +2902,7 @@ export const faMessages = {
   "appointment.cancel.detailsDescription": "اطلاعات نوبت و عملیات قابل انجام را از اینجا بررسی کنید.",
   "appointment.cancel.customer": "مشتری:",
   "appointment.cancel.phone": "تلفن:",
+  "appointment.cancel.callCustomer": "تماس با مشتری",
   "appointment.cancel.bookedBy": "ثبت‌کننده:",
   "appointment.cancel.admin": "مدیر",
   "appointment.cancel.siteUser": "کاربر سایت",

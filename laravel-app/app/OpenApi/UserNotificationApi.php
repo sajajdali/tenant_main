@@ -56,6 +56,29 @@ use OpenApi\Attributes as OA;
         new OA\Response(response: 401, description: 'Unauthenticated'),
     ],
 )]
+#[OA\Get(
+    path: '/api/v1/app/notifications/{notification}',
+    operationId: 'userNotificationsShow',
+    description: 'جزئیات یک اعلان متعلق به کاربر جاری را برای صفحه/مودال جزئیات اعلان برمی گرداند. این endpoint به تنهایی اعلان را خوانده شده نمی کند؛ بعد از باز شدن موفق، Flutter باید در صورت نیاز POST /api/v1/app/notifications/{notification}/read را صدا بزند.',
+    security: [['bearerAuth' => []]],
+    tags: ['User Notifications'],
+    parameters: [
+        new OA\Parameter(
+            name: 'notification',
+            description: 'شناسه اعلان',
+            in: 'path',
+            required: true,
+            schema: new OA\Schema(type: 'integer', minimum: 1),
+            example: 120,
+        ),
+    ],
+    responses: [
+        new OA\Response(response: 200, description: 'Notification details', content: new OA\JsonContent(ref: '#/components/schemas/UserNotificationItemResponse')),
+        new OA\Response(response: 401, description: 'Unauthenticated'),
+        new OA\Response(response: 403, description: 'Notification belongs to another user'),
+        new OA\Response(response: 404, description: 'Notification not found'),
+    ],
+)]
 #[OA\Post(
     path: '/api/v1/app/notifications/{notification}/read',
     operationId: 'userNotificationsMarkRead',

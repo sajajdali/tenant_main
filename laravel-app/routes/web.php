@@ -53,6 +53,7 @@ use Illuminate\Support\Facades\Route;
 Route::post('/landing/contact-submissions', [PublicLandingContactSubmissionController::class, 'store'])
     ->name('landing.contact-submissions.store');
 
+Route::get('/landing-site.webmanifest', [LandingSitePublicController::class, 'manifest'])->name('landing.public.manifest');
 Route::get('/orders', LandingSitePublicController::class)->name('landing.public.orders');
 
 Route::prefix('/landing-api/v1')->group(function () {

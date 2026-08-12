@@ -83,7 +83,7 @@ use OpenApi\Attributes as OA;
 #[OA\Post(
     path: '/api/v1/app/nutrition/iap/cafebazaar/package-orders',
     operationId: 'nutritionCafeBazaarIapCreateOrder',
-    description: 'قبل از باز کردن پرداخت بازار، اپلیکیشن باید سفارش pending بسازد. خروجی شامل order، productId و developerPayload است. همین developerPayload باید به purchaseProduct در Poolakey داده شود و بعد در verify عینا برگردد.',
+    description: 'قبل از باز کردن پرداخت بازار، اپلیکیشن باید سفارش pending بسازد. خروجی شامل order، productId و developerPayload است. همین developerPayload باید به purchaseProduct در Poolakey داده شود و بعد در verify عینا برگردد. اگر کاربر پکیج فعال با بیش از ۱۰ روز اعتبار باقی مانده دارد، سرور بدون replace_active_subscription=true خطای 422 می دهد؛ Flutter باید به کاربر توضیح دهد که خرید جدید پکیج قبلی را جایگزین می کند، نه تمدید تجمعی، سپس در صورت تأیید کاربر دوباره با replace_active_subscription=true درخواست بزند.',
     security: [['bearerAuth' => []]],
     tags: ['Cafe Bazaar IAP'],
     requestBody: new OA\RequestBody(
@@ -128,7 +128,7 @@ use OpenApi\Attributes as OA;
 #[OA\Post(
     path: '/api/v1/app/nutrition/iap/cafebazaar/package-orders/{order}/verify',
     operationId: 'nutritionCafeBazaarIapVerifyOrder',
-    description: 'بعد از موفق شدن purchaseProduct در Flutter، رسید بازار باید به این endpoint ارسال شود. سرور user، order، productId، developerPayload و یکتا بودن purchaseToken را کنترل می کند و فقط بعد از تایید، پکیج را paid و subscription را active می کند. سپس Flutter باید چون consumeRequired=true است، consumeProduct(purchaseToken) را در Poolakey صدا بزند.',
+    description: 'بعد از موفق شدن purchaseProduct در Flutter، رسید بازار باید به این endpoint ارسال شود. سرور user، order، productId، developerPayload و یکتا بودن purchaseToken را کنترل می کند و فقط بعد از تایید، پکیج را paid و subscription را active می کند. در همین مرحله همه subscription های فعال قبلی کاربر expired می شوند و پکیج جدید با startsAt برابر تاریخ verify/خرید و endsAt بر اساس durationDays همان پکیج ساخته می شود؛ روزهای باقی مانده قبلی به پکیج جدید اضافه نمی شود. سپس Flutter باید چون consumeRequired=true است، consumeProduct(purchaseToken) را در Poolakey صدا بزند.',
     security: [['bearerAuth' => []]],
     tags: ['Cafe Bazaar IAP'],
     parameters: [

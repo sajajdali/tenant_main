@@ -66,6 +66,18 @@ class UserNotificationController extends Controller
         ]);
     }
 
+    public function show(Request $request, UserNotification $notification): JsonResponse
+    {
+        $actor = $this->actor($request);
+        abort_unless((int) $notification->tenant_user_id === (int) $actor->id, 403);
+
+        return response()->json([
+            'success' => true,
+            'message' => null,
+            'data' => $this->transform($notification),
+        ]);
+    }
+
     public function markRead(Request $request, UserNotification $notification): JsonResponse
     {
         $actor = $this->actor($request);

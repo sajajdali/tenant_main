@@ -12,19 +12,66 @@ use App\Support\TenantLocale;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Http\JsonResponse;
 
 class LandingSitePublicController extends Controller
 {
+    public function manifest(Request $request): JsonResponse
+    {
+        $domain = $this->resolveActiveDomain($request);
+        abort_unless($domain !== null && $domain->landingSite !== null, 404);
+
+        $landingSite = $domain->landingSite;
+        $settings = $this->siteSettings($landingSite);
+        $name = $settings['siteTitle'] ?: $landingSite->name;
+        $iconUrl = $settings['faviconUrl'] ?: global_asset('favicon.png');
+        $iconType = $this->iconMimeType($iconUrl);
+
+        return response()
+            ->json([
+                'name' => $name,
+                'short_name' => $name,
+                'description' => 'لندینگ اختصاصی '.$name,
+                'dir' => 'rtl',
+                'lang' => 'fa-IR',
+                'start_url' => '/',
+                'scope' => '/',
+                'display' => 'standalone',
+                'display_override' => ['standalone', 'minimal-ui'],
+                'orientation' => 'portrait',
+                'background_color' => $landingSite->theme_mode === 'light' ? '#f8fafc' : '#0f172a',
+                'theme_color' => $landingSite->theme_mode === 'light' ? '#f8fafc' : '#0f172a',
+                'icons' => [
+                    [
+                        'src' => $iconUrl,
+                        'sizes' => '192x192',
+                        'type' => $iconType,
+                        'purpose' => 'any maskable',
+                    ],
+                    [
+                        'src' => $iconUrl,
+                        'sizes' => '512x512',
+                        'type' => $iconType,
+                        'purpose' => 'any maskable',
+                    ],
+                    [
+                        'src' => $iconUrl,
+                        'sizes' => '180x180',
+                        'type' => $iconType,
+                        'purpose' => 'any',
+                    ],
+                ],
+            ])
+            ->header('Content-Type', 'application/manifest+json')
+            ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
+    }
+
     public function __invoke(Request $request): Response|RedirectResponse
     {
         app()->setLocale('fa');
         $request->query->set('locale', 'fa');
 
-        $domain = LandingSiteDomain::query()
-            ->with('landingSite.audienceType')
-            ->where('domain', $request->getHost())
-            ->where('status', 'active')
-            ->first();
+        $domain = $this->resolveActiveDomain($request);
 
         abort_unless($domain !== null && $domain->landingSite !== null, 404);
 
@@ -83,6 +130,15 @@ class LandingSitePublicController extends Controller
             ->header('Expires', '0');
     }
 
+    private function resolveActiveDomain(Request $request): ?LandingSiteDomain
+    {
+        return LandingSiteDomain::query()
+            ->with('landingSite.audienceType')
+            ->where('domain', $request->getHost())
+            ->where('status', 'active')
+            ->first();
+    }
+
     private function buildPageMeta(Request $request, $landingSite): array
     {
         $siteSettings = $this->siteSettings($landingSite);
@@ -93,10 +149,13 @@ class LandingSitePublicController extends Controller
         }
 
         $canonical = rtrim($request->getSchemeAndHttpHost(), '/') . ($path === '/' ? '/' : $path);
-        $defaultImage = $siteSettings['seoImageUrl'] ?: global_asset('booking-app/opengraph.jpg');
+        $defaultImage = $siteSettings['seoImageUrl']
+            ?: $siteSettings['logoUrl']
+            ?: $siteSettings['faviconUrl']
+            ?: global_asset('step-logo-transparent.png');
         $page = $this->resolveRequestedPage($landingSite, $path);
         $seo = (array) ($page?->seo_json ?? $landingSite->seo_json ?? []);
-        $title = trim((string) ($seo['title'] ?? '')) ?: ($landingName.' | لندینگ');
+        $title = $this->cleanLandingMetaTitle(trim((string) ($seo['title'] ?? '')), $landingName);
         $description = trim((string) ($seo['description'] ?? '')) ?: ('لندینگ اختصاصی '.$landingName);
 
         return [
@@ -109,6 +168,36 @@ class LandingSitePublicController extends Controller
             'image' => trim((string) ($seo['imageUrl'] ?? '')) ?: $defaultImage,
             'type' => 'website',
         ];
+    }
+
+    private function cleanLandingMetaTitle(string $title, string $landingName): string
+    {
+        if ($title === '') {
+            return $landingName;
+        }
+
+        $legacyTitles = ['تک اندام', 'تک‌اندام', 'Takandam', 'BarberBook', 'Replit'];
+
+        foreach ($legacyTitles as $legacyTitle) {
+            if (str_contains($title, $legacyTitle) && ! str_contains($landingName, $legacyTitle)) {
+                return $landingName;
+            }
+        }
+
+        return $title;
+    }
+
+    private function iconMimeType(string $url): string
+    {
+        $path = parse_url($url, PHP_URL_PATH) ?: $url;
+
+        return match (strtolower(pathinfo($path, PATHINFO_EXTENSION))) {
+            'svg' => 'image/svg+xml',
+            'ico' => 'image/x-icon',
+            'webp' => 'image/webp',
+            'jpg', 'jpeg' => 'image/jpeg',
+            default => 'image/png',
+        };
     }
 
     private function resolveRequestedPage($landingSite, string $path)
@@ -229,7 +318,8 @@ class LandingSitePublicController extends Controller
             'siteTitle' => trim((string) ($settings['siteTitle'] ?? $landingSite->name)),
             'headerLabel' => trim((string) ($settings['headerLabel'] ?? 'Landing')),
             'logoUrl' => trim((string) ($settings['logoUrl'] ?? '')),
-            'faviconUrl' => trim((string) ($settings['faviconUrl'] ?? '')),
+            'faviconUrl' => trim((string) ($settings['faviconUrl'] ?? '')) ?: global_asset('favicon.png'),
+            'faviconType' => $this->iconMimeType(trim((string) ($settings['faviconUrl'] ?? '')) ?: global_asset('favicon.png')),
             'contactPhones' => array_values(array_filter(array_map(
                 static fn ($phone): string => is_string($phone) ? trim($phone) : '',
                 (array) ($settings['contactPhones'] ?? [])

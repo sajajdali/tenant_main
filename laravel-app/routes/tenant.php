@@ -222,6 +222,7 @@ Route::middleware([
             Route::get('/', [UserNotificationController::class, 'index'])->name('tenant.api.app.notifications.index');
             Route::get('/unread-count', [UserNotificationController::class, 'unreadCount'])->name('tenant.api.app.notifications.unread-count');
             Route::post('/read-all', [UserNotificationController::class, 'markAllRead'])->name('tenant.api.app.notifications.read-all');
+            Route::get('/{notification}', [UserNotificationController::class, 'show'])->name('tenant.api.app.notifications.show');
             Route::post('/{notification}/read', [UserNotificationController::class, 'markRead'])->name('tenant.api.app.notifications.read');
         });
 

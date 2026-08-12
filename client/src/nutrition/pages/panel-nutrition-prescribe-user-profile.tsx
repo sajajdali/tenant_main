@@ -1089,41 +1089,46 @@ export default function PanelNutritionPrescribeUserProfilePage() {
                         }`}
                       >
                         <div className={`absolute inset-y-0 start-0 w-1 ${item.isCurrent ? "bg-emerald-400" : "bg-slate-500"}`} />
-                        <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_220px] md:items-start">
-                          <div className="min-w-0 space-y-2">
-                            <div className="flex flex-wrap items-center gap-2">
-                              <Badge className={`rounded-[12px] px-3 py-1 text-xs ${item.isCurrent ? "bg-emerald-500/15 text-emerald-200 hover:bg-emerald-500/15" : "bg-white/10 text-slate-200 hover:bg-white/10"}`}>
-                                {item.isCurrent ? t("panelNutritionPrescribeUserProfile.prescriptions.current") : t("panelNutritionPrescribeUserProfile.prescriptions.previous")}
-                              </Badge>
-                              <Badge variant="outline" className="rounded-[12px] border-white/15 px-3 py-1 text-xs text-slate-200">
-                                {getPrescriptionModeLabel(item.prescriptionMode, t)}
-                              </Badge>
-                              {detailHref ? (
-                                <span className="rounded-[12px] border border-amber-300/15 bg-amber-400/10 px-3 py-1 text-[11px] font-bold text-amber-100 opacity-0 transition group-hover:opacity-100">
-                                  {t("panelNutritionPrescribeUserProfile.prescriptions.viewCase")}
-                                </span>
-                              ) : null}
+                        <div className="space-y-4 ps-1">
+                          <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                            <div className="min-w-0 space-y-2">
+                              <div className="flex flex-wrap items-center gap-2">
+                                <Badge className={`rounded-[12px] px-3 py-1 text-xs ${item.isCurrent ? "bg-emerald-500/15 text-emerald-200 hover:bg-emerald-500/15" : "bg-white/10 text-slate-200 hover:bg-white/10"}`}>
+                                  {item.isCurrent ? t("panelNutritionPrescribeUserProfile.prescriptions.current") : t("panelNutritionPrescribeUserProfile.prescriptions.previous")}
+                                </Badge>
+                                <Badge variant="outline" className="rounded-[12px] border-white/15 px-3 py-1 text-xs text-slate-200">
+                                  {getPrescriptionModeLabel(item.prescriptionMode, t)}
+                                </Badge>
+                              </div>
+                              <div className="max-w-full break-words text-lg font-black leading-8 text-white">
+                                {item.summaryText || t("panelNutritionPrescribeUserProfile.prescriptions.numberedTitle", { id: item.id })}
+                              </div>
                             </div>
-                            <div className="max-w-full break-words text-base font-black leading-7 text-white">
-                              {item.summaryText || t("panelNutritionPrescribeUserProfile.prescriptions.numberedTitle", { id: item.id })}
+                            {detailHref ? (
+                              <span className="inline-flex h-10 shrink-0 items-center justify-center rounded-[14px] border border-amber-300/15 bg-amber-400/10 px-4 text-xs font-bold text-amber-100 transition group-hover:border-amber-300/35 group-hover:bg-amber-400/15">
+                                {t("panelNutritionPrescribeUserProfile.prescriptions.viewCase")}
+                                <ForwardArrow className="ms-2 h-3.5 w-3.5" />
+                              </span>
+                            ) : null}
+                          </div>
+
+                          <div className="grid gap-2 sm:grid-cols-3">
+                            <div className="flex items-center justify-between gap-3 rounded-[16px] border border-amber-300/20 bg-amber-300/10 px-4 py-3">
+                              <span className="text-xs font-bold text-amber-100/80">{t("panelNutritionPrescribeUserProfile.prescriptions.dietWeight")}</span>
+                              <span className="text-sm font-black text-amber-100">{formatWeight(item.currentWeightKg)}</span>
                             </div>
-                            <div className="max-w-full rounded-[16px] border border-white/10 bg-[#0b1622]/85 p-3 text-sm leading-7 text-slate-300">
-                              {item.notes || t("panelNutritionPrescribeUserProfile.prescriptions.notesFallback")}
+                            <div className="flex items-center justify-between gap-3 rounded-[16px] border border-white/10 bg-[#0b1622] px-4 py-3">
+                              <span className="text-xs font-bold text-slate-400">{t("panelNutritionPrescribeUserProfile.weightChart.start")}</span>
+                              <span className="text-sm font-black text-white">{formatDate(item.startedAt)}</span>
+                            </div>
+                            <div className="flex items-center justify-between gap-3 rounded-[16px] border border-white/10 bg-[#0b1622] px-4 py-3">
+                              <span className="text-xs font-bold text-slate-400">{t("panelNutritionPrescribeUserProfile.prescriptions.endsAt")}</span>
+                              <span className="text-sm font-black text-white">{formatDate(item.endsAt)}</span>
                             </div>
                           </div>
-                          <div className="grid min-w-0 grid-cols-3 gap-2 text-center text-sm md:grid-cols-1 xl:grid-cols-3">
-                            <div className="rounded-[16px] border border-amber-300/20 bg-amber-300/10 p-3">
-                              <div className="text-amber-100/80">{t("panelNutritionPrescribeUserProfile.prescriptions.dietWeight")}</div>
-                              <div className="mt-1 font-bold text-amber-100">{formatWeight(item.currentWeightKg)}</div>
-                            </div>
-                            <div className="rounded-[16px] border border-white/10 bg-[#0b1622] p-3">
-                              <div className="text-slate-400">{t("panelNutritionPrescribeUserProfile.weightChart.start")}</div>
-                              <div className="mt-1 font-bold text-white">{formatDate(item.startedAt)}</div>
-                            </div>
-                            <div className="rounded-[16px] border border-white/10 bg-[#0b1622] p-3">
-                              <div className="text-slate-400">{t("panelNutritionPrescribeUserProfile.prescriptions.endsAt")}</div>
-                              <div className="mt-1 font-bold text-white">{formatDate(item.endsAt)}</div>
-                            </div>
+
+                          <div className="max-w-full rounded-[18px] border border-white/10 bg-[#0b1622]/85 px-4 py-3 text-sm leading-8 text-slate-300">
+                            {item.notes || t("panelNutritionPrescribeUserProfile.prescriptions.notesFallback")}
                           </div>
                         </div>
                       </button>

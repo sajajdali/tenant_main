@@ -2904,6 +2904,7 @@ export const deMessages = {
   "appointment.cancel.detailsDescription": "Pruefen Sie hier die Termindetails und verfuegbaren Aktionen.",
   "appointment.cancel.customer": "Kunde:",
   "appointment.cancel.phone": "Telefon:",
+  "appointment.cancel.callCustomer": "Kunde anrufen",
   "appointment.cancel.bookedBy": "Gebucht von:",
   "appointment.cancel.admin": "Verwaltung",
   "appointment.cancel.siteUser": "Website-Benutzer",

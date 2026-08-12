@@ -47,6 +47,11 @@ const toEnglishDigits = (value: string) =>
     .replace(/[\u0660-\u0669]/g, (digit) => String(digit.charCodeAt(0) - 0x0660));
 
 const onlyDigits = (value: string) => toEnglishDigits(value).replace(/\D/g, "");
+const toTelHref = (value: string) => {
+  const normalized = toEnglishDigits(value).replace(/[^\d+]/g, "");
+
+  return normalized ? `tel:${normalized}` : null;
+};
 const formatMoneyInput = (value: string, formatter: ReturnType<typeof useFormat>) => {
   const digits = onlyDigits(value);
   return digits ? formatter.number(Number(digits)) : "";
@@ -390,6 +395,7 @@ export function CancelModal({ isOpen, onClose, appointment, customerFinanceSumma
         : t("appointment.cancel.attendanceStatus.pending");
   const displayCustomerName = localCustomerName || appointment.userName || "";
   const displayCustomerPhone = localCustomerPhone || appointment.userPhone || "";
+  const customerPhoneHref = toTelHref(displayCustomerPhone);
   const customerInitial = (displayCustomerName || t("appointment.cancel.customerInitial")).trim().slice(0, 1);
   const customerDebtAmount = customerFinanceSummary?.balanceAmount ?? 0;
   const customerHasDebt = customerDebtAmount > 0;
@@ -737,11 +743,24 @@ export function CancelModal({ isOpen, onClose, appointment, customerFinanceSumma
                        </div>
                        <div className="mt-1.5 flex flex-wrap items-center justify-end gap-1.5 text-[11px] font-bold text-[#8f9bb3]">
                          <span>{serviceName}</span>
-                         <span className="h-1 w-1 rounded-full bg-[#53617a]" />
-                         <PhoneText>{displayCustomerPhone}</PhoneText>
-                         <Phone className="h-3.5 w-3.5" />
+                         {displayCustomerPhone && <span className="h-1 w-1 rounded-full bg-[#53617a]" />}
+                         {displayCustomerPhone && <PhoneText>{displayCustomerPhone}</PhoneText>}
                        </div>
                      </div>
+                     {customerPhoneHref && (
+                       <Button
+                         asChild
+                         type="button"
+                         variant="ghost"
+                         size="icon"
+                         className="h-11 w-11 shrink-0 rounded-[13px] border border-emerald-300/25 bg-emerald-400/12 text-emerald-200 shadow-lg shadow-emerald-500/10 hover:border-emerald-200/50 hover:bg-emerald-400/20 hover:text-white"
+                         title={t("appointment.cancel.callCustomer")}
+                       >
+                         <a href={customerPhoneHref} aria-label={t("appointment.cancel.callCustomer")}>
+                           <Phone className="h-4 w-4" />
+                         </a>
+                       </Button>
+                     )}
                    </div>
                  )}
                  <div className={isStaffManagementView ? "hidden" : "flex min-w-0 items-start justify-between gap-3"}>
@@ -750,11 +769,27 @@ export function CancelModal({ isOpen, onClose, appointment, customerFinanceSumma
                     </span>
                     <span className="line-clamp-2 min-w-0 break-words text-start font-bold [overflow-wrap:anywhere]">{displayCustomerName}</span>
                  </div>
-                 <div className={isStaffManagementView ? "hidden" : "flex items-center justify-between"}>
+                 <div className={isStaffManagementView ? "hidden" : "flex items-center justify-between gap-3"}>
                     <span className="text-muted-foreground text-sm flex items-center gap-1">
                       <Phone className="w-3 h-3" /> {t("appointment.cancel.phone")}
                     </span>
-                    <PhoneText>{displayCustomerPhone}</PhoneText>
+                    <span className="flex items-center gap-2">
+                      <PhoneText>{displayCustomerPhone}</PhoneText>
+                      {customerPhoneHref && (
+                        <Button
+                          asChild
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          className="h-9 w-9 rounded-full border-emerald-500/30 bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/15"
+                          title={t("appointment.cancel.callCustomer")}
+                        >
+                          <a href={customerPhoneHref} aria-label={t("appointment.cancel.callCustomer")}>
+                            <Phone className="h-4 w-4" />
+                          </a>
+                        </Button>
+                      )}
+                    </span>
                  </div>
                  {appointment.isForSomeoneElse && !isStaffManagementView && (
                    <>
