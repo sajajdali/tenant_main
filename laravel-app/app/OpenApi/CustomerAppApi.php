@@ -203,7 +203,7 @@ use OpenApi\Attributes as OA;
                                 nullable: true,
                                 example: null,
                             ),
-                            new OA\Property(property: 'user', type: 'object'),
+                            new OA\Property(property: 'user', ref: '#/components/schemas/CustomerAppAuthenticatedUser'),
                             new OA\Property(
                                 property: 'profileStatus',
                                 properties: [
@@ -259,10 +259,35 @@ use OpenApi\Attributes as OA;
     security: [['bearerAuth' => []]],
     tags: ['Customer App Auth'],
     responses: [
-        new OA\Response(response: 200, description: 'Authenticated user'),
+        new OA\Response(response: 200, description: 'Authenticated user', content: new OA\JsonContent(required: ['success', 'data', 'meta'], properties: [
+            new OA\Property(property: 'success', type: 'boolean', example: true),
+            new OA\Property(property: 'message', type: 'string', nullable: true, example: null),
+            new OA\Property(property: 'data', type: 'object', required: ['user', 'profileStatus'], properties: [
+                new OA\Property(property: 'user', ref: '#/components/schemas/CustomerAppAuthenticatedUser', nullable: true),
+                new OA\Property(property: 'profileStatus', type: 'object', nullable: true),
+            ]),
+            new OA\Property(property: 'meta', type: 'object'),
+        ])),
         new OA\Response(response: 401, description: 'Unauthenticated'),
     ],
 )]
+#[OA\Schema(schema: 'CustomerAppAuthenticatedUser', required: ['id', 'name', 'phone', 'email', 'role', 'gender', 'nationalCode', 'birthDate', 'provinceId', 'provinceName', 'cityId', 'cityName', 'jobTitle', 'isVip', 'canBook'], properties: [
+    new OA\Property(property: 'id', type: 'string', example: '45'),
+    new OA\Property(property: 'name', type: 'string', nullable: true, example: 'علی رضایی', description: 'نام کاربر برای داشبورد. Flutter باید با مقدار غیرخالی آن متن «سلام {name}، خوش آمدی» بسازد.'),
+    new OA\Property(property: 'phone', type: 'string', example: '09123456789'),
+    new OA\Property(property: 'email', type: 'string', nullable: true),
+    new OA\Property(property: 'role', type: 'string'),
+    new OA\Property(property: 'gender', type: 'string', nullable: true),
+    new OA\Property(property: 'nationalCode', type: 'string', nullable: true),
+    new OA\Property(property: 'birthDate', type: 'string', format: 'date', nullable: true),
+    new OA\Property(property: 'provinceId', type: 'integer', nullable: true),
+    new OA\Property(property: 'provinceName', type: 'string', nullable: true),
+    new OA\Property(property: 'cityId', type: 'integer', nullable: true),
+    new OA\Property(property: 'cityName', type: 'string', nullable: true),
+    new OA\Property(property: 'jobTitle', type: 'string', nullable: true),
+    new OA\Property(property: 'isVip', type: 'boolean'),
+    new OA\Property(property: 'canBook', type: 'boolean'),
+])]
 #[OA\Post(
     path: '/api/v1/app/auth/logout',
     operationId: 'customerAppLogout',
