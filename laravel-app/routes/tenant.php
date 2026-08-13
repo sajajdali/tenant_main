@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\V1\Customer\Auth\OtpAuthController as CustomerAppOt
 use App\Http\Controllers\Api\V1\Customer\Membership\MembershipController as CustomerAppMembershipController;
 use App\Http\Controllers\Api\V1\Customer\Nutrition\DietRequestController as CustomerAppDietRequestController;
 use App\Http\Controllers\Api\V1\Customer\Nutrition\ProfileController as CustomerAppNutritionProfileController;
+use App\Http\Controllers\Api\V1\Customer\Nutrition\ProgressReportController as CustomerAppNutritionProgressReportController;
 use App\Http\Controllers\Api\V1\Customer\OnlineChat\ConversationController as CustomerAppOnlineChatController;
 use App\Http\Controllers\SupportTicketAttachmentController;
 use App\Http\Controllers\Tenant\AboutSettingsController;
@@ -197,6 +198,7 @@ Route::middleware([
 
         Route::middleware('auth:sanctum')->prefix('/nutrition')->group(function () {
             Route::get('/profile', [CustomerAppNutritionProfileController::class, 'show'])->name('tenant.api.app.nutrition.profile.show');
+            Route::get('/progress-report', [CustomerAppNutritionProgressReportController::class, 'show'])->name('tenant.api.app.nutrition.progress-report.show');
             Route::get('/diet-templates', [NutritionDietTemplateController::class, 'publicIndex'])->name('tenant.api.app.nutrition.diet-templates.index');
             Route::get('/diet-requests/options', [CustomerAppDietRequestController::class, 'options'])->name('tenant.api.app.nutrition.diet-requests.options');
             Route::post('/diet-requests/preview', [CustomerAppDietRequestController::class, 'preview'])->name('tenant.api.app.nutrition.diet-requests.preview');
