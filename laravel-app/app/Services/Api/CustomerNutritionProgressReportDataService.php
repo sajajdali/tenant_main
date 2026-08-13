@@ -23,10 +23,18 @@ class CustomerNutritionProgressReportDataService
         $weights = $this->weightLogs($user);
         $periodWeights = $this->weightsForPeriod($weights, $period);
         $prescriptions = $this->prescriptions($user, $weights);
+        $activeDiet = collect($prescriptions)->first(fn (array $item): bool => $item['isActive']);
         $exercise = $this->exerciseSummary($user);
         $summary = $this->summary($profile, $weights, $prescriptions);
 
         return [
+            'context' => [
+                'hasActiveDiet' => $activeDiet !== null,
+                'activePrescriptionId' => $activeDiet['id'] ?? null,
+                'dietHref' => $activeDiet !== null
+                    ? '/nutrition/my-diets/'.$activeDiet['id']
+                    : '/nutrition/diet-requests/preview',
+            ],
             'summary' => $summary,
             'projection' => $this->projection($summary, $profile, $prescriptions),
             'weightChart' => [
@@ -240,6 +248,7 @@ class CustomerNutritionProgressReportDataService
             ->map(function (object $item) use ($weights): array {
                 $start = $item->started_at ? (string) $item->started_at : null;
                 $end = $item->ends_at ? (string) $item->ends_at : Carbon::now('Asia/Tehran')->toDateString();
+                $today = Carbon::now('Asia/Tehran')->toDateString();
                 $points = $weights->filter(fn (array $point): bool => ($start === null || $point['recordedOn'] >= $start) && $point['recordedOn'] <= $end)->values();
                 $change = $points->count() > 1 ? round($points->first()['weightKg'] - $points->last()['weightKg'], 2) : null;
                 return [
@@ -250,6 +259,10 @@ class CustomerNutritionProgressReportDataService
                     'startedAt' => $start,
                     'endsAt' => $item->ends_at ? (string) $item->ends_at : null,
                     'isCurrent' => (bool) $item->is_current,
+                    'isActive' => (bool) $item->is_current
+                        && $start !== null
+                        && $start <= $today
+                        && ($item->ends_at === null || (string) $item->ends_at >= $today),
                     'startWeightKg' => $points->first()['weightKg'] ?? ($item->current_weight_kg !== null ? (float) $item->current_weight_kg : null),
                     'endWeightKg' => $points->last()['weightKg'] ?? null,
                     'targetWeightKg' => $item->target_weight_kg !== null ? (float) $item->target_weight_kg : null,
