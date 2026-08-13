@@ -3746,6 +3746,17 @@ export const api = {
     deleteAttribution: async (attributionId: string): Promise<ApiResponse<unknown>> => requestJson(`/api/v1/custom-landing/attributions/${encodeURIComponent(attributionId)}`, "DELETE"),
   },
 
+  businessResume: {
+    get: async (): Promise<ApiResponse<{ templateType: "personal" | "beauty_salon" | null; published: boolean; sections: Record<string, boolean>; content: Record<string, unknown>; publicUrl: string }>> => getJson("/api/v1/business-resume"),
+    save: async (payload: { templateType: "personal" | "beauty_salon" | null; published: boolean; sections: Record<string, boolean>; content: Record<string, unknown> }): Promise<ApiResponse<{ templateType: "personal" | "beauty_salon" | null; published: boolean; sections: Record<string, boolean>; content: Record<string, unknown>; publicUrl: string }>> => requestJson("/api/v1/business-resume", "PUT", payload),
+    upload: async (image: File): Promise<ApiResponse<{ path: string; url: string }>> => {
+      const form = new FormData();
+      form.append("image", image);
+      return requestFormData("/api/v1/business-resume/upload", "POST", form);
+    },
+    publicGet: async (): Promise<ApiResponse<{ templateType: "personal" | "beauty_salon"; published: boolean; sections: Record<string, boolean>; content: Record<string, unknown>; publicUrl: string }>> => getJson("/api/v1/business-resume/public"),
+  },
+
   cookingRecipes: {
     publicShow: async (idOrSlug: string): Promise<ApiResponse<CookingRecipeDetailPayload>> => {
       return getJson<CookingRecipeDetailPayload>(`/api/v1/cooking-recipes/${encodeURIComponent(idOrSlug)}`);

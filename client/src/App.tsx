@@ -91,6 +91,7 @@ import PanelStoreReviewsPage from "@/pages/panel-store-reviews";
 import PanelStoreOrdersPage from "@/pages/panel-store-orders";
 import PanelBrandKitPage from "@/pages/panel-brand-kit";
 import PanelBusinessResumePage from "@/pages/panel-business-resume";
+import BusinessResumePublicPage from "@/pages/business-resume-public";
 import PanelFinancePage from "@/pages/panel-finance";
 import PanelManualFinancePage from "@/pages/panel-manual-finance";
 import PanelCommissionReportPage from "@/pages/panel-commission-report";
@@ -241,6 +242,7 @@ function Router() {
       <Route path="/gallery" component={GalleryPage} />
       <Route path="/about" component={AboutPage} />
       <Route path="/contact" component={ContactPage} />
+      <Route path="/resume" component={BusinessResumePublicPage} />
       <Route path="/store" component={StorePage} />
       <Route path="/store/bestsellers" component={StoreListingPage} />
       <Route path="/store/popular" component={StoreListingPage} />

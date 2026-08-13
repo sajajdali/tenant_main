@@ -19,6 +19,7 @@ use App\Http\Controllers\Tenant\ArticlePostController;
 use App\Http\Controllers\Tenant\ArticleSettingsController;
 use App\Http\Controllers\Tenant\BarberController;
 use App\Http\Controllers\Tenant\BookingPaymentController;
+use App\Http\Controllers\Tenant\BusinessResumeController;
 use App\Http\Controllers\Tenant\ContactSettingsController;
 use App\Http\Controllers\Tenant\CustomLandingController;
 use App\Http\Controllers\Tenant\CustomLandingPublicController;
@@ -114,6 +115,7 @@ Route::middleware([
     Route::get('/{verificationFile}.txt', [GeneralSettingsController::class, 'serveEnamadVerificationFile'])
         ->where('verificationFile', '[A-Za-z0-9_-]+')
         ->name('tenant.enamad-verification-file');
+    Route::get('/api/v1/business-resume/public', [BusinessResumeController::class, 'publicShow'])->name('tenant.api.business-resume.public');
 
     Route::prefix('/api/v1/auth/otp')->group(function () {
         Route::post('/send', [TenantOtpAuthApiController::class, 'send'])->name('tenant.api.auth.otp.send');
@@ -281,6 +283,7 @@ Route::middleware([
     Route::get('/gallery', SiteController::class)->name('tenant.gallery');
     Route::get('/about', SiteController::class)->name('tenant.about');
     Route::get('/contact', SiteController::class)->name('tenant.contact');
+    Route::get('/resume', SiteController::class)->name('tenant.business-resume.public');
     Route::get('/articles', SiteController::class)->name('tenant.articles');
     Route::get('/articles/{any}', SiteController::class)->where('any', '.*');
     Route::get('/nutrition', SiteController::class)->name('tenant.nutrition');
@@ -435,6 +438,9 @@ Route::middleware([
         Route::put('/users/{mobile}/booking-access', [TenantUserController::class, 'updateBookingAccess']);
         Route::put('/users/{mobile}/vip-access', [TenantUserController::class, 'updateVipAccess'])->middleware('tenant.module:vip-customers');
         Route::get('/customer-feedback/settings', [CustomerFeedbackController::class, 'show']);
+        Route::get('/business-resume', [BusinessResumeController::class, 'show']);
+        Route::put('/business-resume', [BusinessResumeController::class, 'update']);
+        Route::post('/business-resume/upload', [BusinessResumeController::class, 'upload']);
         Route::put('/customer-feedback/settings', [CustomerFeedbackController::class, 'update']);
         Route::get('/customer-feedback/report', [CustomerFeedbackController::class, 'report']);
         Route::get('/customer-feedback/report/responses/{response}', [CustomerFeedbackController::class, 'reportResponse']);
