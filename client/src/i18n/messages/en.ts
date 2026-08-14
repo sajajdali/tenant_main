@@ -3158,6 +3158,7 @@ export const enMessages = {
   "settings.smsRedirect.noticeDescription": "Use the dedicated SMS settings page to enable SMS globally, enable each scenario separately, write SMS text, use ready parameters, and preview messages.",
   "settings.smsRedirect.button": "Open SMS settings",
   "settings.general.saving": "Saving...",
+  "settings.general.saveFailed": "Settings could not be saved",
   "settings.general.save": "Save general settings",
   "settings.barberEdit.title": "Edit {{professional}}",
   "settings.barberEdit.description": "Edit the name, mobile number, and api code if enabled.",

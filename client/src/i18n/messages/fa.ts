@@ -3156,6 +3156,7 @@ export const faMessages = {
   "settings.smsRedirect.noticeDescription": "برای فعال‌سازی کلی پیامک، فعال‌سازی جداگانه هر سناریو، نوشتن متن پیامک، استفاده از پارامترهای آماده و دیدن پیش‌نمایش، از صفحه مستقل تنظیمات پیامک استفاده کنید.",
   "settings.smsRedirect.button": "ورود به تنظیمات پیامک",
   "settings.general.saving": "در حال ذخیره...",
+  "settings.general.saveFailed": "ذخیره تنظیمات انجام نشد",
   "settings.general.save": "ذخیره تنظیمات عمومی",
   "settings.barberEdit.title": "ویرایش {{professional}}",
   "settings.barberEdit.description": "نام، موبایل و در صورت فعال بودن api code را از اینجا ویرایش کنید.",

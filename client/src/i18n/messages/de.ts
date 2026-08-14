@@ -3158,6 +3158,7 @@ export const deMessages = {
   "settings.smsRedirect.noticeDescription": "Nutzen Sie die eigene SMS-Einstellungsseite, um SMS global und je Szenario zu aktivieren, Texte zu schreiben, fertige Parameter zu verwenden und Vorschauen zu sehen.",
   "settings.smsRedirect.button": "SMS-Einstellungen oeffnen",
   "settings.general.saving": "Wird gespeichert...",
+  "settings.general.saveFailed": "Einstellungen konnten nicht gespeichert werden",
   "settings.general.save": "Allgemeine Einstellungen speichern",
   "settings.barberEdit.title": "{{professional}} bearbeiten",
   "settings.barberEdit.description": "Name, Mobilnummer und api code bearbeiten, falls aktiviert.",

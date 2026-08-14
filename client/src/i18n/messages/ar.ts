@@ -3158,6 +3158,7 @@ export const arMessages = {
   "settings.smsRedirect.noticeDescription": "استخدم صفحة إعدادات الرسائل لتفعيل الرسائل عموما، وتفعيل كل سيناريو، وكتابة النصوص، واستخدام المعاملات الجاهزة، ومعاينة الرسائل.",
   "settings.smsRedirect.button": "فتح إعدادات الرسائل",
   "settings.general.saving": "جار الحفظ...",
+  "settings.general.saveFailed": "تعذر حفظ الإعدادات",
   "settings.general.save": "حفظ الإعدادات العامة",
   "settings.barberEdit.title": "تعديل {{professional}}",
   "settings.barberEdit.description": "عدّل الاسم ورقم الهاتف و api code إذا كان مفعلا.",

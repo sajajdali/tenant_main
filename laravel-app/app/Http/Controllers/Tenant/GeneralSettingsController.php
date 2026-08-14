@@ -49,14 +49,17 @@ class GeneralSettingsController extends Controller
             'enabled' => ['required', 'boolean'],
             'locale' => ['nullable', 'in:'.implode(',', TenantLocale::selectableLocales())],
             'country' => ['nullable', 'in:'.implode(',', TenantLocale::selectableCountries())],
-            'provider' => ['nullable', 'in:'.implode(',', TenantPaymentGateways::supportedKeys())],
+            // Maliart is a tenant-level override and is returned by this API as
+            // the active provider, even though it is not one of the editable
+            // standard gateway definitions.
+            'provider' => ['nullable', 'in:'.implode(',', [...TenantPaymentGateways::supportedKeys(), 'maliart'])],
             'sandboxEnabled' => ['nullable', 'boolean'],
             'cafebazaarEnabled' => ['nullable', 'boolean'],
             'cafebazaarPublicKey' => ['nullable', 'string', 'max:8000'],
             'androidAppSettingsEnabled' => ['nullable', 'boolean'],
             'androidAppVersion' => ['nullable', 'string', 'max:64'],
-            'androidWebAppUrl' => ['nullable', 'url', 'max:2048'],
-            'androidPaymentReturnUrl' => ['nullable', 'url', 'max:2048'],
+            'androidWebAppUrl' => ['nullable', 'string', 'max:2048'],
+            'androidPaymentReturnUrl' => ['nullable', 'string', 'max:2048'],
             'enamadCode' => ['nullable', 'string'],
             'managementPanelNote' => ['nullable', 'string'],
             'siteAnnouncementEnabled' => ['nullable', 'boolean'],
@@ -228,7 +231,7 @@ class GeneralSettingsController extends Controller
             ? trim((string) $validated['androidAppVersion'])
             : (string) ($androidApp['version'] ?? '');
         $androidApp['web_app_url'] = array_key_exists('androidWebAppUrl', $validated)
-            ? trim((string) $validated['androidWebAppUrl'])
+            ? $this->normalizeAndroidAppUrl((string) $validated['androidWebAppUrl'])
             : (string) ($androidApp['web_app_url'] ?? '');
         $androidApp['payment_return_url'] = array_key_exists('androidPaymentReturnUrl', $validated)
             ? trim((string) $validated['androidPaymentReturnUrl'])
@@ -457,5 +460,16 @@ class GeneralSettingsController extends Controller
         $slug = $tenant?->audienceType?->slug;
 
         return in_array($slug, ['nutritionists', 'nutrition-doctors'], true);
+    }
+
+    private function normalizeAndroidAppUrl(string $value): string
+    {
+        $value = trim($value);
+
+        if ($value !== '' && ! str_contains($value, '://')) {
+            $value = 'https://'.$value;
+        }
+
+        return filter_var($value, FILTER_VALIDATE_URL) !== false ? rtrim($value, '/') : '';
     }
 }

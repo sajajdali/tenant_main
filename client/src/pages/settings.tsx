@@ -1784,6 +1784,8 @@ export default function SettingsPage({ forcedTab }: SettingsPageProps) {
       if (res.success) {
           setPaymentSettings(res.data);
           toast({ title: t("settings.general.saved") });
+      } else {
+          toast({ variant: "destructive", title: t("settings.general.saveFailed"), description: res.message });
       }
       setPaymentLoading(false);
   }
