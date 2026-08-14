@@ -79,12 +79,10 @@ class NutritionPackagePurchaseController extends Controller
             $verified = $this->service->verify($order);
             $subscription = $verified->subscription;
 
-            return redirect('/nutrition/membership/package-result?status=success&order='
-                . urlencode((string) $verified->id)
-                . '&invoice=' . urlencode($verified->invoice_number)
-                . '&reference=' . urlencode((string) ($verified->reference_id ?? ''))
-                . '&endsAt=' . urlencode((string) ($subscription?->ends_at?->toDateString() ?? ''))
-            );
+            return redirect()->route('tenant.nutrition.package-payments.result', [
+                'status' => 'success',
+                'order' => $verified->id,
+            ]);
         } catch (ValidationException $exception) {
             return $this->failedPaymentRedirect($order);
         } catch (\Throwable $exception) {
@@ -98,12 +96,51 @@ class NutritionPackagePurchaseController extends Controller
     {
         $query = http_build_query([
             'status' => 'failed',
+            'order' => $order->id,
             'tracking' => $order->invoice_number ?: (string) $order->id,
             'package' => (string) $order->nutrition_package_id,
             'discount' => (string) ($order->discount_code_snapshot['code'] ?? ''),
         ]);
 
-        return redirect('/nutrition/membership/package-result?'.$query);
+        return redirect(route('tenant.nutrition.package-payments.result').'?'.$query);
+    }
+
+    public function resultPage(Request $request): \Illuminate\Contracts\View\View
+    {
+        $orderId = (int) $request->integer('order');
+        $rules = \App\Domain\Tenant\Models\GeneralSetting::query()->value('booking_rules') ?? [];
+        $androidApp = is_array($rules['android_app'] ?? null) ? $rules['android_app'] : [];
+        $webAppUrl = trim((string) ($androidApp['web_app_url'] ?? ''));
+        $returnUrl = ($androidApp['enabled'] ?? false) && filter_var($webAppUrl, FILTER_VALIDATE_URL)
+            ? $this->appendOrderToUrl($webAppUrl, $orderId)
+            : null;
+
+        return view('tenant.nutrition-package-payment-result', [
+            'status' => in_array($request->string('status')->toString(), ['success', 'failed', 'pending'], true) ? $request->string('status')->toString() : 'pending',
+            'returnUrl' => $returnUrl,
+        ]);
+    }
+
+    public function orderStatus(Request $request, NutritionPackageOrder $order): JsonResponse
+    {
+        $user = $this->user($request);
+        abort_unless($user && (int) $order->user_id === (int) $user->id, 404);
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'order' => $this->service->serializeOrder($order->fresh(['package', 'subscription', 'discountCode'])),
+                'subscription' => $this->service->serializeSubscription($this->service->activeSubscriptionForUser($user)),
+            ],
+        ]);
+    }
+
+    private function appendOrderToUrl(string $url, int $orderId): string
+    {
+        if ($orderId <= 0) return $url;
+        $separator = str_contains($url, '?') ? '&' : '?';
+
+        return rtrim($url, '?&').$separator.'order='.rawurlencode((string) $orderId);
     }
 
     public function mySummary(Request $request): JsonResponse

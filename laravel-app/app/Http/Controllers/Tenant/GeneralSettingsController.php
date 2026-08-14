@@ -53,6 +53,10 @@ class GeneralSettingsController extends Controller
             'sandboxEnabled' => ['nullable', 'boolean'],
             'cafebazaarEnabled' => ['nullable', 'boolean'],
             'cafebazaarPublicKey' => ['nullable', 'string', 'max:8000'],
+            'androidAppSettingsEnabled' => ['nullable', 'boolean'],
+            'androidAppVersion' => ['nullable', 'string', 'max:64'],
+            'androidWebAppUrl' => ['nullable', 'url', 'max:2048'],
+            'androidPaymentReturnUrl' => ['nullable', 'url', 'max:2048'],
             'enamadCode' => ['nullable', 'string'],
             'managementPanelNote' => ['nullable', 'string'],
             'siteAnnouncementEnabled' => ['nullable', 'boolean'],
@@ -216,6 +220,20 @@ class GeneralSettingsController extends Controller
         $bookingRules['customer_cancellation_cutoff_hours'] = (int) ($validated['customerCancellationCutoffHours'] ?? ($bookingRules['customer_cancellation_cutoff_hours'] ?? 2));
         $bookingRules['appointment_alert_sound'] = (string) ($validated['appointmentAlertSound'] ?? ($bookingRules['appointment_alert_sound'] ?? 'classic'));
         $bookingRules['api_code_enabled'] = (bool) ($validated['apiCodeEnabled'] ?? false);
+        $androidApp = is_array($bookingRules['android_app'] ?? null) ? $bookingRules['android_app'] : [];
+        $androidApp['enabled'] = array_key_exists('androidAppSettingsEnabled', $validated)
+            ? (bool) $validated['androidAppSettingsEnabled']
+            : (bool) ($androidApp['enabled'] ?? false);
+        $androidApp['version'] = array_key_exists('androidAppVersion', $validated)
+            ? trim((string) $validated['androidAppVersion'])
+            : (string) ($androidApp['version'] ?? '');
+        $androidApp['web_app_url'] = array_key_exists('androidWebAppUrl', $validated)
+            ? trim((string) $validated['androidWebAppUrl'])
+            : (string) ($androidApp['web_app_url'] ?? '');
+        $androidApp['payment_return_url'] = array_key_exists('androidPaymentReturnUrl', $validated)
+            ? trim((string) $validated['androidPaymentReturnUrl'])
+            : (string) ($androidApp['payment_return_url'] ?? '');
+        $bookingRules['android_app'] = $androidApp;
         $bookingRules['registration_requirements'] = TenantMembershipProfile::normalizeRequirements($validated['registrationRequirements'] ?? []);
         $bookingRules['gallery_enabled'] = (bool) ($validated['galleryEnabled'] ?? false);
         if ($this->isNutritionAudience()) {
@@ -394,6 +412,10 @@ class GeneralSettingsController extends Controller
             'customerCancellationCutoffHours' => max(1, (int) ($bookingRules['customer_cancellation_cutoff_hours'] ?? 2)),
             'appointmentAlertSound' => (string) ($bookingRules['appointment_alert_sound'] ?? 'classic'),
             'apiCodeEnabled' => (bool) ($bookingRules['api_code_enabled'] ?? false),
+            'androidAppSettingsEnabled' => (bool) (($bookingRules['android_app']['enabled'] ?? false)),
+            'androidAppVersion' => (string) (($bookingRules['android_app']['version'] ?? '')),
+            'androidWebAppUrl' => (string) (($bookingRules['android_app']['web_app_url'] ?? '')),
+            'androidPaymentReturnUrl' => (string) (($bookingRules['android_app']['payment_return_url'] ?? '')),
             'registrationRequirements' => TenantMembershipProfile::normalizeRequirements($bookingRules['registration_requirements'] ?? []),
             'galleryEnabled' => (bool) ($bookingRules['gallery_enabled'] ?? false),
             'smsEnabled' => (bool) ($sms?->enabled ?? false),

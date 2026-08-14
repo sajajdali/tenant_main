@@ -29,8 +29,8 @@ class MaliartTenantPaymentService
         $callbackUrl = str_replace(['{payment}', '__PAYMENT__'], (string) $payment->id, $callbackUrlTemplate);
         $remote = $this->client->create([
             'order_id' => (string) $payment->invoice_number,
-            'amount' => (int) $payment->payable_amount,
-            'currency' => 'IRT',
+            'amount' => (int) $payment->payable_amount * 10,
+            'currency' => 'IRR',
             'type' => (string) $payment->payment_type,
             'description' => $description,
             'return_url' => $callbackUrl,

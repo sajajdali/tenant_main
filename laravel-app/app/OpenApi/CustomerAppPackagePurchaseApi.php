@@ -147,6 +147,15 @@ use OpenApi\Attributes as OA;
     ],
 )]
 #[OA\Get(
+    path: '/api/v1/app/nutrition/package-checkout/orders/{order}',
+    operationId: 'nutritionPackageCheckoutOrderStatus',
+    description: 'وضعیت قطعی یک سفارش پکیج را فقط برای مالک همان سفارش برمی گرداند. Flutter پس از بازگشت از بانک باید این endpoint را با Bearer token صدا بزند؛ query صفحه بازگشت معیار موفقیت نیست.',
+    security: [['bearerAuth' => []]],
+    tags: ['Package Purchase'],
+    parameters: [new OA\Parameter(name: 'order', in: 'path', required: true, schema: new OA\Schema(type: 'integer'), example: 45)],
+    responses: [new OA\Response(response: 200, description: 'Verified order status'), new OA\Response(response: 401, description: 'Unauthenticated'), new OA\Response(response: 404, description: 'Order not found or not owned by current user')],
+)]
+#[OA\Get(
     path: '/nutrition-package-payments/{order}/callback',
     operationId: 'nutritionPackagePaymentCallback',
     description: 'Callback درگاه پرداخت پکیج تغذیه؛ فقط برای درگاه پرداخت آنلاین است و Flutter/Web هرگز نباید آن را صدا بزند. سرور بدون اعتماد به query/browser result، تراکنش را verify می کند و سپس با 302 به صفحه وب نتیجه /nutrition/membership/package-result هدایت می کند. نتیجه موفق شامل status=success، order، invoice، reference و endsAt است و نتیجه ناموفق status=failed و tracking دارد.',

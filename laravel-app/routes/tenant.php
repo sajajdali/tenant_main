@@ -182,6 +182,8 @@ Route::middleware([
                 ->name('tenant.api.app.nutrition.package-checkout.pay');
             Route::get('/summary', [NutritionPackagePurchaseController::class, 'mySummary'])
                 ->name('tenant.api.app.nutrition.package-checkout.summary');
+            Route::get('/orders/{order}', [NutritionPackagePurchaseController::class, 'orderStatus'])
+                ->name('tenant.api.app.nutrition.package-checkout.orders.show');
         });
         Route::middleware('auth:sanctum')->prefix('/nutrition/iap/cafebazaar')->group(function () {
             Route::get('/settings', [NutritionCafeBazaarPurchaseController::class, 'settings'])
@@ -287,6 +289,7 @@ Route::middleware([
     Route::get('/articles', SiteController::class)->name('tenant.articles');
     Route::get('/articles/{any}', SiteController::class)->where('any', '.*');
     Route::get('/nutrition', SiteController::class)->name('tenant.nutrition');
+    Route::get('/nutrition/membership/package-result', [NutritionPackagePurchaseController::class, 'resultPage'])->name('tenant.nutrition.package-payments.result');
     Route::get('/nutrition/{any}', SiteController::class)->where('any', '.*');
     Route::get('/store', SiteController::class)->name('tenant.store');
     Route::get('/store/{any}', SiteController::class)->where('any', '.*');

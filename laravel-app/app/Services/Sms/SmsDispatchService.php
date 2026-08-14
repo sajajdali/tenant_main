@@ -6,6 +6,7 @@ namespace App\Services\Sms;
 
 use App\Domain\Tenant\Models\SmsOutbound;
 use App\Domain\Tenant\Models\SmsSetting;
+use App\Domain\Tenant\Models\GeneralSetting;
 use App\Jobs\SendSmsOutboundJob;
 use App\Support\SmsPricing;
 use App\Support\SmsQueue;
@@ -22,7 +23,7 @@ class SmsDispatchService
 
     public function queue(array $payload): SmsOutbound
     {
-        $message = SmsPricing::normalizeMessage((string) ($payload['message'] ?? ''));
+        $message = SmsPricing::normalizeMessage($this->withAndroidWebAppUrl((string) ($payload['message'] ?? '')));
         $validationError = SmsPricing::validationError($message);
 
         if ($validationError !== null) {
@@ -55,6 +56,54 @@ class SmsDispatchService
             'error_message' => null,
             'sent_at' => null,
         ]);
+    }
+
+    /**
+     * Replaces only links generated for this tenant/application. External links
+     * intentionally remain untouched when an administrator has used them in a template.
+     */
+    private function withAndroidWebAppUrl(string $message): string
+    {
+        $rules = GeneralSetting::query()->value('booking_rules') ?? [];
+        $androidApp = is_array($rules['android_app'] ?? null) ? $rules['android_app'] : [];
+        $configuredUrl = trim((string) ($androidApp['web_app_url'] ?? ''));
+
+        if (! ($androidApp['enabled'] ?? false) || $configuredUrl === '' || filter_var($configuredUrl, FILTER_VALIDATE_URL) === false) {
+            return $message;
+        }
+
+        $defaultHost = parse_url(url('/'), PHP_URL_HOST);
+        $tenantHost = tenant()?->domains()->value('domain');
+        $tenantHost = is_string($tenantHost) ? parse_url(str_contains($tenantHost, '://') ? $tenantHost : 'https://'.$tenantHost, PHP_URL_HOST) : null;
+        $systemHosts = array_filter([$defaultHost, $tenantHost], static fn ($host): bool => is_string($host) && $host !== '');
+        $configuredBase = rtrim($configuredUrl, '/');
+
+        if ($systemHosts === [] || $configuredBase === '') {
+            return $message;
+        }
+
+        return (string) preg_replace_callback('/https?:\/\/[^\s<>"\']+/u', function (array $match) use ($systemHosts, $configuredBase): string {
+            $candidate = $match[0];
+            $suffix = '';
+
+            while ($candidate !== '' && preg_match('/[.,،؛!?]$/u', $candidate) === 1) {
+                $suffix = mb_substr($candidate, -1).$suffix;
+                $candidate = mb_substr($candidate, 0, -1);
+            }
+
+            if (! in_array(parse_url($candidate, PHP_URL_HOST), $systemHosts, true)) {
+                return $match[0];
+            }
+
+            $path = (string) (parse_url($candidate, PHP_URL_PATH) ?? '');
+            $query = parse_url($candidate, PHP_URL_QUERY);
+            $fragment = parse_url($candidate, PHP_URL_FRAGMENT);
+
+            return $configuredBase.$path
+                . (is_string($query) && $query !== '' ? '?'.$query : '')
+                . (is_string($fragment) && $fragment !== '' ? '#'.$fragment : '')
+                . $suffix;
+        }, $message);
     }
 
     public function dispatchNow(SmsSetting $setting, array $payload): array
@@ -98,7 +147,7 @@ class SmsDispatchService
 
     public function dispatchManyNow(SmsSetting $setting, array $payloads, string $message, array $context = []): array
     {
-        $message = SmsPricing::normalizeMessage($message);
+        $message = SmsPricing::normalizeMessage($this->withAndroidWebAppUrl($message));
         $validationError = SmsPricing::validationError($message);
         $resolvedProvider = (string) ($context['provider'] ?? $setting->provider);
         $resolvedSender = $context['sender'] ?? ($setting->credentials['sender'] ?? null);

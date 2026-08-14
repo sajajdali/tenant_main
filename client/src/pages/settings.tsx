@@ -407,6 +407,10 @@ export default function SettingsPage({ forcedTab }: SettingsPageProps) {
       hourlyBookingLimit: 4,
       customerCancellationCutoffHours: 2,
       appointmentAlertSound: DEFAULT_APPOINTMENT_ALERT_SOUND,
+      androidAppSettingsEnabled: false,
+      androidAppVersion: "",
+      androidWebAppUrl: "",
+      androidPaymentReturnUrl: "",
       registrationRequirements: getDefaultRegistrationRequirements(),
       smsEnabled: false,
       smsProvider: null,
@@ -3541,9 +3545,9 @@ export default function SettingsPage({ forcedTab }: SettingsPageProps) {
 
                             <div className="rounded-lg border bg-card/40 p-4 space-y-4">
                                 <div className="flex items-center justify-between gap-4">
-                                    <div className="space-y-1">
+                                    <div className="flex-1 space-y-1 text-start">
                                         <Label className="font-bold">{t("settings.apiCode.title")}</Label>
-                                        <p className="text-sm text-muted-foreground leading-7">
+                                        <p dir={dir} className="text-sm text-muted-foreground leading-7 [unicode-bidi:plaintext]">
                                             {t("settings.apiCode.descriptionBefore", { professional: labels.singular })} <CodeText>api code</CodeText> {t("settings.apiCode.descriptionAfter")}
                                         </p>
                                     </div>
@@ -3557,6 +3561,36 @@ export default function SettingsPage({ forcedTab }: SettingsPageProps) {
                                         }
                                     />
                                 </div>
+                            </div>
+
+                            <div className="rounded-xl border border-dashed border-border/60 bg-muted/20 p-4">
+                                <div className="flex items-center justify-between gap-4">
+                                    <div className="flex-1 space-y-1 text-start">
+                                        <Label className="text-sm font-medium text-muted-foreground">{t("settings.androidApp.title")}</Label>
+                                        <p dir={dir} className="text-xs leading-6 text-muted-foreground [unicode-bidi:plaintext]">{t("settings.androidApp.description")}</p>
+                                    </div>
+                                    <Switch
+                                        checked={paymentSettings.androidAppSettingsEnabled ?? false}
+                                        onCheckedChange={(checked) => setPaymentSettings((current) => ({ ...current, androidAppSettingsEnabled: checked }))}
+                                    />
+                                </div>
+
+                                {paymentSettings.androidAppSettingsEnabled && (
+                                    <div className="mt-4 grid gap-4 border-t border-border/50 pt-4 md:grid-cols-3">
+                                        <div className="space-y-2">
+                                            <Label>{t("settings.androidApp.version")}</Label>
+                                            <Input dir="ltr" value={paymentSettings.androidAppVersion ?? ""} onChange={(event) => setPaymentSettings((current) => ({ ...current, androidAppVersion: event.target.value }))} placeholder="1.0.0" />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label>{t("settings.androidApp.webAppUrl")}</Label>
+                                            <Input dir="ltr" type="url" value={paymentSettings.androidWebAppUrl ?? ""} onChange={(event) => setPaymentSettings((current) => ({ ...current, androidWebAppUrl: event.target.value }))} placeholder="https://app.example.com" />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label>{t("settings.androidApp.paymentReturnUrl")}</Label>
+                                            <Input dir="ltr" type="url" value={paymentSettings.androidPaymentReturnUrl ?? ""} onChange={(event) => setPaymentSettings((current) => ({ ...current, androidPaymentReturnUrl: event.target.value }))} placeholder="myapp://payment-result" />
+                                        </div>
+                                    </div>
+                                )}
                             </div>
 
                             <div className="rounded-2xl border border-border/70 bg-card/40 p-4 space-y-4">
