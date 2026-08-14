@@ -120,7 +120,7 @@ use OpenApi\Attributes as OA;
 #[OA\Post(
     path: '/api/v1/app/auth/login',
     operationId: 'customerAppLogin',
-    description: 'ارسال کد ورود به شماره موبایل کاربر tenant.',
+    description: 'ارسال کد ورود OTP چهاررقمی به شماره موبایل کاربر tenant. کلاینت نباید برای خواندن پیامک به API یا شماره فرستنده وابسته باشد: Android با SMS Retriever / SMS User Consent و وب با WebOTP API، فقط در صورت مجوز سیستم و پشتیبانی دستگاه، کد را از متن پیامک استخراج و در همان input قرار می دهد. در همه حالت ها کاربر باید بتواند کد را دستی وارد کند. مقدار data.code فقط در testMode=true قابل اعتماد و قابل نمایش برای توسعه است؛ در محیط واقعی null است و هرگز نباید در UI یا لاگ نمایش داده شود.',
     tags: ['Customer App Auth'],
     requestBody: new OA\RequestBody(
         required: true,
@@ -168,7 +168,7 @@ use OpenApi\Attributes as OA;
 #[OA\Post(
     path: '/api/v1/app/auth/verify',
     operationId: 'customerAppVerify',
-    description: 'تأیید کد OTP و صدور Bearer token برای اپلیکیشن.',
+    description: 'تأیید کد OTP و صدور Bearer token برای اپلیکیشن. Android/Web ممکن است code را خودکار در فیلد وارد کنند، اما درخواست verify فقط پس از تکمیل چهار رقم و ترجیحاً با تأیید صریح کاربر یا submit خودکار قابل‌دسترسی ارسال شود. code نباید در log، analytics یا URL ثبت شود.',
     tags: ['Customer App Auth'],
     requestBody: new OA\RequestBody(
         required: true,

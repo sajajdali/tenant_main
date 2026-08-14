@@ -652,7 +652,7 @@ use OpenApi\Attributes as OA;
 #[OA\Post(
     path: '/api/v1/app/membership/medical-conditions',
     operationId: 'customerAppMembershipStoreMedicalConditions',
-    description: 'ثبت لیست بیماری های کاربر در صفحه /nutrition/membership/medical-conditions. برای ثبت اینکه کاربر بیماری ندارد، medicalConditionsItems را آرایه خالی بفرستید.',
+    description: 'ثبت لیست بیماری های کاربر در صفحه /nutrition/membership/medical-conditions. برای ثبت اینکه کاربر بیماری ندارد، medicalConditionsItems را آرایه خالی بفرستید. UX اجباری Flutter: با انتخاب «بیماری خاصی ندارم» همان درخواست ارسال و مرحله بعد باز شود؛ هم زمان دکمه «ادامه» نیز فعال بماند. اگر کاربر بدون انتخاب موردی «ادامه» را زد، کلاینت باید دقیقاً همین payload خالی را ارسال کند. در نتیجه هیچ کاربری نباید تصور کند دکمه ادامه خراب است.',
     security: [['bearerAuth' => []]],
     tags: ['Membership'],
     requestBody: new OA\RequestBody(
