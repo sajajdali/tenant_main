@@ -3133,6 +3133,8 @@ export const faMessages = {
   "settings.offQueueBooking.title": "نوبت خارج از صف",
   "settings.offQueueBooking.description": "اگر فعال باشد، مدیر یا {{professional}} می‌تواند بدون انتخاب اسلات آماده، یک ساعت شروع دلخواه وارد کند و نوبت را ثبت کند.",
   "settings.onlinePayment.title": "پرداخت آنلاین",
+  "settings.customApp.title": "تنظیمات اپلیکیشن اختصاصی",
+  "settings.customApp.description": "فقط اگر سفارش اپلیکیشن اختصاصی داده‌اید این گزینه را فعال کنید.",
   "settings.androidApp.title": "فعال‌سازی تنظیمات اپلیکیشن اندروید",
   "settings.androidApp.description": "برای استفاده‌های محدود؛ با فعال‌سازی، تنظیمات اتصال اپلیکیشن نمایش داده می‌شود.",
   "settings.androidApp.version": "ورژن اپلیکیشن",

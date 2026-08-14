@@ -411,6 +411,7 @@ const getDefaultPaymentSettings = (): PaymentSettings => ({
   customerCancellationCutoffHours: 2,
   appointmentAlertSound: DEFAULT_APPOINTMENT_ALERT_SOUND,
   apiCodeEnabled: false,
+  customAppSettingsEnabled: false,
   androidAppSettingsEnabled: false,
   androidAppVersion: "",
   androidWebAppUrl: "",

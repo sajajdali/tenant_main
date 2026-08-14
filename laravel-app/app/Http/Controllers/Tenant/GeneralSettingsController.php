@@ -56,6 +56,7 @@ class GeneralSettingsController extends Controller
             'sandboxEnabled' => ['nullable', 'boolean'],
             'cafebazaarEnabled' => ['nullable', 'boolean'],
             'cafebazaarPublicKey' => ['nullable', 'string', 'max:8000'],
+            'customAppSettingsEnabled' => ['nullable', 'boolean'],
             'androidAppSettingsEnabled' => ['nullable', 'boolean'],
             'androidAppVersion' => ['nullable', 'string', 'max:64'],
             'androidWebAppUrl' => ['nullable', 'string', 'max:2048'],
@@ -224,6 +225,9 @@ class GeneralSettingsController extends Controller
         $bookingRules['appointment_alert_sound'] = (string) ($validated['appointmentAlertSound'] ?? ($bookingRules['appointment_alert_sound'] ?? 'classic'));
         $bookingRules['api_code_enabled'] = (bool) ($validated['apiCodeEnabled'] ?? false);
         $androidApp = is_array($bookingRules['android_app'] ?? null) ? $bookingRules['android_app'] : [];
+        $androidApp['settings_enabled'] = array_key_exists('customAppSettingsEnabled', $validated)
+            ? (bool) $validated['customAppSettingsEnabled']
+            : (bool) ($androidApp['settings_enabled'] ?? false);
         $androidApp['enabled'] = array_key_exists('androidAppSettingsEnabled', $validated)
             ? (bool) $validated['androidAppSettingsEnabled']
             : (bool) ($androidApp['enabled'] ?? false);
@@ -415,6 +419,7 @@ class GeneralSettingsController extends Controller
             'customerCancellationCutoffHours' => max(1, (int) ($bookingRules['customer_cancellation_cutoff_hours'] ?? 2)),
             'appointmentAlertSound' => (string) ($bookingRules['appointment_alert_sound'] ?? 'classic'),
             'apiCodeEnabled' => (bool) ($bookingRules['api_code_enabled'] ?? false),
+            'customAppSettingsEnabled' => (bool) (($bookingRules['android_app']['settings_enabled'] ?? false)),
             'androidAppSettingsEnabled' => (bool) (($bookingRules['android_app']['enabled'] ?? false)),
             'androidAppVersion' => (string) (($bookingRules['android_app']['version'] ?? '')),
             'androidWebAppUrl' => (string) (($bookingRules['android_app']['web_app_url'] ?? '')),

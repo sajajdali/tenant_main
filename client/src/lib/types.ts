@@ -1273,6 +1273,7 @@ export interface PaymentSettings {
   customerCancellationCutoffHours?: number;
   appointmentAlertSound?: AppointmentAlertSoundKey;
   apiCodeEnabled?: boolean;
+  customAppSettingsEnabled?: boolean;
   androidAppSettingsEnabled?: boolean;
   androidAppVersion?: string;
   androidWebAppUrl?: string;

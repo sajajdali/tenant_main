@@ -407,6 +407,7 @@ export default function SettingsPage({ forcedTab }: SettingsPageProps) {
       hourlyBookingLimit: 4,
       customerCancellationCutoffHours: 2,
       appointmentAlertSound: DEFAULT_APPOINTMENT_ALERT_SOUND,
+      customAppSettingsEnabled: false,
       androidAppSettingsEnabled: false,
       androidAppVersion: "",
       androidWebAppUrl: "",
@@ -3568,29 +3569,63 @@ export default function SettingsPage({ forcedTab }: SettingsPageProps) {
                             <div className="rounded-xl border border-dashed border-border/60 bg-muted/20 p-4">
                                 <div className="flex items-center justify-between gap-4">
                                     <div className="flex-1 space-y-1 text-start">
-                                        <Label className="text-sm font-medium text-muted-foreground">{t("settings.androidApp.title")}</Label>
-                                        <p dir={dir} className="text-xs leading-6 text-muted-foreground [unicode-bidi:plaintext]">{t("settings.androidApp.description")}</p>
+                                        <Label className="text-sm font-medium text-muted-foreground">{t("settings.customApp.title")}</Label>
+                                        <p dir={dir} className="text-xs leading-6 text-muted-foreground [unicode-bidi:plaintext]">{t("settings.customApp.description")}</p>
                                     </div>
                                     <Switch
-                                        checked={paymentSettings.androidAppSettingsEnabled ?? false}
-                                        onCheckedChange={(checked) => setPaymentSettings((current) => ({ ...current, androidAppSettingsEnabled: checked }))}
+                                        checked={paymentSettings.customAppSettingsEnabled ?? false}
+                                        onCheckedChange={(checked) => setPaymentSettings((current) => ({ ...current, customAppSettingsEnabled: checked }))}
                                     />
                                 </div>
 
-                                {paymentSettings.androidAppSettingsEnabled && (
-                                    <div className="mt-4 grid gap-4 border-t border-border/50 pt-4 md:grid-cols-3">
-                                        <div className="space-y-2">
-                                            <Label>{t("settings.androidApp.version")}</Label>
-                                            <Input dir="ltr" value={paymentSettings.androidAppVersion ?? ""} onChange={(event) => setPaymentSettings((current) => ({ ...current, androidAppVersion: event.target.value }))} placeholder="1.0.0" />
+                                {paymentSettings.customAppSettingsEnabled && (
+                                    <div className="mt-4 space-y-4 border-t border-border/50 pt-4">
+                                        <div className="flex items-center justify-between gap-4">
+                                            <div className="flex-1 space-y-1 text-start">
+                                                <Label className="text-sm font-medium text-muted-foreground">{t("settings.androidApp.title")}</Label>
+                                                <p dir={dir} className="text-xs leading-6 text-muted-foreground [unicode-bidi:plaintext]">{t("settings.androidApp.description")}</p>
+                                            </div>
+                                            <Switch
+                                                checked={paymentSettings.androidAppSettingsEnabled ?? false}
+                                                onCheckedChange={(checked) => setPaymentSettings((current) => ({ ...current, androidAppSettingsEnabled: checked }))}
+                                            />
                                         </div>
-                                        <div className="space-y-2">
-                                            <Label>{t("settings.androidApp.webAppUrl")}</Label>
-                                            <Input dir="ltr" type="url" value={paymentSettings.androidWebAppUrl ?? ""} onChange={(event) => setPaymentSettings((current) => ({ ...current, androidWebAppUrl: event.target.value }))} placeholder="https://app.example.com" />
+
+                                        {paymentSettings.androidAppSettingsEnabled && (
+                                            <div className="grid gap-4 border-t border-border/50 pt-4 md:grid-cols-3">
+                                                <div className="space-y-2">
+                                                    <Label>{t("settings.androidApp.version")}</Label>
+                                                    <Input dir="ltr" value={paymentSettings.androidAppVersion ?? ""} onChange={(event) => setPaymentSettings((current) => ({ ...current, androidAppVersion: event.target.value }))} placeholder="1.0.0" />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <Label>{t("settings.androidApp.webAppUrl")}</Label>
+                                                    <Input dir="ltr" type="url" value={paymentSettings.androidWebAppUrl ?? ""} onChange={(event) => setPaymentSettings((current) => ({ ...current, androidWebAppUrl: event.target.value }))} placeholder="https://app.example.com" />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <Label>{t("settings.androidApp.paymentReturnUrl")}</Label>
+                                                    <Input dir="ltr" type="url" value={paymentSettings.androidPaymentReturnUrl ?? ""} onChange={(event) => setPaymentSettings((current) => ({ ...current, androidPaymentReturnUrl: event.target.value }))} placeholder="myapp://payment-result" />
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        <div className="flex items-center justify-between gap-4 border-t border-border/50 pt-4">
+                                            <div className="flex-1 space-y-1 text-start">
+                                                <Label className="text-sm font-medium text-muted-foreground">{t("settings.onlinePayment.cafebazaarTitle")}</Label>
+                                                <p dir={dir} className="text-xs leading-6 text-muted-foreground [unicode-bidi:plaintext]">{t("settings.onlinePayment.cafebazaarDescription")}</p>
+                                            </div>
+                                            <Switch
+                                                checked={paymentSettings.cafebazaarEnabled ?? false}
+                                                onCheckedChange={(checked) => setPaymentSettings((current) => ({ ...current, cafebazaarEnabled: checked }))}
+                                            />
                                         </div>
-                                        <div className="space-y-2">
-                                            <Label>{t("settings.androidApp.paymentReturnUrl")}</Label>
-                                            <Input dir="ltr" type="url" value={paymentSettings.androidPaymentReturnUrl ?? ""} onChange={(event) => setPaymentSettings((current) => ({ ...current, androidPaymentReturnUrl: event.target.value }))} placeholder="myapp://payment-result" />
-                                        </div>
+
+                                        {paymentSettings.cafebazaarEnabled && (
+                                            <div className="space-y-2 border-t border-border/50 pt-4">
+                                                <Label>{t("settings.onlinePayment.cafebazaarPublicKey")}</Label>
+                                                <Textarea dir="ltr" value={paymentSettings.cafebazaarPublicKey ?? ""} onChange={(event) => setPaymentSettings((current) => ({ ...current, cafebazaarPublicKey: event.target.value }))} placeholder="MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8A..." className="min-h-[120px] font-mono text-xs" />
+                                                <p className="text-xs text-muted-foreground">{t("settings.onlinePayment.cafebazaarPublicKeyHint")}</p>
+                                            </div>
+                                        )}
                                     </div>
                                 )}
                             </div>
@@ -3690,37 +3725,6 @@ export default function SettingsPage({ forcedTab }: SettingsPageProps) {
                                     }
                                 />
                             </div>
-
-                            <div className="flex items-center justify-between rounded-lg border bg-card/30 p-4">
-                                <div className="space-y-1">
-                                    <Label className="font-bold">{t("settings.onlinePayment.cafebazaarTitle")}</Label>
-                                    <p className="text-sm text-muted-foreground">
-                                        {t("settings.onlinePayment.cafebazaarDescription")}
-                                    </p>
-                                </div>
-                                <Switch
-                                    checked={paymentSettings.cafebazaarEnabled ?? false}
-                                    onCheckedChange={(checked) =>
-                                        setPaymentSettings((current) => ({ ...current, cafebazaarEnabled: checked }))
-                                    }
-                                />
-                            </div>
-
-                            {paymentSettings.cafebazaarEnabled && (
-                                <div className="space-y-2">
-                                    <Label>{t("settings.onlinePayment.cafebazaarPublicKey")}</Label>
-                                    <Textarea
-                                        dir="ltr"
-                                        value={paymentSettings.cafebazaarPublicKey ?? ""}
-                                        onChange={(event) =>
-                                            setPaymentSettings((current) => ({ ...current, cafebazaarPublicKey: event.target.value }))
-                                        }
-                                        placeholder="MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8A..."
-                                        className="min-h-[120px] font-mono text-xs"
-                                    />
-                                    <p className="text-xs text-muted-foreground">{t("settings.onlinePayment.cafebazaarPublicKeyHint")}</p>
-                                </div>
-                            )}
 
                             {paymentSettings.enabled && (
                                 <>

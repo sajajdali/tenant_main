@@ -3135,6 +3135,8 @@ export const deMessages = {
   "settings.offQueueBooking.title": "Termin ausserhalb der Warteschlange",
   "settings.offQueueBooking.description": "Wenn aktiv, kann ein Admin oder {{professional}} eine eigene Startzeit eingeben und ohne vorbereiteten Slot buchen.",
   "settings.onlinePayment.title": "Online-Zahlung",
+  "settings.customApp.title": "Einstellungen für individuelle Apps",
+  "settings.customApp.description": "Aktivieren Sie diese Option nur, wenn Sie eine individuelle App bestellt haben.",
   "settings.androidApp.title": "Android-App-Einstellungen aktivieren",
   "settings.androidApp.description": "Für seltene Nutzung; nach der Aktivierung werden die App-Verbindungseinstellungen angezeigt.",
   "settings.androidApp.version": "App-Version",

@@ -3135,6 +3135,8 @@ export const arMessages = {
   "settings.offQueueBooking.title": "موعد خارج الدور",
   "settings.offQueueBooking.description": "عند التفعيل، يمكن للمدير أو {{professional}} إدخال وقت بداية مخصص وتسجيل موعد دون اختيار فترة جاهزة.",
   "settings.onlinePayment.title": "الدفع الإلكتروني",
+  "settings.customApp.title": "إعدادات التطبيق المخصص",
+  "settings.customApp.description": "فعّل هذا الخيار فقط إذا طلبت تطبيقًا مخصصًا.",
   "settings.androidApp.title": "تفعيل إعدادات تطبيق أندرويد",
   "settings.androidApp.description": "للاستخدام المحدود؛ عند التفعيل تظهر إعدادات اتصال التطبيق.",
   "settings.androidApp.version": "إصدار التطبيق",

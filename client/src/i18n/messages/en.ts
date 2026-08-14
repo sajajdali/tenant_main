@@ -3135,6 +3135,8 @@ export const enMessages = {
   "settings.offQueueBooking.title": "Off-queue appointment",
   "settings.offQueueBooking.description": "When enabled, an admin or {{professional}} can enter a custom start time and book without choosing a prepared slot.",
   "settings.onlinePayment.title": "Online payment",
+  "settings.customApp.title": "Custom app settings",
+  "settings.customApp.description": "Enable this only if you have ordered a custom application.",
   "settings.androidApp.title": "Enable Android app settings",
   "settings.androidApp.description": "For limited use; enabling this shows the app connection settings.",
   "settings.androidApp.version": "App version",
