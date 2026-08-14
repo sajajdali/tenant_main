@@ -68,6 +68,9 @@ laravel-app/storage/*
 
 .local/
 
+# Local implementation notes and handoff documents
+/docs/
+
 # macOS archive metadata
 __MACOSX/
 ._*

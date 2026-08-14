@@ -137,10 +137,19 @@ class NutritionPackagePurchaseController extends Controller
 
     private function appendOrderToUrl(string $url, int $orderId): string
     {
-        if ($orderId <= 0) return $url;
-        $separator = str_contains($url, '?') ? '&' : '?';
+        $parts = parse_url($url);
+        $scheme = $parts['scheme'] ?? 'https';
+        $host = $parts['host'] ?? '';
+        $port = isset($parts['port']) ? ':'.$parts['port'] : '';
 
-        return rtrim($url, '?&').$separator.'order='.rawurlencode((string) $orderId);
+        if ($host === '') {
+            return $url;
+        }
+
+        // The configured value identifies the web app host. The Flutter return
+        // route is always stable, so it cannot accidentally become `/?order=…`.
+        return $scheme.'://'.$host.$port.'/payment-result'
+            . ($orderId > 0 ? '?order='.rawurlencode((string) $orderId) : '');
     }
 
     public function mySummary(Request $request): JsonResponse
