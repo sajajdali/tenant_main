@@ -67,3 +67,7 @@ laravel-app/storage/*
 *.sqlite3
 
 .local/
+
+# macOS archive metadata
+__MACOSX/
+._*
