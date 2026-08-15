@@ -6607,6 +6607,8 @@ export const faMessages = {
   "panelDashboard.nutritionCards.requests.title": "رژیم‌های درخواستی",
   "panelDashboard.nutritionCards.requests.description": "لیست درخواست‌های ثبت‌شده، وضعیت بررسی و شروع هر پرونده رژیم درمانی را از این بخش ببینید.",
   "panelDashboard.nutritionCards.prescribe.title": "تجویز رژیم",
+  "panelDashboard.nutritionCards.users.title": "کاربران رژیم",
+  "panelDashboard.nutritionCards.users.description": "فهرست کاربران عضو سامانه رژیم، پکیج و وضعیت رژیم آن‌ها.",
   "panelDashboard.nutritionCards.prescribe.description": "برای کاربر موجود یا کاربر جدید، پرونده رژیم را مرحله‌به‌مرحله تکمیل کنید و بعداً هر سوال را جداگانه ویرایش کنید.",
   "panelDashboard.nutritionCards.tokens.title": "آمار رژیم و توکن",
   "panelDashboard.nutritionCards.tokens.description": "موجودی توکن، خرید توکن، گزارش مصرف و آمار رژیم آنلاین و آفلاین را از این بخش ببینید.",

@@ -6609,6 +6609,8 @@ export const enMessages = {
   "panelDashboard.nutritionCards.requests.title": "Diet requests",
   "panelDashboard.nutritionCards.requests.description": "View submitted requests, review status, and each diet therapy case from this section.",
   "panelDashboard.nutritionCards.prescribe.title": "Prescribe diet",
+  "panelDashboard.nutritionCards.users.title": "Diet users",
+  "panelDashboard.nutritionCards.users.description": "Registered diet users, their packages, and diet status.",
   "panelDashboard.nutritionCards.prescribe.description": "Complete a diet case step by step for an existing or new user, then edit each question separately later.",
   "panelDashboard.nutritionCards.tokens.title": "Diet and token stats",
   "panelDashboard.nutritionCards.tokens.description": "View token balance, token purchases, usage reports, and online/offline diet stats here.",

@@ -29,6 +29,7 @@ import PanelNutritionRequestDetailPage from "@/nutrition/pages/panel-nutrition-r
 import PanelNutritionRequestReplacementsPage from "@/nutrition/pages/panel-nutrition-request-replacements";
 import PanelNutritionRequestTrackingPage from "@/nutrition/pages/panel-nutrition-request-tracking";
 import PanelNutritionPrescribeSelectUserPage from "@/nutrition/pages/panel-nutrition-prescribe-select-user";
+import PanelNutritionUsersPage from "@/nutrition/pages/panel-nutrition-users";
 import PanelNutritionPrescribeUserProfilePage from "@/nutrition/pages/panel-nutrition-prescribe-user-profile";
 import PanelNutritionPrescribeUserPage from "@/nutrition/pages/panel-nutrition-prescribe-user";
 import PanelNutritionPrescribeStepPage from "@/nutrition/pages/panel-nutrition-prescribe-step";
@@ -152,6 +153,7 @@ export function getNutritionRouteDefs(enabled: boolean) {
     <Route key="panel-nutrition-landing" path="/panel/nutrition/landing" component={PanelNutritionLandingSettingsPage} />,
     <Route key="panel-nutrition-requests" path="/panel/nutrition/requests" component={PanelNutritionRequestsPage} />,
     <Route key="panel-nutrition-prescribe-select" path="/panel/nutrition/prescribe" component={PanelNutritionPrescribeSelectUserPage} />,
+    <Route key="panel-nutrition-users" path="/panel/nutrition/users" component={PanelNutritionUsersPage} />,
     <Route key="panel-nutrition-prescribe-user-profile" path="/panel/nutrition/prescribe/users/:mobile" component={PanelNutritionPrescribeUserProfilePage} />,
     <Route key="panel-nutrition-prescribe-user" path="/panel/nutrition/prescribe/user" component={PanelNutritionPrescribeUserPage} />,
     <Route key="panel-nutrition-prescribe-packages-branch" path="/panel/nutrition/prescribe/packages/:packageId" component={PanelNutritionPrescribePackagesPage} />,

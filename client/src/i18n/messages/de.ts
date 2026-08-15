@@ -6609,6 +6609,8 @@ export const deMessages = {
   "panelDashboard.nutritionCards.requests.title": "Diät-Anfragen",
   "panelDashboard.nutritionCards.requests.description": "Sehen Sie hier eingereichte Anfragen, Prüfstatus und alle Fälle der Diättherapie ein.",
   "panelDashboard.nutritionCards.prescribe.title": "Diät vorschreiben",
+  "panelDashboard.nutritionCards.users.title": "Ernährungsnutzer",
+  "panelDashboard.nutritionCards.users.description": "Registrierte Ernährungsnutzer, ihre Pakete und ihr Ernährungsstatus.",
   "panelDashboard.nutritionCards.prescribe.description": "Füllen Sie eine Diät Fall Schritt für Schritt für einen bestehenden oder neuen Benutzer, dann bearbeiten Sie jede Frage später separat.",
   "panelDashboard.nutritionCards.tokens.title": "Diät und Token-Statistik",
   "panelDashboard.nutritionCards.tokens.description": "Sehen Sie Token Balance, Token Käufe, Nutzungsberichte und Online / Offline-Diätsstatistik hier.",

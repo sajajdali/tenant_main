@@ -593,6 +593,13 @@ export default function PanelPage() {
     ...(isNutritionExpertAudience
       ? [
           {
+            title: t("panelDashboard.nutritionCards.users.title"),
+            description: t("panelDashboard.nutritionCards.users.description"),
+            href: "/panel/nutrition/users",
+            icon: Users,
+            disabled: supportExpired,
+          } satisfies PanelCard,
+          {
             title: t("panelDashboard.nutritionCards.packageOrders.title"),
             description: t("panelDashboard.nutritionCards.packageOrders.description"),
             href: "/panel/nutrition/package-orders",
@@ -676,6 +683,7 @@ export default function PanelPage() {
     const featureByHref: Record<string, string> = {
       "/panel/nutrition/landing": "nutrition_landing",
       "/panel/nutrition/requests": "nutrition_requests",
+      "/panel/nutrition/users": "nutrition_requests",
       "/panel/nutrition/tokens": "nutrition_tokens",
       "/panel/nutrition/settings": "nutrition_requests",
       "/panel/nutrition/exercises": "nutrition_templates",

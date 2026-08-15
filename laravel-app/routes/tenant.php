@@ -499,7 +499,9 @@ Route::middleware([
         Route::delete('/nutrition/diet-requests/admin/{nutritionDietRequest}/expert-file', [NutritionDietRequestController::class, 'adminDeleteExpertFilePrescription']);
         Route::post('/nutrition/admin-prescribe/profile', [NutritionAdminUserController::class, 'savePrescribeProfile']);
         Route::post('/nutrition/admin-prescribe/request', [NutritionAdminUserController::class, 'createDietRequest']);
+        Route::get('/nutrition/admin-users', [NutritionAdminUserController::class, 'index']);
         Route::get('/nutrition/admin-users/{mobile}', [NutritionAdminUserController::class, 'show']);
+        Route::put('/nutrition/admin-users/{mobile}', [NutritionAdminUserController::class, 'updateUser']);
         Route::post('/nutrition/admin-users/{mobile}/grant-package', [NutritionAdminUserController::class, 'grantPackage']);
         Route::put('/nutrition/admin-users/{mobile}/subscriptions/{subscription}/dates', [NutritionAdminUserController::class, 'updateSubscriptionDates']);
         Route::post('/nutrition/admin-users/{mobile}/subscriptions/{subscription}/credits', [NutritionAdminUserController::class, 'adjustSubscriptionCredits']);

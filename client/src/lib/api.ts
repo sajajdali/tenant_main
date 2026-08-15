@@ -2207,6 +2207,12 @@ export const api = {
   },
 
   nutritionAdminUsers: {
+    list: async (page = 1, search = ""): Promise<ApiResponse<{ items: Array<{ id: string; fullName: string; mobile: string; email?: string | null; registeredAt?: string | null; activePackage?: { name: string; endsAt?: string | null } | null; currentDiet?: { summary: string; endsAt?: string | null } | null; weightChangeKg?: number | null }>; currentPage: number; lastPage: number; total: number }>> => {
+      const params = new URLSearchParams({ page: String(page), search: normalizeDigits(search).trim() });
+      return getJson(`/api/v1/nutrition/admin-users?${params.toString()}`);
+    },
+    updateUser: async (mobile: string, payload: { fullName: string; email?: string | null }): Promise<ApiResponse<{}>> => requestJson(`/api/v1/nutrition/admin-users/${encodeURIComponent(normalizeDigits(mobile))}`, "PUT", { full_name: payload.fullName, email: payload.email }),
+
     savePrescribeProfile: async (payload: {
       fullName: string;
       mobile: string;

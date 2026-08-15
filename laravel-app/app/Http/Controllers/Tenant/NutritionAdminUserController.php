@@ -8,6 +8,7 @@ use App\Domain\Tenant\Models\NutritionDietPrescription;
 use App\Domain\Tenant\Models\NutritionDietRequest;
 use App\Domain\Tenant\Models\NutritionDietTemplate;
 use App\Domain\Tenant\Models\NutritionPackage;
+use App\Domain\Tenant\Models\NutritionPackageOrder;
 use App\Domain\Tenant\Models\NutritionPackageSubscription;
 use App\Domain\Tenant\Models\NutritionProfile;
 use App\Domain\Tenant\Models\TenantUser;
@@ -32,6 +33,58 @@ class NutritionAdminUserController extends Controller
         private readonly NutritionPackagePaymentService $packageService,
         private readonly NutritionDietRequestSettingsService $settings,
     ) {}
+
+    public function index(Request $request): JsonResponse
+    {
+        $this->ensureAdmin($request);
+
+        $validated = $request->validate([
+            'page' => ['nullable', 'integer', 'min:1'],
+            'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
+            'search' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        $search = trim((string) ($validated['search'] ?? ''));
+        $users = TenantUser::query()
+            ->where('role', 'customer')
+            ->where(function ($query): void {
+                $query->whereExists(fn ($subquery) => $subquery->selectRaw('1')->from('nutrition_profiles')->whereColumn('nutrition_profiles.user_id', 'users.id'))
+                    ->orWhereExists(fn ($subquery) => $subquery->selectRaw('1')->from('nutrition_package_subscriptions')->whereColumn('nutrition_package_subscriptions.user_id', 'users.id'))
+                    ->orWhereExists(fn ($subquery) => $subquery->selectRaw('1')->from('nutrition_diet_prescriptions')->whereColumn('nutrition_diet_prescriptions.user_id', 'users.id'));
+            })
+            ->when($search !== '', function ($query) use ($search): void {
+                $digits = InputNormalizer::digits($search);
+                $query->where(fn ($nested) => $nested->where('name', 'like', "%{$search}%")->orWhere('mobile', 'like', "%{$digits}%"));
+            })
+            ->with(['nutritionProfile.selectedPackage'])
+            ->latest('created_at')
+            ->paginate((int) ($validated['per_page'] ?? 25));
+
+        $items = collect($users->items())->map(function (TenantUser $user): array {
+            $subscription = NutritionPackageSubscription::query()->with('package')->where('user_id', $user->id)->where('status', 'active')->whereDate('ends_at', '>=', now()->toDateString())->latest('ends_at')->first();
+            $diet = NutritionDietPrescription::query()
+                ->with('request:id,diet_template_name')
+                ->where('user_id', $user->id)
+                ->where('is_current', true)
+                ->latest('published_at')
+                ->first();
+            $firstWeight = NutritionDietPrescription::query()->where('user_id', $user->id)->orderBy('started_at')->value('current_weight_kg');
+            $currentWeight = $user->nutritionProfile?->weight_kg;
+
+            return [
+                'id' => (string) $user->id,
+                'fullName' => (string) ($user->name ?: 'بدون نام'),
+                'mobile' => (string) $user->mobile,
+                'email' => $user->email,
+                'registeredAt' => $user->created_at?->toIso8601String(),
+                'activePackage' => $subscription ? ['name' => (string) ($subscription->package?->name ?: 'پکیج'), 'endsAt' => $subscription->ends_at?->toDateString()] : null,
+                'currentDiet' => $diet ? ['summary' => (string) ($diet->request?->diet_template_name ?: $diet->summary_text ?: 'رژیم فعال'), 'endsAt' => $diet->ends_at?->toDateString()] : null,
+                'weightChangeKg' => $firstWeight !== null && $currentWeight !== null ? round((float) $currentWeight - (float) $firstWeight, 2) : null,
+            ];
+        })->values();
+
+        return response()->json(['success' => true, 'data' => ['items' => $items, 'currentPage' => $users->currentPage(), 'lastPage' => $users->lastPage(), 'total' => $users->total()]]);
+    }
 
     public function show(Request $request, string $mobile): JsonResponse
     {
@@ -60,6 +113,11 @@ class NutritionAdminUserController extends Controller
             ->whereIn('status', ['sent', 'in_progress', 'not_sent'])
             ->latest('created_at')
             ->latest('id')
+            ->get();
+        $orders = NutritionPackageOrder::query()
+            ->with('package')
+            ->where('user_id', $user->id)
+            ->latest('created_at')
             ->get();
 
         $firstStartedAt = NutritionDietPrescription::query()
@@ -127,6 +185,15 @@ class NutritionAdminUserController extends Controller
                     'mindsetAnswers' => $profile->mindset_answers,
                 ] : null,
                 'subscription' => $this->packageService->serializeSubscription($activeSubscription),
+                'orders' => $orders->map(fn (NutritionPackageOrder $order): array => [
+                    'id' => (string) $order->id,
+                    'status' => (string) $order->status,
+                    'packageName' => (string) ($order->package?->name ?: 'پکیج رژیم'),
+                    'payableAmount' => (int) $order->payable_amount,
+                    'referenceId' => $order->reference_id,
+                    'paidAt' => $order->paid_at?->toIso8601String(),
+                    'createdAt' => $order->created_at?->toIso8601String(),
+                ])->values()->all(),
                 'activeRequests' => $activeRequests->map(function (NutritionDietRequest $dietRequest): array {
                     $hasPendingUnpublishedPrescription = $dietRequest->prescriptions->contains(
                         fn (NutritionDietPrescription $prescription): bool => $prescription->published_at === null,
@@ -183,6 +250,17 @@ class NutritionAdminUserController extends Controller
                 ])->values()->all(),
             ],
         ]);
+    }
+
+    public function updateUser(Request $request, string $mobile): JsonResponse
+    {
+        $this->ensureAdmin($request);
+        $normalizedMobile = InputNormalizer::mobile($mobile);
+        abort_unless($normalizedMobile, 404);
+        $validated = $request->validate(['full_name' => ['required', 'string', 'max:255'], 'email' => ['nullable', 'email', 'max:255']]);
+        $user = TenantUser::query()->where('mobile', $normalizedMobile)->firstOrFail();
+        $user->forceFill(['name' => trim($validated['full_name']), 'email' => blank($validated['email'] ?? null) ? null : $validated['email']])->save();
+        return response()->json(['success' => true, 'message' => 'اطلاعات کاربر به‌روزرسانی شد.']);
     }
 
     public function grantPackage(Request $request, string $mobile): JsonResponse

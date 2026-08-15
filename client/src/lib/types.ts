@@ -324,6 +324,15 @@ export interface NutritionAdminUserProfilePayload {
     mindsetAnswers?: Record<string, string> | null;
   } | null;
   subscription?: NutritionPackageSubscription | null;
+  orders: Array<{
+    id: string;
+    status: string;
+    packageName: string;
+    payableAmount: number;
+    referenceId?: string | null;
+    paidAt?: string | null;
+    createdAt?: string | null;
+  }>;
   activeRequests: Array<{
     id: string;
     requestType: "ai" | "expert";
