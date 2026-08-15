@@ -405,8 +405,8 @@ class SmsTopUpPaymentService
         try {
             $remote = $this->maliart->create([
                 'order_id' => (string) $payment->invoice_number,
-                'amount' => MaliartPaymentClient::amountAsRial((int) $payment->payable_amount),
-                'currency' => 'IRR',
+                'amount' => (int) $payment->payable_amount,
+                'currency' => 'IRT',
                 'type' => 'sms_credit_topup',
                 'description' => $description,
                 'return_url' => $callbackUrl,

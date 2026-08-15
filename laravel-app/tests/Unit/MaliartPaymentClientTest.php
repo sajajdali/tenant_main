@@ -91,8 +91,4 @@ class MaliartPaymentClientTest extends TestCase
         $this->assertSame(125000, MaliartPaymentClient::amountAsToman(1250000, 'RIAL'));
     }
 
-    public function test_it_converts_internal_toman_amounts_to_bank_rial(): void
-    {
-        $this->assertSame(1250000, MaliartPaymentClient::amountAsRial(125000));
-    }
 }

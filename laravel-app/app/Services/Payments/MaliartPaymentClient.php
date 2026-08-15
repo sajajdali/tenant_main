@@ -12,16 +12,6 @@ use RuntimeException;
 
 class MaliartPaymentClient
 {
-    /**
-     * Amounts inside the application are stored in toman. Maliart receives
-     * rial, while its status API may return either rial or toman for legacy
-     * payments. Keep this conversion at the gateway boundary only.
-     */
-    public static function amountAsRial(int $amount): int
-    {
-        return $amount * 10;
-    }
-
     public static function amountAsToman(int $amount, ?string $currency): int
     {
         $normalizedCurrency = strtoupper(trim((string) $currency));
