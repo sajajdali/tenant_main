@@ -12,7 +12,7 @@ use Tests\TestCase;
 
 class MaliartTenantPaymentServiceTest extends TestCase
 {
-    public function test_it_sends_internal_toman_amounts_to_maliart_as_irt(): void
+    public function test_it_sends_internal_toman_amounts_to_maliart_as_rial(): void
     {
         $client = new class extends MaliartPaymentClient {
             public array $payload = [];
@@ -59,8 +59,8 @@ class MaliartTenantPaymentServiceTest extends TestCase
             '09120000000',
         );
 
-        $this->assertSame(125000, $client->payload['amount']);
-        $this->assertSame('IRT', $client->payload['currency']);
+        $this->assertSame(1250000, $client->payload['amount']);
+        $this->assertSame('IRR', $client->payload['currency']);
     }
 
     public function test_it_accepts_rial_amounts_returned_from_bank_status(): void

@@ -25,8 +25,8 @@ class TenantMaliartGateway
     {
         $remote = $this->client->create([
             'order_id' => $orderId,
-            'amount' => $amount,
-            'currency' => 'IRT',
+            'amount' => MaliartPaymentClient::amountAsRial($amount),
+            'currency' => 'IRR',
             'type' => $type,
             'description' => $description,
             'return_url' => $returnUrl,

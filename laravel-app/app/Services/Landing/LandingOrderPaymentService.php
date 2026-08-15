@@ -124,8 +124,8 @@ class LandingOrderPaymentService
             try {
                 $remote = $this->maliart->create([
                     'order_id' => (string) $payment->invoice_number,
-                    'amount' => (int) $payment->amount,
-                    'currency' => 'IRT',
+                    'amount' => MaliartPaymentClient::amountAsRial((int) $payment->amount),
+                    'currency' => 'IRR',
                     'type' => 'landing_order',
                     'description' => 'پرداخت سفارش لندینگ',
                     'return_url' => $callbackUrl,
@@ -349,8 +349,10 @@ class LandingOrderPaymentService
         $remote = $this->maliart->status($remotePaymentId);
         if (
             (string) ($remote['order_id'] ?? '') !== (string) $payment->invoice_number
-            || (int) ($remote['amount'] ?? 0) !== (int) $payment->amount
-            || (string) ($remote['currency'] ?? '') !== 'IRT'
+            || MaliartPaymentClient::amountAsToman(
+                (int) ($remote['amount'] ?? 0),
+                (string) ($remote['currency'] ?? ''),
+            ) !== (int) $payment->amount
         ) {
             $payment->update(['status' => LandingOrderPayment::STATUS_FAILED, 'failure_reason' => 'اطلاعات پرداخت با سفارش مطابقت ندارد.']);
             throw new RuntimeException('اطلاعات پرداخت با سفارش مطابقت ندارد.');
