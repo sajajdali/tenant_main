@@ -17,6 +17,7 @@ use App\Support\TenantSandboxMode;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Validation\ValidationException;
 use Shetabit\Multipay\Exceptions\InvalidPaymentException;
 use Shetabit\Multipay\Invoice;
@@ -173,6 +174,11 @@ class NutritionPackagePaymentService
             ];
         }
 
+        return $this->startGatewayPayment($order, $user, $package, $settings, $callbackUrlTemplate);
+    }
+
+    private function startGatewayPayment(NutritionPackageOrder $order, TenantUser $user, NutritionPackage $package, array $settings, string $callbackUrlTemplate): array
+    {
         $callbackUrl = str_replace(['{order}', '__ORDER__'], (string) $order->id, $callbackUrlTemplate);
 
         if ((string) $order->gateway === 'maliart') {
@@ -209,10 +215,20 @@ class NutritionPackagePaymentService
             ]);
         });
 
+        $redirectForm = $paymentManager->pay()->jsonSerialize();
+        $meta = is_array($order->meta_json) ? $order->meta_json : [];
+        $meta['gateway_redirect'] = $redirectForm;
+        $order->update(['meta_json' => $meta]);
+
         return [
             'mode' => 'gateway',
             'order' => $this->serializeOrder($order->fresh(['package', 'subscription', 'discountCode'])),
-            'redirectForm' => $paymentManager->pay()->jsonSerialize(),
+            'paymentUrl' => URL::temporarySignedRoute(
+                'tenant.nutrition.package-payments.redirect',
+                now()->addMinutes(30),
+                ['order' => $order->id],
+            ),
+            'redirectForm' => $redirectForm,
         ];
     }
 
@@ -220,6 +236,12 @@ class NutritionPackagePaymentService
     {
         if ($order->status === 'paid') {
             return $order->fresh(['package', 'subscription', 'discountCode']);
+        }
+
+        if ($order->status !== 'pending') {
+            throw ValidationException::withMessages([
+                'payment' => __('tenant.nutrition.package_payment_retry_not_available'),
+            ]);
         }
 
         if ((string) $order->gateway === 'maliart') {
@@ -254,6 +276,86 @@ class NutritionPackagePaymentService
         }
 
         return $this->markSuccessful($order, (string) $receipt->getReferenceId())->fresh(['package', 'subscription', 'discountCode']);
+    }
+
+    /**
+     * Creates a new payment attempt from an unpaid order's immutable purchase snapshot.
+     * The original transaction is never sent to a gateway again.
+     */
+    public function retry(TenantUser $user, NutritionPackageOrder $originalOrder, string $callbackUrlTemplate = ''): array
+    {
+        $originalOrder->loadMissing('package');
+
+        if ((int) $originalOrder->user_id !== (int) $user->id) {
+            abort(404);
+        }
+
+        if (! in_array((string) $originalOrder->status, ['pending', 'failed', 'cancelled'], true)) {
+            throw ValidationException::withMessages([
+                'order' => __('tenant.nutrition.package_payment_retry_not_available'),
+            ]);
+        }
+
+        $package = $originalOrder->package;
+        if (! $package) {
+            throw ValidationException::withMessages([
+                'order' => __('tenant.nutrition.package_payment_retry_not_available'),
+            ]);
+        }
+        $this->ensurePurchasablePackage($package);
+
+        $settings = $this->settings();
+        $gateway = (string) $originalOrder->gateway;
+        if (! $this->gatewayCanBeRetried($gateway, $settings)) {
+            throw ValidationException::withMessages([
+                'payment' => __('tenant.nutrition.package_payment_retry_not_available'),
+            ]);
+        }
+
+        /** @var NutritionPackageOrder $order */
+        $order = DB::transaction(function () use ($originalOrder): NutritionPackageOrder {
+            $lockedOriginal = NutritionPackageOrder::query()->lockForUpdate()->findOrFail($originalOrder->id);
+            if (! in_array((string) $lockedOriginal->status, ['pending', 'failed', 'cancelled'], true)) {
+                throw ValidationException::withMessages([
+                    'order' => __('tenant.nutrition.package_payment_retry_not_available'),
+                ]);
+            }
+
+            $meta = is_array($lockedOriginal->meta_json) ? $lockedOriginal->meta_json : [];
+            $meta['retry'] = [
+                'original_order_id' => $lockedOriginal->id,
+                'attempted_at' => now()->toIso8601String(),
+            ];
+
+            // A pending attempt can still receive a late gateway callback. Mark it
+            // cancelled before creating the replacement so it cannot grant a
+            // second subscription after this retry has been started.
+            if ($lockedOriginal->status === 'pending') {
+                $lockedOriginal->update([
+                    'status' => 'cancelled',
+                    'failure_reason' => 'Superseded by a new payment retry.',
+                ]);
+            }
+
+            return NutritionPackageOrder::query()->create([
+                'user_id' => $lockedOriginal->user_id,
+                'nutrition_package_id' => $lockedOriginal->nutrition_package_id,
+                'nutrition_discount_code_id' => $lockedOriginal->nutrition_discount_code_id,
+                'invoice_number' => $this->makeInvoiceNumber(),
+                'status' => 'pending',
+                'gateway' => $lockedOriginal->gateway,
+                'sandbox_mode' => false,
+                'amount' => $lockedOriginal->amount,
+                'discount_amount' => $lockedOriginal->discount_amount,
+                'payable_amount' => $lockedOriginal->payable_amount,
+                'discount_code' => $lockedOriginal->discount_code,
+                'discount_code_snapshot' => $lockedOriginal->discount_code_snapshot,
+                'meta_json' => $meta,
+                'expires_at' => now()->addMinutes(30),
+            ]);
+        });
+
+        return $this->startGatewayPayment($order, $user, $package, $settings, $callbackUrlTemplate);
     }
 
     public function userOrders(TenantUser $user, int $perPage = 20)
@@ -524,6 +626,16 @@ class NutritionPackagePaymentService
         }
 
         return $fallback;
+    }
+
+    private function gatewayCanBeRetried(string $gateway, array $settings): bool
+    {
+        if ($gateway === 'maliart') {
+            return (bool) ($settings['maliart_enabled'] ?? false);
+        }
+
+        return (bool) ($settings['enabled'] ?? false)
+            && in_array($gateway, $settings['enabled_gateways'] ?? [], true);
     }
 
     private function serializePackage(NutritionPackage $package): array

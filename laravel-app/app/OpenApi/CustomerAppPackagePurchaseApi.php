@@ -149,16 +149,48 @@ use OpenApi\Attributes as OA;
 #[OA\Get(
     path: '/api/v1/app/nutrition/package-checkout/orders/{order}',
     operationId: 'nutritionPackageCheckoutOrderStatus',
-    description: 'وضعیت قطعی یک سفارش پکیج را فقط برای مالک همان سفارش برمی گرداند. Flutter پس از بازگشت از بانک باید این endpoint را با Bearer token صدا بزند؛ query صفحه بازگشت معیار موفقیت نیست.',
+    description: 'وضعیت قطعی یک سفارش پکیج را فقط برای مالک همان سفارش برمی گرداند. این endpoint برای Flutter جدید deprecated است؛ نتیجه پرداخت از Deep Link/صفحه نتیجهٔ سرور دریافت می شود.',
+    deprecated: true,
     security: [['bearerAuth' => []]],
     tags: ['Package Purchase'],
     parameters: [new OA\Parameter(name: 'order', in: 'path', required: true, schema: new OA\Schema(type: 'integer'), example: 45)],
     responses: [new OA\Response(response: 200, description: 'Verified order status'), new OA\Response(response: 401, description: 'Unauthenticated'), new OA\Response(response: 404, description: 'Order not found or not owned by current user')],
 )]
+#[OA\Post(
+    path: '/api/v1/app/nutrition/package-checkout/orders/{order}/retry',
+    operationId: 'nutritionPackageCheckoutOrderRetry',
+    description: 'برای سفارش ناموفق، لغوشده یا پرداخت‌نشدهٔ کاربر جاری یک تلاش پرداخت جدید می سازد. body ندارد و مبلغ، پکیج، کد تخفیف، درگاه و تأیید جایگزینی اشتراک فقط از snapshot سفارش اولیه خوانده می شود. تلاش قبلی هرگز دوباره verify یا به بانک ارسال نمی شود. Flutter فقط data.paymentUrl را باز می کند.',
+    security: [['bearerAuth' => []]],
+    tags: ['Package Purchase'],
+    parameters: [new OA\Parameter(name: 'order', in: 'path', required: true, schema: new OA\Schema(type: 'integer'), example: 45)],
+    responses: [
+        new OA\Response(
+            response: 200,
+            description: 'New payment attempt created',
+            content: new OA\JsonContent(
+                properties: [
+                    new OA\Property(property: 'success', type: 'boolean', example: true),
+                    new OA\Property(property: 'message', type: 'string', example: 'در حال انتقال به درگاه پرداخت...'),
+                    new OA\Property(property: 'data', properties: [
+                        new OA\Property(property: 'mode', type: 'string', enum: ['gateway', 'sandbox']),
+                        new OA\Property(property: 'order', type: 'object'),
+                        new OA\Property(property: 'paymentUrl', type: 'string', format: 'uri', nullable: true, example: 'https://tenant.example.com/payment'),
+                        new OA\Property(property: 'redirectForm', type: 'object', nullable: true),
+                    ], type: 'object'),
+                ],
+                type: 'object',
+            ),
+        ),
+        new OA\Response(response: 401, description: 'Unauthenticated'),
+        new OA\Response(response: 404, description: 'Order not found or not owned by current user'),
+        new OA\Response(response: 422, description: 'Order cannot be retried or its purchase conditions are no longer available'),
+        new OA\Response(response: 429, description: 'Too many retry attempts'),
+    ],
+)]
 #[OA\Get(
     path: '/nutrition-package-payments/{order}/callback',
     operationId: 'nutritionPackagePaymentCallback',
-    description: 'Callback درگاه پرداخت پکیج تغذیه؛ فقط برای درگاه پرداخت آنلاین است و Flutter/Web هرگز نباید آن را صدا بزند. سرور بدون اعتماد به query/browser result، تراکنش را verify می کند و سپس با 302 به صفحه وب نتیجه /nutrition/membership/package-result هدایت می کند. نتیجه موفق شامل status=success، order، invoice، reference و endsAt است و نتیجه ناموفق status=failed و tracking دارد.',
+    description: 'Callback درگاه پرداخت پکیج تغذیه؛ فقط برای درگاه پرداخت آنلاین است و Flutter/Web هرگز نباید آن را صدا بزند. سرور بدون اعتماد به query/browser result، تراکنش را verify می کند و سپس با 302 به صفحه وب نتیجه /nutrition/membership/package-result هدایت می کند. Deep Link صفحه نتیجه status=success، failed یا cancelled و همچنین order و tracking را به اپلیکیشن می دهد.',
     tags: ['Package Purchase'],
     parameters: [
         new OA\Parameter(

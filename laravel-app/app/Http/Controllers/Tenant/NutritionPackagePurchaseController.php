@@ -14,6 +14,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\ValidationException;
 
 class NutritionPackagePurchaseController extends Controller
@@ -82,6 +83,7 @@ class NutritionPackagePurchaseController extends Controller
             return redirect()->route('tenant.nutrition.package-payments.result', [
                 'status' => 'success',
                 'order' => $verified->id,
+                'tracking' => $verified->reference_id ?: ($verified->invoice_number ?: (string) $verified->id),
             ]);
         } catch (ValidationException $exception) {
             return $this->failedPaymentRedirect($order);
@@ -90,6 +92,24 @@ class NutritionPackagePurchaseController extends Controller
 
             return $this->failedPaymentRedirect($order);
         }
+    }
+
+    /**
+     * Opens a signed, server-hosted payment form so API clients only need to
+     * open paymentUrl and never handle gateway-specific POST fields.
+     */
+    public function gatewayRedirect(NutritionPackageOrder $order): \Illuminate\Contracts\View\View
+    {
+        abort_unless($order->status === 'pending' && (! $order->expires_at || $order->expires_at->isFuture()), 404);
+
+        $redirect = data_get($order->meta_json, 'gateway_redirect');
+        abort_unless(is_array($redirect) && filled($redirect['action'] ?? null), 404);
+
+        return view('tenant.nutrition-package-payment-redirect', [
+            'action' => (string) $redirect['action'],
+            'method' => strtoupper((string) ($redirect['method'] ?? 'POST')),
+            'inputs' => is_array($redirect['inputs'] ?? null) ? $redirect['inputs'] : [],
+        ]);
     }
 
     private function failedPaymentRedirect(NutritionPackageOrder $order): RedirectResponse
@@ -108,15 +128,20 @@ class NutritionPackagePurchaseController extends Controller
     public function resultPage(Request $request): \Illuminate\Contracts\View\View
     {
         $orderId = (int) $request->integer('order');
+        $status = $request->string('status')->toString();
+        $status = in_array($status, ['success', 'failed', 'cancelled'], true) ? $status : 'pending';
+        $tracking = trim($request->string('tracking')->toString());
         $rules = \App\Domain\Tenant\Models\GeneralSetting::query()->value('booking_rules') ?? [];
         $androidApp = is_array($rules['android_app'] ?? null) ? $rules['android_app'] : [];
         $webAppUrl = trim((string) ($androidApp['web_app_url'] ?? ''));
         $returnUrl = ($androidApp['enabled'] ?? false) && filter_var($webAppUrl, FILTER_VALIDATE_URL)
-            ? $this->appendOrderToUrl($webAppUrl, $orderId)
+            ? $this->appendPaymentResultToUrl($webAppUrl, $orderId, $status, $tracking)
             : null;
 
         return view('tenant.nutrition-package-payment-result', [
-            'status' => in_array($request->string('status')->toString(), ['success', 'failed', 'pending'], true) ? $request->string('status')->toString() : 'pending',
+            'status' => $status,
+            'orderId' => $orderId,
+            'tracking' => $tracking,
             'returnUrl' => $returnUrl,
         ]);
     }
@@ -135,7 +160,32 @@ class NutritionPackagePurchaseController extends Controller
         ]);
     }
 
-    private function appendOrderToUrl(string $url, int $orderId): string
+    public function retry(Request $request, NutritionPackageOrder $order): JsonResponse
+    {
+        $user = $this->user($request);
+        abort_unless($user && (int) $order->user_id === (int) $user->id, 404);
+
+        $rateLimitKey = 'nutrition-package-payment-retry:'.$user->id.':'.$order->id;
+        if (RateLimiter::tooManyAttempts($rateLimitKey, 5)) {
+            return response()->json([
+                'message' => __('tenant.nutrition.package_payment_retry_rate_limited'),
+            ], 429);
+        }
+
+        RateLimiter::hit($rateLimitKey, 60);
+        $callbackUrl = route('tenant.nutrition.package-payments.callback', ['order' => '__ORDER__']);
+        $result = $this->service->retry($user, $order, $callbackUrl);
+
+        return response()->json([
+            'success' => true,
+            'message' => $result['mode'] === 'sandbox'
+                ? __('tenant.nutrition.package_sandbox_activated')
+                : __('tenant.nutrition.redirecting_to_gateway'),
+            'data' => $result,
+        ]);
+    }
+
+    private function appendPaymentResultToUrl(string $url, int $orderId, string $status, string $tracking): string
     {
         $parts = parse_url($url);
         $scheme = $parts['scheme'] ?? 'https';
@@ -148,8 +198,13 @@ class NutritionPackagePurchaseController extends Controller
 
         // The configured value identifies the web app host. The Flutter return
         // route is always stable, so it cannot accidentally become `/?order=…`.
-        return $scheme.'://'.$host.$port.'/payment-result'
-            . ($orderId > 0 ? '?order='.rawurlencode((string) $orderId) : '');
+        $query = array_filter([
+            'status' => $status,
+            'order' => $orderId > 0 ? (string) $orderId : null,
+            'tracking' => $tracking !== '' ? $tracking : null,
+        ], static fn (?string $value): bool => $value !== null && $value !== '');
+
+        return $scheme.'://'.$host.$port.'/payment-result?'.http_build_query($query);
     }
 
     public function mySummary(Request $request): JsonResponse

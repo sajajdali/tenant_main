@@ -184,6 +184,8 @@ Route::middleware([
                 ->name('tenant.api.app.nutrition.package-checkout.summary');
             Route::get('/orders/{order}', [NutritionPackagePurchaseController::class, 'orderStatus'])
                 ->name('tenant.api.app.nutrition.package-checkout.orders.show');
+            Route::post('/orders/{order}/retry', [NutritionPackagePurchaseController::class, 'retry'])
+                ->name('tenant.api.app.nutrition.package-checkout.orders.retry');
         });
         Route::middleware('auth:sanctum')->prefix('/nutrition/iap/cafebazaar')->group(function () {
             Route::get('/settings', [NutritionCafeBazaarPurchaseController::class, 'settings'])
@@ -306,6 +308,9 @@ Route::middleware([
     });
     Route::get('/support-renewal/callback', [SupportRenewalController::class, 'callback'])->name('tenant.support-renewal.callback');
     Route::get('/domain-renewal/callback', [DomainRenewalController::class, 'callback'])->name('tenant.domain-renewal.callback');
+    Route::get('/nutrition-package-payments/{order}/redirect', [NutritionPackagePurchaseController::class, 'gatewayRedirect'])
+        ->middleware('signed')
+        ->name('tenant.nutrition.package-payments.redirect');
     Route::get('/nutrition-package-payments/{order}/callback', [NutritionPackagePurchaseController::class, 'callback'])->name('tenant.nutrition.package-payments.callback');
     Route::get('/nutrition-token-payments/callback', [NutritionTokenController::class, 'callback'])->name('tenant.nutrition.tokens.callback');
     Route::get('/sms-top-up/callback', [SmsTopUpPaymentController::class, 'callback'])->name('tenant.sms-top-up.callback');
