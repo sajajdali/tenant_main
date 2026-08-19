@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Tenant;
 
 use App\Domain\Tenant\Models\NutritionPackage;
 use App\Domain\Tenant\Models\NutritionDietTemplate;
+use App\Domain\Tenant\Models\PaymentSetting;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -94,6 +95,7 @@ class NutritionPackageController extends Controller
             'success' => true,
             'data' => [
                 'items' => $items->map(fn (NutritionPackage $item) => $this->transformPackage($item))->values()->all(),
+                'cafebazaarEnabled' => (bool) data_get(PaymentSetting::query()->first()?->meta, 'cafebazaar_iap.enabled', false),
                 'parentOptions' => $parentOptions,
                 'goalOptions' => $this->goalOptions()
                     ->map(fn (string $label, string $value) => [

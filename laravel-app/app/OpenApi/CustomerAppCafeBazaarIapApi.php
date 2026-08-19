@@ -9,7 +9,7 @@ use OpenApi\Attributes as OA;
 #[OA\Get(
     path: '/api/v1/app/nutrition/iap/cafebazaar/settings',
     operationId: 'nutritionCafeBazaarIapSettings',
-    description: 'وضعیت فعال بودن پرداخت درون برنامه ای کافه بازار را برمی گرداند. این درگاه مستقل از درگاه اصلی وب است و فعال بودن آن نباید باعث حذف یا غیرفعال شدن پرداخت آنلاین وب شود. فقط اپلیکیشن Android که از کافه بازار نصب شده است باید در صورت enabled=true و public_key_configured=true از این مسیر استفاده کند؛ وب اپلیکیشن همیشه از package-checkout استفاده می کند.',
+    description: 'وضعیت فعال بودن پرداخت درون برنامه ای کافه بازار را برمی گرداند. Flutter فقط در Android نصب‌شده از بازار و وقتی enabled=true و server_api_configured=true است از این جریان استفاده کند. اعتبارسنجی و consume فقط در سرور انجام می‌شود.',
     security: [['bearerAuth' => []]],
     tags: ['Cafe Bazaar IAP'],
     responses: [
@@ -23,10 +23,11 @@ use OpenApi\Attributes as OA;
                         property: 'data',
                         properties: [
                             new OA\Property(property: 'enabled', type: 'boolean', example: true),
-                            new OA\Property(property: 'public_key_configured', type: 'boolean', example: true),
+                            new OA\Property(property: 'server_api_configured', type: 'boolean', example: true),
+                            new OA\Property(property: 'packageName', type: 'string', example: 'ir.example.nutrition'),
                             new OA\Property(property: 'store', type: 'string', example: 'cafebazaar'),
                             new OA\Property(property: 'paymentRoute', type: 'string', example: '/api/v1/app/nutrition/iap/cafebazaar'),
-                            new OA\Property(property: 'consumeRequired', type: 'boolean', example: true),
+                            new OA\Property(property: 'consumeRequired', type: 'boolean', example: false, description: 'مصرف توسط backend انجام شده است؛ Flutter نباید consume کند.'),
                             new OA\Property(property: 'discountSupported', type: 'boolean', example: false),
                         ],
                         type: 'object',
@@ -41,7 +42,7 @@ use OpenApi\Attributes as OA;
 #[OA\Get(
     path: '/api/v1/app/nutrition/iap/cafebazaar/packages',
     operationId: 'nutritionCafeBazaarIapPackages',
-    description: 'لیست پکیج های فعال قابل خرید با بازار را همراه شناسه محصول بازار برمی گرداند. این لیست مخصوص Flutter Android نصب شده از بازار است. وب اپلیکیشن برای نمایش/پرداخت پکیج ها از مسیرهای عادی پکیج و package-checkout استفاده می کند. قیمت پرداخت در بازار از پنل بازار خوانده می شود و این API قیمت وب سایت را مبنای شارژ بازار نمی داند.',
+    description: 'لیست پکیج های فعال قابل خرید با بازار را همراه شناسه محصول بازار (cafebazaarProductId) برمی گرداند. مدیر ابتدا محصول مصرفی را در پنل کافه بازار ایجاد می کند و سپس همان شناسه را در فیلد «شناسه محصول بازار» هر پکیج وارد می کند. این لیست مخصوص Flutter Android نصب شده از بازار است. وب اپلیکیشن برای نمایش/پرداخت پکیج ها از مسیرهای عادی پکیج و package-checkout استفاده می کند. قیمت پرداخت در بازار از پنل بازار خوانده می شود و این API قیمت وب سایت را مبنای شارژ بازار نمی داند.',
     security: [['bearerAuth' => []]],
     tags: ['Cafe Bazaar IAP'],
     responses: [
@@ -83,7 +84,7 @@ use OpenApi\Attributes as OA;
 #[OA\Post(
     path: '/api/v1/app/nutrition/iap/cafebazaar/package-orders',
     operationId: 'nutritionCafeBazaarIapCreateOrder',
-    description: 'قبل از باز کردن پرداخت بازار، اپلیکیشن باید سفارش pending بسازد. خروجی شامل order، productId و developerPayload است. همین developerPayload باید به purchaseProduct در Poolakey داده شود و بعد در verify عینا برگردد. اگر کاربر پکیج فعال با بیش از ۱۰ روز اعتبار باقی مانده دارد، سرور بدون replace_active_subscription=true خطای 422 می دهد؛ Flutter باید به کاربر توضیح دهد که خرید جدید پکیج قبلی را جایگزین می کند، نه تمدید تجمعی، سپس در صورت تأیید کاربر دوباره با replace_active_subscription=true درخواست بزند.',
+    description: 'قبل از باز کردن پرداخت بازار، اپلیکیشن باید سفارش pending بسازد. خروجی شامل order و productId است. productId را به SDK Bazaar بدهید و order.id را برای verify نگه دارید. اگر کاربر پکیج فعال با بیش از ۱۰ روز اعتبار باقی مانده دارد، سرور بدون replace_active_subscription=true خطای 422 می دهد؛ Flutter باید به کاربر توضیح دهد که خرید جدید پکیج قبلی را جایگزین می کند، نه تمدید تجمعی، سپس در صورت تأیید کاربر دوباره با replace_active_subscription=true درخواست بزند.',
     security: [['bearerAuth' => []]],
     tags: ['Cafe Bazaar IAP'],
     requestBody: new OA\RequestBody(
@@ -111,8 +112,7 @@ use OpenApi\Attributes as OA;
                             new OA\Property(property: 'order', type: 'object'),
                             new OA\Property(property: 'store', type: 'string', example: 'cafebazaar'),
                             new OA\Property(property: 'productId', type: 'string', example: 'nutrition_package_basic'),
-                            new OA\Property(property: 'developerPayload', type: 'string', example: 'base64-signed-payload'),
-                            new OA\Property(property: 'consumeRequired', type: 'boolean', example: true),
+                            new OA\Property(property: 'consumeRequired', type: 'boolean', example: false),
                             new OA\Property(property: 'discountSupported', type: 'boolean', example: false),
                         ],
                         type: 'object',
@@ -128,7 +128,7 @@ use OpenApi\Attributes as OA;
 #[OA\Post(
     path: '/api/v1/app/nutrition/iap/cafebazaar/package-orders/{order}/verify',
     operationId: 'nutritionCafeBazaarIapVerifyOrder',
-    description: 'بعد از موفق شدن purchaseProduct در Flutter، رسید بازار باید به این endpoint ارسال شود. سرور user، order، productId، developerPayload و یکتا بودن purchaseToken را کنترل می کند و فقط بعد از تایید، پکیج را paid و subscription را active می کند. در همین مرحله همه subscription های فعال قبلی کاربر expired می شوند و پکیج جدید با startsAt برابر تاریخ verify/خرید و endsAt بر اساس durationDays همان پکیج ساخته می شود؛ روزهای باقی مانده قبلی به پکیج جدید اضافه نمی شود. سپس Flutter باید چون consumeRequired=true است، consumeProduct(purchaseToken) را در Poolakey صدا بزند.',
+    description: 'پس از موفقیت purchaseProduct در Flutter، فقط package_name، product_id و purchase_token را ارسال کنید. سرور نام پکیج و شناسه محصول را با تنظیمات/سفارش مقایسه می‌کند، سپس با API رسمی Bazaar اعتبارسنجی می‌کند. فقط اگر purchaseState=0 و consumptionState=0 باشد، سرور خودش خرید را با API consume مصرف کرده و پکیج را فعال می‌کند. Flutter نباید consumeProduct، signed_data، signature یا کلید Bazaar را استفاده/ارسال کند. پاسخ data.bazaarValidation و data.bazaarConsume پاسخ‌های واقعی Bazaar هستند.',
     security: [['bearerAuth' => []]],
     tags: ['Cafe Bazaar IAP'],
     parameters: [
@@ -137,17 +137,11 @@ use OpenApi\Attributes as OA;
     requestBody: new OA\RequestBody(
         required: true,
         content: new OA\JsonContent(
-            required: ['product_id', 'purchase_token', 'developer_payload', 'signed_data', 'signature'],
+            required: ['package_name', 'product_id', 'purchase_token'],
             properties: [
+                new OA\Property(property: 'package_name', type: 'string', example: 'ir.example.nutrition'),
                 new OA\Property(property: 'product_id', type: 'string', example: 'nutrition_package_basic'),
                 new OA\Property(property: 'purchase_token', type: 'string', example: 'bazaar-purchase-token'),
-                new OA\Property(property: 'store_order_id', type: 'string', nullable: true, example: 'GPA.1234-5678'),
-                new OA\Property(property: 'developer_payload', type: 'string', example: 'base64-signed-payload'),
-                new OA\Property(property: 'purchase_time', nullable: true, oneOf: [new OA\Schema(type: 'integer'), new OA\Schema(type: 'string')], example: 1786180000000),
-                new OA\Property(property: 'purchase_state', type: 'string', nullable: true, example: 'purchased'),
-                new OA\Property(property: 'signed_data', type: 'string', description: 'رشته خام signed purchase data که بازار امضا کرده است. سرور همین رشته را با کلید عمومی RSA بازار verify می کند.', example: '{"orderId":"...","packageName":"...","productId":"nutrition_package_basic","purchaseToken":"..."}'),
-                new OA\Property(property: 'raw_purchase', type: 'object', nullable: true),
-                new OA\Property(property: 'signature', type: 'string', description: 'امضای base64 بازار برای signed_data.', example: 'MEUCIQD...'),
             ],
             type: 'object',
         ),
@@ -156,13 +150,13 @@ use OpenApi\Attributes as OA;
         new OA\Response(response: 200, description: 'Bazaar purchase verified and package activated'),
         new OA\Response(response: 401, description: 'Unauthenticated'),
         new OA\Response(response: 404, description: 'Order not found for current user'),
-        new OA\Response(response: 422, description: 'Invalid product, payload, token, expired order, or disabled gateway'),
+        new OA\Response(response: 422, description: 'Invalid package/product/token, cancelled or already-consumed purchase, Bazaar API failure, expired order, or disabled gateway'),
     ],
 )]
 #[OA\Post(
     path: '/api/v1/app/nutrition/iap/cafebazaar/purchases/recover',
     operationId: 'nutritionCafeBazaarIapRecoverPurchases',
-    description: 'برای بازیابی خریدهای مصرف نشده بازار. Flutter در شروع برنامه getPurchasedProducts را از Poolakey می خواند و هر خرید مصرف نشده مربوط به پکیج را با order_id ذخیره شده قبلی به این مسیر می فرستد. بعد از موفقیت هر آیتم، consumeProduct همان purchaseToken انجام شود.',
+    description: 'برای retry خریدی که Flutter بعد از پرداخت آن بسته/قطع شده است. هر آیتم همان داده‌های verify را دارد؛ سرور خودش validate و consume می‌کند. Flutter نباید consumeProduct را صدا بزند.',
     security: [['bearerAuth' => []]],
     tags: ['Cafe Bazaar IAP'],
     requestBody: new OA\RequestBody(
@@ -174,18 +168,12 @@ use OpenApi\Attributes as OA;
                     property: 'purchases',
                     type: 'array',
                     items: new OA\Items(
-                        required: ['order_id', 'product_id', 'purchase_token', 'developer_payload', 'signed_data', 'signature'],
+                        required: ['order_id', 'package_name', 'product_id', 'purchase_token'],
                         properties: [
                             new OA\Property(property: 'order_id', type: 'integer', example: 45),
+                            new OA\Property(property: 'package_name', type: 'string', example: 'ir.example.nutrition'),
                             new OA\Property(property: 'product_id', type: 'string', example: 'nutrition_package_basic'),
                             new OA\Property(property: 'purchase_token', type: 'string', example: 'bazaar-purchase-token'),
-                            new OA\Property(property: 'store_order_id', type: 'string', nullable: true),
-                            new OA\Property(property: 'developer_payload', type: 'string'),
-                            new OA\Property(property: 'purchase_time', nullable: true, oneOf: [new OA\Schema(type: 'integer'), new OA\Schema(type: 'string')]),
-                            new OA\Property(property: 'purchase_state', type: 'string', nullable: true),
-                            new OA\Property(property: 'signed_data', type: 'string'),
-                            new OA\Property(property: 'raw_purchase', type: 'object', nullable: true),
-                            new OA\Property(property: 'signature', type: 'string'),
                         ],
                         type: 'object',
                     ),
@@ -198,27 +186,6 @@ use OpenApi\Attributes as OA;
         new OA\Response(response: 200, description: 'Recovered purchases checked'),
         new OA\Response(response: 401, description: 'Unauthenticated'),
         new OA\Response(response: 422, description: 'Invalid recovered purchase'),
-    ],
-)]
-#[OA\Post(
-    path: '/api/v1/app/nutrition/iap/cafebazaar/purchases/consumed',
-    operationId: 'nutritionCafeBazaarIapMarkConsumed',
-    description: 'بعد از اینکه Flutter با موفقیت consumeProduct را در Poolakey انجام داد، purchaseToken را اینجا گزارش کند تا رسید در سرور consumed علامت بخورد. فعال شدن پکیج وابسته به این endpoint نیست؛ فعال شدن در verify انجام شده است.',
-    security: [['bearerAuth' => []]],
-    tags: ['Cafe Bazaar IAP'],
-    requestBody: new OA\RequestBody(
-        required: true,
-        content: new OA\JsonContent(
-            required: ['purchase_token'],
-            properties: [
-                new OA\Property(property: 'purchase_token', type: 'string', example: 'bazaar-purchase-token'),
-            ],
-            type: 'object',
-        ),
-    ),
-    responses: [
-        new OA\Response(response: 200, description: 'Receipt marked consumed when found'),
-        new OA\Response(response: 401, description: 'Unauthenticated'),
     ],
 )]
 final class CustomerAppCafeBazaarIapApi {}

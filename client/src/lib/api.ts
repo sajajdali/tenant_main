@@ -392,7 +392,9 @@ const getDefaultPaymentSettings = (): PaymentSettings => ({
   provider: null,
   sandboxEnabled: false,
   cafebazaarEnabled: false,
-  cafebazaarPublicKey: "",
+  cafebazaarPackageName: "",
+  cafebazaarClientId: "",
+  cafebazaarClientSecret: "",
   enabledGateways: [],
   gateways: Object.fromEntries(
     PAYMENT_GATEWAYS.map((gateway) => [gateway.key, { enabled: false }]),

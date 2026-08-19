@@ -198,8 +198,6 @@ Route::middleware([
                 ->name('tenant.api.app.nutrition.iap.cafebazaar.orders.verify');
             Route::post('/purchases/recover', [NutritionCafeBazaarPurchaseController::class, 'recover'])
                 ->name('tenant.api.app.nutrition.iap.cafebazaar.purchases.recover');
-            Route::post('/purchases/consumed', [NutritionCafeBazaarPurchaseController::class, 'markConsumed'])
-                ->name('tenant.api.app.nutrition.iap.cafebazaar.purchases.consumed');
         });
 
         Route::middleware('auth:sanctum')->prefix('/nutrition')->group(function () {

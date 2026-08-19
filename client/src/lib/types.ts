@@ -165,6 +165,7 @@ export interface NutritionPackageItem {
 
 export interface NutritionPackageListPayload {
   items: NutritionPackageItem[];
+  cafebazaarEnabled?: boolean;
   parentOptions?: NutritionDietTemplateParentOption[];
   goalOptions?: NutritionDietTemplateOption[];
   dietTemplateOptions?: NutritionDietTemplateOption[];
@@ -1261,7 +1262,10 @@ export interface PaymentSettings {
   provider: PaymentProvider | null;
   sandboxEnabled?: boolean;
   cafebazaarEnabled?: boolean;
-  cafebazaarPublicKey?: string;
+  cafebazaarPackageName?: string;
+  cafebazaarClientId?: string;
+  cafebazaarClientSecret?: string;
+  cafebazaarClientSecretConfigured?: boolean;
   maliartEnabled?: boolean;
   tenantMaliartEnabled?: boolean;
   enabledGateways?: PaymentProvider[];

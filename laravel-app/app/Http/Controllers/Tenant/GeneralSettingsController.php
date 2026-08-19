@@ -55,7 +55,9 @@ class GeneralSettingsController extends Controller
             'provider' => ['nullable', 'in:'.implode(',', [...TenantPaymentGateways::supportedKeys(), 'maliart'])],
             'sandboxEnabled' => ['nullable', 'boolean'],
             'cafebazaarEnabled' => ['nullable', 'boolean'],
-            'cafebazaarPublicKey' => ['nullable', 'string', 'max:8000'],
+            'cafebazaarPackageName' => ['nullable', 'string', 'max:191'],
+            'cafebazaarClientId' => ['nullable', 'string', 'max:500'],
+            'cafebazaarClientSecret' => ['nullable', 'string', 'max:1000'],
             'customAppSettingsEnabled' => ['nullable', 'boolean'],
             'androidAppSettingsEnabled' => ['nullable', 'boolean'],
             'androidAppVersion' => ['nullable', 'string', 'max:64'],
@@ -186,7 +188,11 @@ class GeneralSettingsController extends Controller
                 'sandbox_enabled' => (bool) ($validated['sandboxEnabled'] ?? false),
                 'cafebazaar_iap' => [
                     'enabled' => (bool) ($validated['cafebazaarEnabled'] ?? false),
-                    'public_key' => trim((string) ($validated['cafebazaarPublicKey'] ?? data_get($payment->meta, 'cafebazaar_iap.public_key', ''))),
+                    'package_name' => trim((string) ($validated['cafebazaarPackageName'] ?? data_get($payment->meta, 'cafebazaar_iap.package_name', ''))),
+                    'client_id' => trim((string) ($validated['cafebazaarClientId'] ?? data_get($payment->meta, 'cafebazaar_iap.client_id', ''))),
+                    'client_secret' => filled($validated['cafebazaarClientSecret'] ?? null)
+                        ? trim((string) $validated['cafebazaarClientSecret'])
+                        : (string) data_get($payment->meta, 'cafebazaar_iap.client_secret', ''),
                 ],
             ],
         ]);
@@ -396,7 +402,11 @@ class GeneralSettingsController extends Controller
             'provider' => $tenantMaliartEnabled ? 'maliart' : ($payment?->provider ?: ($enabledGateways[0] ?? null)),
             'sandboxEnabled' => TenantSandboxMode::paymentEnabled(null, (bool) ($paymentMeta['sandbox_enabled'] ?? false)),
             'cafebazaarEnabled' => (bool) data_get($paymentMeta, 'cafebazaar_iap.enabled', false),
-            'cafebazaarPublicKey' => (string) data_get($paymentMeta, 'cafebazaar_iap.public_key', ''),
+            'cafebazaarPackageName' => (string) data_get($paymentMeta, 'cafebazaar_iap.package_name', ''),
+            'cafebazaarClientId' => (string) data_get($paymentMeta, 'cafebazaar_iap.client_id', ''),
+            // A secret is never returned to the browser. The boolean lets the UI
+            // show whether a value has already been saved.
+            'cafebazaarClientSecretConfigured' => filled(data_get($paymentMeta, 'cafebazaar_iap.client_secret', '')),
             'maliartEnabled' => $this->maliart->enabled(),
             'tenantMaliartEnabled' => $tenantMaliartEnabled,
             'enabledGateways' => $tenantMaliartEnabled ? ['maliart'] : $enabledGateways,

@@ -82,6 +82,7 @@ export default function PanelNutritionPackagesPage() {
   const [submitting, setSubmitting] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [items, setItems] = useState<NutritionPackageItem[]>([]);
+  const [cafebazaarEnabled, setCafebazaarEnabled] = useState(false);
   const [parentOptions, setParentOptions] = useState<NutritionDietTemplateParentOption[]>([]);
   const [goalOptions, setGoalOptions] = useState<NutritionDietTemplateOption[]>([]);
   const [dietTemplateOptions, setDietTemplateOptions] = useState<NutritionDietTemplateOption[]>([]);
@@ -143,6 +144,7 @@ export default function PanelNutritionPackagesPage() {
     const res = await api.nutritionPackages.list();
     if (res.success) {
       setItems(res.data.items);
+      setCafebazaarEnabled(res.data.cafebazaarEnabled === true);
       setParentOptions(res.data.parentOptions ?? []);
       setGoalOptions(res.data.goalOptions ?? []);
       setDietTemplateOptions(res.data.dietTemplateOptions ?? []);
@@ -401,17 +403,19 @@ export default function PanelNutritionPackagesPage() {
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="package-cafebazaar-product-id">{t("panelNutritionPackages.fields.cafebazaarProductId")}</Label>
-                <Input
-                  id="package-cafebazaar-product-id"
-                  dir="ltr"
-                  value={cafebazaarProductId}
-                  onChange={(e) => setCafebazaarProductId(e.target.value)}
-                  placeholder="nutrition_package_basic"
-                />
-                <div className="text-xs text-muted-foreground">{t("panelNutritionPackages.cafebazaarProductHint")}</div>
-              </div>
+              {cafebazaarEnabled ? (
+                <div className="space-y-2">
+                  <Label htmlFor="package-cafebazaar-product-id">{t("panelNutritionPackages.fields.cafebazaarProductId")}</Label>
+                  <Input
+                    id="package-cafebazaar-product-id"
+                    dir="ltr"
+                    value={cafebazaarProductId}
+                    onChange={(e) => setCafebazaarProductId(e.target.value)}
+                    placeholder="nutrition_package_basic"
+                  />
+                  <div className="text-xs text-muted-foreground">{t("panelNutritionPackages.cafebazaarProductHint")}</div>
+                </div>
+              ) : null}
 
               <div className="space-y-2">
                 <Label htmlFor="package-badge-title">{t("panelNutritionPackages.fields.badgeTitle")}</Label>
@@ -523,6 +527,7 @@ export default function PanelNutritionPackagesPage() {
                     <PackageAdminCard
                       key={item.id}
                       item={item}
+                      cafebazaarEnabled={cafebazaarEnabled}
                       deletingId={deletingId}
                       t={t}
                       format={format}
@@ -718,16 +723,18 @@ export default function PanelNutritionPackagesPage() {
                 <Input type="number" min="0" value={editDiscountedPriceAmount} onChange={(e) => setEditDiscountedPriceAmount(e.target.value)} placeholder={t("panelNutritionPackages.optional")} />
               </div>
             </div>
-            <div className="space-y-2">
-              <Label>{t("panelNutritionPackages.fields.cafebazaarProductId")}</Label>
-              <Input
-                dir="ltr"
-                value={editCafebazaarProductId}
-                onChange={(e) => setEditCafebazaarProductId(e.target.value)}
-                placeholder="nutrition_package_basic"
-              />
-              <div className="text-xs text-muted-foreground">{t("panelNutritionPackages.cafebazaarProductHint")}</div>
-            </div>
+            {cafebazaarEnabled ? (
+              <div className="space-y-2">
+                <Label>{t("panelNutritionPackages.fields.cafebazaarProductId")}</Label>
+                <Input
+                  dir="ltr"
+                  value={editCafebazaarProductId}
+                  onChange={(e) => setEditCafebazaarProductId(e.target.value)}
+                  placeholder="nutrition_package_basic"
+                />
+                <div className="text-xs text-muted-foreground">{t("panelNutritionPackages.cafebazaarProductHint")}</div>
+              </div>
+            ) : null}
             <div className="space-y-2">
               <Label>{t("panelNutritionPackages.fields.badgeTitle")}</Label>
               <Input
@@ -902,6 +909,7 @@ function PackageFeatureEditor({ rows, onChange, t }: { rows: PackageFeatureRow[]
 
 function PackageAdminCard({
   item,
+  cafebazaarEnabled,
   deletingId,
   t,
   format,
@@ -909,6 +917,7 @@ function PackageAdminCard({
   onDelete,
 }: {
   item: NutritionPackageItem;
+  cafebazaarEnabled: boolean;
   deletingId: string | null;
   t: Translator;
   format: Formatter;
@@ -995,10 +1004,12 @@ function PackageAdminCard({
             </div>
           </div>
 
-          <div className="rounded-2xl border border-border/70 bg-background/40 p-4">
-            <div className="text-xs text-muted-foreground">{t("panelNutritionPackages.fields.cafebazaarProductId")}</div>
-            <div className="mt-2 font-mono text-sm" dir="ltr">{item.cafebazaarProductId || t("panelNutritionPackages.notConfigured")}</div>
-          </div>
+          {cafebazaarEnabled ? (
+            <div className="rounded-2xl border border-border/70 bg-background/40 p-4">
+              <div className="text-xs text-muted-foreground">{t("panelNutritionPackages.fields.cafebazaarProductId")}</div>
+              <div className="mt-2 font-mono text-sm" dir="ltr">{item.cafebazaarProductId || t("panelNutritionPackages.notConfigured")}</div>
+            </div>
+          ) : null}
 
           <div className="text-xs text-muted-foreground">{t("panelNutritionPackages.card.sortOrder", { value: format.number(item.sortOrder) })}</div>
         </div>
@@ -1006,7 +1017,7 @@ function PackageAdminCard({
 
       {(item.children ?? []).map((child) => (
         <div key={child.id} className="md:ms-8">
-          <PackageAdminCard item={child} deletingId={deletingId} t={t} format={format} onEdit={onEdit} onDelete={onDelete} />
+          <PackageAdminCard item={child} cafebazaarEnabled={cafebazaarEnabled} deletingId={deletingId} t={t} format={format} onEdit={onEdit} onDelete={onDelete} />
         </div>
       ))}
     </>

@@ -82,8 +82,7 @@ class NutritionCafeBazaarPurchaseController extends Controller
                 'order' => $this->packagePayments->serializeOrder($order->fresh(['package', 'subscription', 'discountCode'])),
                 'store' => 'cafebazaar',
                 'productId' => (string) data_get($order->meta_json, 'in_app_purchase.product_id'),
-                'developerPayload' => (string) data_get($order->meta_json, 'in_app_purchase.developer_payload'),
-                'consumeRequired' => true,
+                'consumeRequired' => false,
                 'discountSupported' => false,
             ],
         ]);
@@ -95,15 +94,9 @@ class NutritionCafeBazaarPurchaseController extends Controller
         abort_unless($user, 401);
 
         $validated = $request->validate([
+            'package_name' => ['required', 'string', 'max:191'],
             'product_id' => ['required', 'string', 'max:191'],
             'purchase_token' => ['required', 'string', 'max:500'],
-            'store_order_id' => ['nullable', 'string', 'max:255'],
-            'developer_payload' => ['required', 'string', 'max:1000'],
-            'purchase_time' => ['nullable'],
-            'purchase_state' => ['nullable', 'string', 'max:80'],
-            'signed_data' => ['required', 'string', 'max:8000'],
-            'raw_purchase' => ['nullable', 'array'],
-            'signature' => ['required', 'string', 'max:4000'],
         ]);
 
         $result = $this->bazaar->verifyOrder($user, $order, $validated);
@@ -116,6 +109,8 @@ class NutritionCafeBazaarPurchaseController extends Controller
                 'subscription' => $this->packagePayments->serializeSubscription($result['order']->subscription),
                 'receipt' => $this->serializeReceipt($result['receipt']),
                 'consumeRequired' => (bool) $result['consumeRequired'],
+                'bazaarValidation' => $result['bazaarValidation'],
+                'bazaarConsume' => $result['bazaarConsume'],
             ],
         ]);
     }
@@ -128,15 +123,9 @@ class NutritionCafeBazaarPurchaseController extends Controller
         $validated = $request->validate([
             'purchases' => ['required', 'array', 'min:1', 'max:20'],
             'purchases.*.order_id' => ['required', 'integer', 'exists:nutrition_package_orders,id'],
+            'purchases.*.package_name' => ['required', 'string', 'max:191'],
             'purchases.*.product_id' => ['required', 'string', 'max:191'],
             'purchases.*.purchase_token' => ['required', 'string', 'max:500'],
-            'purchases.*.store_order_id' => ['nullable', 'string', 'max:255'],
-            'purchases.*.developer_payload' => ['required', 'string', 'max:1000'],
-            'purchases.*.purchase_time' => ['nullable'],
-            'purchases.*.purchase_state' => ['nullable', 'string', 'max:80'],
-            'purchases.*.signed_data' => ['required', 'string', 'max:8000'],
-            'purchases.*.raw_purchase' => ['nullable', 'array'],
-            'purchases.*.signature' => ['required', 'string', 'max:4000'],
         ]);
 
         $items = collect($validated['purchases'])

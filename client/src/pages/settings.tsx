@@ -389,7 +389,9 @@ export default function SettingsPage({ forcedTab }: SettingsPageProps) {
       provider: null,
       sandboxEnabled: false,
       cafebazaarEnabled: false,
-      cafebazaarPublicKey: "",
+      cafebazaarPackageName: "",
+      cafebazaarClientId: "",
+      cafebazaarClientSecret: "",
       enabledGateways: [],
       gateways: Object.fromEntries(
           PAYMENT_GATEWAYS.map((gateway) => [gateway.key, { enabled: false }]),
@@ -3620,10 +3622,11 @@ export default function SettingsPage({ forcedTab }: SettingsPageProps) {
                                         </div>
 
                                         {paymentSettings.cafebazaarEnabled && (
-                                            <div className="space-y-2 border-t border-border/50 pt-4">
-                                                <Label>{t("settings.onlinePayment.cafebazaarPublicKey")}</Label>
-                                                <Textarea dir="ltr" value={paymentSettings.cafebazaarPublicKey ?? ""} onChange={(event) => setPaymentSettings((current) => ({ ...current, cafebazaarPublicKey: event.target.value }))} placeholder="MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8A..." className="min-h-[120px] font-mono text-xs" />
-                                                <p className="text-xs text-muted-foreground">{t("settings.onlinePayment.cafebazaarPublicKeyHint")}</p>
+                                            <div className="grid gap-4 border-t border-border/50 pt-4 md:grid-cols-2">
+                                                <div className="space-y-2 md:col-span-2"><Label>{t("settings.onlinePayment.cafebazaarPackageName")}</Label><Input dir="ltr" value={paymentSettings.cafebazaarPackageName ?? ""} onChange={(event) => setPaymentSettings((current) => ({ ...current, cafebazaarPackageName: event.target.value }))} placeholder="ir.example.nutrition" /></div>
+                                                <div className="space-y-2"><Label>{t("settings.onlinePayment.cafebazaarClientId")}</Label><Input dir="ltr" value={paymentSettings.cafebazaarClientId ?? ""} onChange={(event) => setPaymentSettings((current) => ({ ...current, cafebazaarClientId: event.target.value }))} /></div>
+                                                <div className="space-y-2"><Label>{t("settings.onlinePayment.cafebazaarClientSecret")}</Label><Input dir="ltr" type="password" value={paymentSettings.cafebazaarClientSecret ?? ""} onChange={(event) => setPaymentSettings((current) => ({ ...current, cafebazaarClientSecret: event.target.value }))} placeholder={paymentSettings.cafebazaarClientSecretConfigured ? t("settings.onlinePayment.cafebazaarSecretSaved") : ""} /></div>
+                                                <p className="text-xs text-muted-foreground md:col-span-2">{t("settings.onlinePayment.cafebazaarServerApiHint")}</p>
                                             </div>
                                         )}
                                     </div>
