@@ -128,7 +128,7 @@ use OpenApi\Attributes as OA;
 #[OA\Post(
     path: '/api/v1/app/nutrition/iap/cafebazaar/package-orders/{order}/verify',
     operationId: 'nutritionCafeBazaarIapVerifyOrder',
-    description: 'پس از موفقیت purchaseProduct در Flutter، فقط package_name، product_id و purchase_token را ارسال کنید. سرور نام پکیج و شناسه محصول را با تنظیمات/سفارش مقایسه می‌کند، سپس با API رسمی Bazaar اعتبارسنجی می‌کند. فقط اگر purchaseState=0 و consumptionState=0 باشد، سرور خودش خرید را با API consume مصرف کرده و پکیج را فعال می‌کند. Flutter نباید consumeProduct، signed_data، signature یا کلید Bazaar را استفاده/ارسال کند. پاسخ data.bazaarValidation و data.bazaarConsume پاسخ‌های واقعی Bazaar هستند.',
+    description: 'پس از موفقیت purchaseProduct در Flutter، فقط package_name، product_id و purchase_token را ارسال کنید. سرور نام پکیج و شناسه محصول را با تنظیمات/سفارش مقایسه می‌کند، سپس با API رسمی Bazaar اعتبارسنجی می‌کند. فقط اگر purchaseState=0 باشد، سرور خودش خرید را با API consume مصرف کرده و پکیج را فعال می‌کند؛ consumptionState فقط برای ثبت و عیب‌یابی نگهداری می‌شود. Flutter نباید consumeProduct، signed_data، signature یا کلید Bazaar را استفاده/ارسال کند. پاسخ data.bazaarValidation و data.bazaarConsume پاسخ‌های واقعی Bazaar هستند.',
     security: [['bearerAuth' => []]],
     tags: ['Cafe Bazaar IAP'],
     parameters: [

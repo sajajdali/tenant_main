@@ -1263,9 +1263,8 @@ export interface PaymentSettings {
   sandboxEnabled?: boolean;
   cafebazaarEnabled?: boolean;
   cafebazaarPackageName?: string;
-  cafebazaarClientId?: string;
-  cafebazaarClientSecret?: string;
-  cafebazaarClientSecretConfigured?: boolean;
+  cafebazaarApiSecret?: string;
+  cafebazaarApiSecretConfigured?: boolean;
   maliartEnabled?: boolean;
   tenantMaliartEnabled?: boolean;
   enabledGateways?: PaymentProvider[];

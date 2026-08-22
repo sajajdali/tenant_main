@@ -11,7 +11,6 @@ use App\Domain\Tenant\Models\PaymentSetting;
 use App\Domain\Tenant\Models\TenantUser;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -31,8 +30,7 @@ class NutritionCafeBazaarPurchaseService
         return [
             'enabled' => (bool) ($settings['enabled'] ?? false),
             'server_api_configured' => filled($settings['package_name'] ?? '')
-                && filled($settings['client_id'] ?? '')
-                && filled($settings['client_secret'] ?? ''),
+                && filled($settings['api_secret'] ?? ''),
             'packageName' => (string) ($settings['package_name'] ?? ''),
             'store' => 'cafebazaar',
             'paymentRoute' => '/api/v1/app/nutrition/iap/cafebazaar',
@@ -142,10 +140,6 @@ class NutritionCafeBazaarPurchaseService
             throw ValidationException::withMessages(['purchase_token' => 'کافه‌بازار این خرید را موفق تایید نکرده است.']);
         }
 
-        if ((int) ($validation['consumptionState'] ?? -1) !== 0) {
-            throw ValidationException::withMessages(['purchase_token' => 'این خرید قبلا در کافه‌بازار مصرف شده است.']);
-        }
-
         $existingReceipt = NutritionInAppPurchaseReceipt::query()
             ->where('purchase_token', $purchaseToken)
             ->first();
@@ -210,32 +204,9 @@ class NutritionCafeBazaarPurchaseService
         return is_array($meta['cafebazaar_iap'] ?? null) ? $meta['cafebazaar_iap'] : [];
     }
 
-    private function accessToken(array $settings): string
-    {
-        $cacheKey = 'cafebazaar:access-token:'.(string) (tenant('id') ?: 'default');
-
-        return Cache::remember($cacheKey, now()->addMinutes(50), function () use ($settings): string {
-            $response = Http::asJson()->acceptJson()->timeout(15)->post(
-                'https://pardakht.cafebazaar.ir/devapi/v2/auth/token/',
-                [
-                    'grant_type' => 'client_credentials',
-                    'client_id' => (string) $settings['client_id'],
-                    'client_secret' => (string) $settings['client_secret'],
-                ],
-            );
-
-            if (! $response->successful() || blank($response->json('access_token'))) {
-                report(new \RuntimeException('Cafe Bazaar access token request failed: HTTP '.$response->status()));
-                throw ValidationException::withMessages(['gateway' => 'دریافت دسترسی ارتباط با کافه‌بازار ناموفق بود. تنظیمات و اتصال را بررسی کنید.']);
-            }
-
-            return (string) $response->json('access_token');
-        });
-    }
-
     private function validatePurchaseWithBazaar(array $settings, string $packageName, string $productId, string $purchaseToken): array
     {
-        $response = Http::acceptJson()->withToken($this->accessToken($settings))->timeout(15)->get(
+        $response = $this->bazaarRequest($settings)->get(
             'https://pardakht.cafebazaar.ir/devapi/v2/api/validate/'.rawurlencode($packageName).'/inapp/'.rawurlencode($productId).'/purchases/'.rawurlencode($purchaseToken).'/',
         );
 
@@ -244,9 +215,9 @@ class NutritionCafeBazaarPurchaseService
 
     private function consumePurchaseWithBazaar(array $settings, string $packageName, string $purchaseToken): array
     {
-        $response = Http::asJson()->acceptJson()->withToken($this->accessToken($settings))->timeout(15)->post(
+        $response = $this->bazaarRequest($settings)->post(
             'https://pardakht.cafebazaar.ir/devapi/v2/api/consume/'.rawurlencode($packageName).'/purchases/',
-            ['purchaseToken' => $purchaseToken],
+            ['token' => $purchaseToken],
         );
 
         return $this->bazaarResponse($response, 'مصرف خرید در کافه‌بازار ناموفق بود.');
@@ -260,7 +231,7 @@ class NutritionCafeBazaarPurchaseService
 
         $message = match ($response->status()) {
             404 => 'نام پکیج، شناسه محصول یا توکن خرید در کافه‌بازار یافت نشد یا معتبر نیست.',
-            401, 403 => 'دسترسی کافه‌بازار معتبر نیست. Client ID و Client Secret را بررسی کنید.',
+            401, 403 => 'توکن API پیشخوان کافه‌بازار معتبر نیست. آن را در تنظیمات پرداخت بررسی کنید.',
             default => $defaultMessage,
         };
 
@@ -297,8 +268,18 @@ class NutritionCafeBazaarPurchaseService
         }
 
         if (! $settings['server_api_configured']) {
-            throw ValidationException::withMessages(['gateway' => 'نام پکیج، Client ID و Client Secret کافه‌بازار باید در تنظیمات پرداخت ثبت شوند.']);
+            throw ValidationException::withMessages(['gateway' => 'نام پکیج و توکن API پیشخوان کافه‌بازار باید در تنظیمات پرداخت ثبت شوند.']);
         }
+    }
+
+    private function bazaarRequest(array $settings): \Illuminate\Http\Client\PendingRequest
+    {
+        return Http::asJson()
+            ->acceptJson()
+            ->timeout(15)
+            ->withHeaders([
+                'CAFEBAZAAR-PISHKHAN-API-SECRET' => (string) $settings['api_secret'],
+            ]);
     }
 
     private function ensurePackageHasBazaarProduct(NutritionPackage $package): NutritionPackage
