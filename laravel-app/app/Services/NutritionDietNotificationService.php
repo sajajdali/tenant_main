@@ -55,7 +55,11 @@ class NutritionDietNotificationService
             ],
         );
 
-        $this->sendUserPrescriptionSms($user, $afterManualApproval ? 'afterAiApproval' : 'afterAiPrescription');
+        // A diet becomes deliverable at this point in both flows: immediately
+        // after successful AI generation, or after an expert approves it.
+        // Keep both flows on the tenant's single "after prescription" template
+        // so enabling that setting reliably notifies every recipient.
+        $this->sendUserPrescriptionSms($user, 'afterAiPrescription');
     }
 
     public function notifyUserExpertPrescriptionReady(NutritionDietRequest $request, NutritionDietPrescription $prescription): void
@@ -218,13 +222,20 @@ class NutritionDietNotificationService
             return;
         }
 
-        $this->smsDispatch->dispatchQueued($smsSetting, [
-            'type' => 'nutrition_diet',
-            'template_key' => $templateKey,
-            'recipient_mobile' => (string) $user->mobile,
-            'recipient_name' => (string) ($user->name ?? ''),
-            'message' => $message,
-        ]);
+        try {
+            $this->smsDispatch->dispatchQueued($smsSetting, [
+                'type' => 'nutrition_diet',
+                'template_key' => $templateKey,
+                'recipient_mobile' => (string) $user->mobile,
+                'recipient_name' => (string) ($user->name ?? ''),
+                'message' => $message,
+            ]);
+        } catch (\Throwable $exception) {
+            // The prescription has already been successfully delivered. A
+            // temporary SMS configuration/number issue must not mark the AI
+            // generation itself as failed or hide the diet from the user.
+            report($exception);
+        }
     }
 
     private function sendAdminNutritionSms(TenantUser $admin, NutritionDietRequest $request, string $templateKey): void
