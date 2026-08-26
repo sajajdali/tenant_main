@@ -19,12 +19,12 @@ return new class extends Migration
 
         Schema::create('nutrition_in_app_purchase_receipts', function (Blueprint $table): void {
             $table->id();
-            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
-            $table->foreignId('nutrition_package_id')->constrained('nutrition_packages')->cascadeOnDelete();
-            $table->foreignId('nutrition_package_order_id')->nullable()->constrained('nutrition_package_orders')->nullOnDelete();
+            $table->foreignId('user_id')->constrained('users', indexName: 'nipr_user_fk')->cascadeOnDelete();
+            $table->foreignId('nutrition_package_id')->constrained('nutrition_packages', indexName: 'nipr_package_fk')->cascadeOnDelete();
+            $table->foreignId('nutrition_package_order_id')->nullable()->constrained('nutrition_package_orders', indexName: 'nipr_order_fk')->nullOnDelete();
             $table->string('store', 40)->default('cafebazaar');
             $table->string('product_id');
-            $table->string('purchase_token')->unique();
+            $table->string('purchase_token')->unique('nipr_purchase_token_uq');
             $table->string('store_order_id')->nullable();
             $table->string('developer_payload')->nullable();
             $table->enum('status', ['pending', 'verified', 'granted', 'failed', 'consumed'])->default('pending');
@@ -36,8 +36,8 @@ return new class extends Migration
             $table->text('failure_reason')->nullable();
             $table->timestamps();
 
-            $table->index(['user_id', 'store', 'product_id']);
-            $table->index(['nutrition_package_order_id', 'status']);
+            $table->index(['user_id', 'store', 'product_id'], 'nipr_user_store_product_idx');
+            $table->index(['nutrition_package_order_id', 'status'], 'nipr_order_status_idx');
         });
     }
 
