@@ -1809,7 +1809,7 @@ class NutritionDietRequestController extends Controller
                 'consumptionType' => $log->consumption_type,
                 'isManual' => $log->consumption_type === 'manual',
                 'manualEntryMethod' => property_exists($log, 'manual_entry_method') ? ($log->manual_entry_method ?: 'manual') : 'manual',
-                'photoUrl' => property_exists($log, 'photo_path') && ! empty($log->photo_path) ? Storage::disk('media_public')->url((string) $log->photo_path) : null,
+                'photoUrl' => property_exists($log, 'photo_path') && ! empty($log->photo_path) ? $this->tenantMediaUrl((string) $log->photo_path) : null,
             ])
             ->values()
             ->all();
