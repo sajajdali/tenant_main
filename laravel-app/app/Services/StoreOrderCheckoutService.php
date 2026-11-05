@@ -4,15 +4,16 @@ declare(strict_types=1);
 
 namespace App\Services;
 
-use App\Domain\Store\Models\StoreProduct;
 use App\Domain\Store\Models\StoreOrder;
 use App\Domain\Store\Models\StoreOrderPayment;
+use App\Domain\Store\Models\StoreProduct;
 use App\Domain\Tenant\Models\GeneralSetting;
 use App\Domain\Tenant\Models\PaymentSetting;
 use App\Domain\Tenant\Models\TenantUser;
 use App\Services\Payments\TenantMaliartGateway;
-use App\Support\TenantSandboxMode;
 use App\Support\TenantPaymentGateways;
+use App\Support\TenantSandboxMode;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -24,9 +25,9 @@ class StoreOrderCheckoutService
 {
     public function __construct(
         private readonly CustomerClubService $customerClubService,
+        private readonly CustomerClubRewardRuleEngine $ruleEngine,
         private readonly TenantMaliartGateway $maliart,
-    ) {
-    }
+    ) {}
 
     public function settings(): array
     {
@@ -66,16 +67,17 @@ class StoreOrderCheckoutService
         $resolvedItems = $this->resolveItems($validated['items']);
         $pricing = $this->calculateAmounts($validated, $resolvedItems);
         $isFreeCheckout = (int) $pricing['total'] <= 0;
+        $isWalletCheckout = $validated['paymentMethod'] === 'wallet';
 
         /** @var array{order: StoreOrder, payment: StoreOrderPayment} $created */
-        $created = DB::transaction(function () use ($actor, $validated, $pricing, $settings, $resolvedItems, $isFreeCheckout): array {
-            $orderStatus = $isFreeCheckout ? 'pending_payment' : match ($validated['paymentMethod']) {
+        $created = DB::transaction(function () use ($actor, $validated, $pricing, $settings, $resolvedItems, $isFreeCheckout, $isWalletCheckout): array {
+            $orderStatus = ($isFreeCheckout || $isWalletCheckout) ? 'paid' : match ($validated['paymentMethod']) {
                 'cod' => 'placed',
                 'card' => 'awaiting_card_transfer',
                 default => 'pending_payment',
             };
 
-            $paymentStatus = $isFreeCheckout ? 'pending' : match ($validated['paymentMethod']) {
+            $paymentStatus = ($isFreeCheckout || $isWalletCheckout) ? 'paid' : match ($validated['paymentMethod']) {
                 'cod' => 'pending_cash',
                 'card' => 'awaiting_transfer',
                 default => 'pending',
@@ -103,7 +105,7 @@ class StoreOrderCheckoutService
                 'shipping_amount' => $pricing['shipping'],
                 'discount_amount' => $pricing['discount'],
                 'total_amount' => $pricing['total'],
-                'paid_at' => $validated['paymentMethod'] === 'cod' ? now() : null,
+                'paid_at' => in_array($validated['paymentMethod'], ['cod', 'wallet'], true) ? now() : null,
                 'metadata' => [
                     'payment_gateway' => $validated['gateway'] ?? null,
                     'stock_deducted_at' => $validated['paymentMethod'] === 'cod' ? now()->toDateTimeString() : null,
@@ -137,14 +139,18 @@ class StoreOrderCheckoutService
                 'sandbox_mode' => (bool) ($validated['paymentMethod'] === 'online' && $settings['sandbox_enabled']),
                 'amount' => $pricing['total'],
                 'expires_at' => now()->addMinutes(30),
-                'paid_at' => $validated['paymentMethod'] === 'cod' ? now() : null,
+                'paid_at' => in_array($validated['paymentMethod'], ['cod', 'wallet'], true) ? now() : null,
                 'metadata' => [
                     'card_note' => $settings['card_note'],
                 ],
             ]);
 
-            if ($validated['paymentMethod'] === 'cod') {
+            if (in_array($validated['paymentMethod'], ['cod', 'wallet'], true)) {
                 $this->deductStockForOrder($order->fresh(['items']));
+            }
+
+            if ($isWalletCheckout) {
+                $this->customerClubService->spendWalletForPurchase($actor, (int) $pricing['total'], 'store_order', (string) $order->id, 'پرداخت سفارش فروشگاه با اعتبار');
             }
 
             return ['order' => $order->fresh(['items', 'payments']), 'payment' => $payment->fresh()];
@@ -169,6 +175,13 @@ class StoreOrderCheckoutService
                 'order' => $order,
                 'payment' => $payment,
             ];
+        }
+
+        if ($isWalletCheckout) {
+            $this->customerClubService->awardStoreOrder($order);
+            $this->ruleEngine->handle('store_order.paid', $actor, 'store_order', (string) $order->id, ['amount' => $order->total_amount]);
+
+            return ['mode' => 'wallet', 'order' => $order, 'payment' => $payment];
         }
 
         if ($validated['paymentMethod'] === 'card') {
@@ -224,7 +237,7 @@ class StoreOrderCheckoutService
             ];
         }
 
-        $invoice = (new Invoice())
+        $invoice = (new Invoice)
             ->amount((int) $payment->amount)
             ->detail('description', 'پرداخت سفارش فروشگاه')
             ->detail('mobile', $order->customer_phone);
@@ -302,6 +315,7 @@ class StoreOrderCheckoutService
             $this->deductStockForOrder($lockedOrder);
             $freshOrder = $lockedOrder->fresh(['items', 'payments']);
             $this->customerClubService->awardStoreOrder($freshOrder);
+            $this->ruleEngine->handle('store_order.paid', TenantUser::query()->findOrFail($freshOrder->created_by_user_id), 'store_order', (string) $freshOrder->id, ['amount' => $freshOrder->total_amount]);
 
             return $freshOrder;
         });
@@ -351,6 +365,7 @@ class StoreOrderCheckoutService
 
             $freshOrder = $order->fresh(['items', 'payments']);
             $this->customerClubService->awardStoreOrder($freshOrder);
+            $this->ruleEngine->handle('store_order.paid', TenantUser::query()->findOrFail($freshOrder->created_by_user_id), 'store_order', (string) $freshOrder->id, ['amount' => $freshOrder->total_amount]);
 
             return $freshOrder;
         });
@@ -444,7 +459,7 @@ class StoreOrderCheckoutService
             ]);
         }
 
-        /** @var \Illuminate\Support\Collection<int, StoreProduct> $products */
+        /** @var Collection<int, StoreProduct> $products */
         $products = StoreProduct::query()
             ->whereIn('id', $productIds->all())
             ->where('is_active', true)

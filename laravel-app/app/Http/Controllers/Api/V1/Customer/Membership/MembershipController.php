@@ -626,8 +626,70 @@ class MembershipController extends Controller
         return $this->success([
             'membership' => $this->membershipData($user, $profile->fresh()),
             'medicalConditions' => $this->medicalConditionsStepData($profile->fresh()),
-            'nextStep' => $this->membershipPath('medications-and-supplements'),
+            'nextStep' => $this->membershipPath('weight-loss-injections'),
         ], 'سوابق بیماری ثبت شد.');
+    }
+
+    public function weightLossInjections(Request $request): JsonResponse
+    {
+        /** @var TenantUser $user */
+        $user = $request->user();
+        $profile = $this->nutritionProfile($user);
+
+        if (! $profile || $profile->weekly_weight_change_kg === null) {
+            return response()->json([
+                'success' => false,
+                'message' => 'ابتدا مراحل قبلی عضویت را کامل کنید.',
+                'errors' => [
+                    'profile' => ['Weekly rate is required before weight-loss injections step.'],
+                ],
+            ], 422);
+        }
+
+        return $this->success($this->weightLossInjectionsStepData($profile));
+    }
+
+    public function storeWeightLossInjections(Request $request): JsonResponse
+    {
+        /** @var TenantUser $user */
+        $user = $request->user();
+
+        $validated = $request->validate([
+            'usesWeightLossInjections' => ['required', 'boolean'],
+            'weightLossInjectionName' => ['nullable', 'string', 'max:255'],
+            'weightLossInjectionDoseCount' => ['nullable', 'integer', 'min:1', 'max:1000'],
+        ]);
+
+        $profile = $this->nutritionProfile($user);
+
+        if (! $profile || $profile->weekly_weight_change_kg === null) {
+            return response()->json([
+                'success' => false,
+                'message' => 'ابتدا مراحل قبلی عضویت را کامل کنید.',
+                'errors' => [
+                    'profile' => ['Weekly rate is required before weight-loss injections step.'],
+                ],
+            ], 422);
+        }
+
+        $usesWeightLossInjections = (bool) $validated['usesWeightLossInjections'];
+
+        $profile->forceFill([
+            'uses_weight_loss_injections' => $usesWeightLossInjections,
+            'weight_loss_injection_name' => $usesWeightLossInjections
+                ? (trim((string) ($validated['weightLossInjectionName'] ?? '')) ?: null)
+                : null,
+            'weight_loss_injection_dose_count' => $usesWeightLossInjections
+                ? ($validated['weightLossInjectionDoseCount'] ?? null)
+                : null,
+            'preferences_completed_at' => now(),
+        ])->save();
+
+        return $this->success([
+            'membership' => $this->membershipData($user, $profile->fresh()),
+            'weightLossInjections' => $this->weightLossInjectionsStepData($profile->fresh()),
+            'nextStep' => $this->membershipPath('medications-and-supplements'),
+        ], 'سابقه استفاده از آمپول لاغری ثبت شد.');
     }
 
     public function medicationsAndSupplements(Request $request): JsonResponse
@@ -1036,6 +1098,7 @@ class MembershipController extends Controller
             ['key' => 'target-weight', 'title' => 'وزن هدف', 'endpoint' => '/api/v1/app/membership/target-weight'],
             ['key' => 'result', 'title' => 'برنامه رسیدن به وزن هدف', 'endpoint' => '/api/v1/app/membership/result'],
             ['key' => 'medical-conditions', 'title' => 'سوابق بیماری', 'endpoint' => '/api/v1/app/membership/medical-conditions'],
+            ['key' => 'weight-loss-injections', 'title' => 'سابقه آمپول لاغری', 'endpoint' => '/api/v1/app/membership/weight-loss-injections'],
             ['key' => 'medications-and-supplements', 'title' => 'دارو یا مکمل مصرفی', 'endpoint' => '/api/v1/app/membership/medications-and-supplements'],
             ['key' => 'allergies', 'title' => 'حساسیت غذایی', 'endpoint' => '/api/v1/app/membership/allergies'],
             ['key' => 'disliked-foods', 'title' => 'غذاهای نامطلوب', 'endpoint' => '/api/v1/app/membership/disliked-foods'],
@@ -1230,6 +1293,25 @@ class MembershipController extends Controller
             'medicalConditions' => NutritionMedicalConditionSupport::summarizeEntries($items),
             'medicalConditionsItems' => $items,
             'completedAt' => $profile->preferences_completed_at?->toIso8601String(),
+        ];
+    }
+
+    private function weightLossInjectionsStepData(NutritionProfile $profile): array
+    {
+        return [
+            'step' => 'weight-loss-injections',
+            'title' => 'سابقه آمپول لاغری',
+            'subtitle' => 'مرحله آمپول لاغری',
+            'description' => 'آیا تاکنون از آمپول لاغری استفاده کرده‌اید؟',
+            'value' => [
+                'usesWeightLossInjections' => $profile->uses_weight_loss_injections,
+                'weightLossInjectionName' => $profile->weight_loss_injection_name,
+                'weightLossInjectionDoseCount' => $profile->weight_loss_injection_dose_count,
+                'completedAt' => $profile->preferences_completed_at?->toIso8601String(),
+            ],
+            'options' => [
+                'detailsOptional' => true,
+            ],
         ];
     }
 

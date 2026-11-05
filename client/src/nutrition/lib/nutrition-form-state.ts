@@ -35,6 +35,9 @@ export interface NutritionFormState {
   medicalConditions?: string;
   medicalConditionsItems?: NutritionMedicalConditionItem[];
   medicationsAndSupplements?: string;
+  usesWeightLossInjections?: boolean;
+  weightLossInjectionName?: string;
+  weightLossInjectionDoseCount?: number;
   mindsetAnswers?: Record<string, string>;
   mindsetCompleted?: boolean;
   selectedNutritionPackageId?: string;

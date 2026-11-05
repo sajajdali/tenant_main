@@ -55,6 +55,9 @@ export default function NutritionMembershipDislikedFoodsPage() {
         medicalConditions: latestFormState.medicalConditions ?? summarizeMedicalConditionItems(latestFormState.medicalConditionsItems),
         medicalConditionsItems: latestFormState.medicalConditionsItems ?? [],
         medicationsAndSupplements: latestFormState.medicationsAndSupplements ?? "",
+        usesWeightLossInjections: latestFormState.usesWeightLossInjections ?? false,
+        weightLossInjectionName: latestFormState.weightLossInjectionName ?? "",
+        weightLossInjectionDoseCount: latestFormState.weightLossInjectionDoseCount,
         dislikedFoods: nextDislikedFoods,
         foodAllergies: latestFormState.foodAllergies ?? "",
       });
@@ -73,6 +76,9 @@ export default function NutritionMembershipDislikedFoodsPage() {
       medicalConditions: latestFormState.medicalConditions ?? summarizeMedicalConditionItems(latestFormState.medicalConditionsItems),
       medicalConditionsItems: latestFormState.medicalConditionsItems ?? [],
       medicationsAndSupplements: latestFormState.medicationsAndSupplements ?? "",
+      usesWeightLossInjections: latestFormState.usesWeightLossInjections ?? false,
+      weightLossInjectionName: latestFormState.weightLossInjectionName ?? "",
+      weightLossInjectionDoseCount: latestFormState.weightLossInjectionDoseCount,
       dislikedFoods: nextDislikedFoods,
       foodAllergies: latestFormState.foodAllergies ?? "",
     });
@@ -90,6 +96,9 @@ export default function NutritionMembershipDislikedFoodsPage() {
       medicalConditions: latestFormState.medicalConditions ?? summarizeMedicalConditionItems(latestFormState.medicalConditionsItems),
       medicalConditionsItems: latestFormState.medicalConditionsItems ?? [],
       medicationsAndSupplements: latestFormState.medicationsAndSupplements ?? "",
+      usesWeightLossInjections: latestFormState.usesWeightLossInjections ?? false,
+      weightLossInjectionName: latestFormState.weightLossInjectionName ?? "",
+      weightLossInjectionDoseCount: latestFormState.weightLossInjectionDoseCount,
       dislikedFoods: nextDislikedFoods,
       foodAllergies: latestFormState.foodAllergies ?? "",
     });

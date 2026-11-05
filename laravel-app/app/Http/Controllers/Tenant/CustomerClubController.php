@@ -5,9 +5,13 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Tenant;
 
 use App\Domain\Tenant\Models\CustomerClubReward;
+use App\Domain\Tenant\Models\CustomerClubRewardRule;
+use App\Domain\Tenant\Models\CustomerClubRewardRuleAward;
+use App\Domain\Tenant\Models\CustomerClubRewardRuleReview;
 use App\Domain\Tenant\Models\CustomerClubTier;
 use App\Domain\Tenant\Models\TenantUser;
 use App\Http\Controllers\Controller;
+use App\Services\CustomerClubRewardRuleEngine;
 use App\Services\CustomerClubService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -15,9 +19,10 @@ use Illuminate\Validation\Rule;
 
 class CustomerClubController extends Controller
 {
-    public function __construct(private readonly CustomerClubService $service)
-    {
-    }
+    public function __construct(
+        private readonly CustomerClubService $service,
+        private readonly CustomerClubRewardRuleEngine $ruleEngine,
+    ) {}
 
     public function adminOverview(Request $request): JsonResponse
     {
@@ -177,6 +182,74 @@ class CustomerClubController extends Controller
         ]);
     }
 
+    public function rules(Request $request): JsonResponse
+    {
+        $this->abortUnlessTenantAdmin($request);
+
+        return response()->json(['success' => true, 'data' => CustomerClubRewardRule::query()
+            ->withCount('awards')->latest('id')->get()->map(fn (CustomerClubRewardRule $rule) => $this->serializeRule($rule))->values()]);
+    }
+
+    public function storeRule(Request $request): JsonResponse
+    {
+        $actor = $this->abortUnlessTenantAdmin($request);
+        $rule = CustomerClubRewardRule::query()->create([...$request->validate($this->ruleRules()), 'created_by_user_id' => $actor->id]);
+
+        return response()->json(['success' => true, 'data' => $this->serializeRule($rule), 'message' => 'قانون پاداش ذخیره شد.']);
+    }
+
+    public function updateRule(Request $request, CustomerClubRewardRule $rule): JsonResponse
+    {
+        $this->abortUnlessTenantAdmin($request);
+        $rule->update($request->validate($this->ruleRules()));
+
+        return response()->json(['success' => true, 'data' => $this->serializeRule($rule->fresh()), 'message' => 'قانون پاداش به‌روزرسانی شد.']);
+    }
+
+    public function destroyRule(Request $request, CustomerClubRewardRule $rule): JsonResponse
+    {
+        $this->abortUnlessTenantAdmin($request);
+        $rule->delete();
+
+        return response()->json(['success' => true, 'data' => true]);
+    }
+
+    public function reviews(Request $request): JsonResponse
+    {
+        $this->abortUnlessTenantAdmin($request);
+
+        return response()->json(['success' => true, 'data' => CustomerClubRewardRuleReview::query()->with(['award.rule', 'award.user'])->latest('id')->get()->map(fn (CustomerClubRewardRuleReview $review) => [
+            'id' => (string) $review->id, 'status' => $review->status, 'note' => $review->note,
+            'award' => ['ruleTitle' => $review->award?->rule?->title, 'userName' => $review->award?->user?->name, 'amount' => $review->award?->reward_amount],
+        ])->values()]);
+    }
+
+    public function ruleAwards(Request $request): JsonResponse
+    {
+        $this->abortUnlessTenantAdmin($request);
+        $data = $request->validate(['rule_id' => ['nullable', 'integer', 'exists:customer_club_reward_rules,id'], 'status' => ['nullable', 'string', 'max:30']]);
+
+        return response()->json(['success' => true, 'data' => CustomerClubRewardRuleAward::query()
+            ->with(['rule:id,title', 'user:id,name,mobile', 'review:id,award_id,status,note,reviewed_at'])
+            ->when(isset($data['rule_id']), fn ($query) => $query->where('rule_id', $data['rule_id']))
+            ->when(isset($data['status']), fn ($query) => $query->where('status', $data['status']))
+            ->latest('id')->limit(100)->get()->map(fn (CustomerClubRewardRuleAward $award) => [
+                'id' => (string) $award->id, 'status' => $award->status, 'amount' => (int) $award->reward_amount,
+                'awardedAt' => $award->awarded_at?->toISOString(), 'ruleTitle' => $award->rule?->title,
+                'userName' => $award->user?->name, 'userMobile' => $award->user?->mobile,
+                'reviewStatus' => $award->review?->status, 'reviewNote' => $award->review?->note,
+            ])->values()]);
+    }
+
+    public function reviewRuleAward(Request $request, CustomerClubRewardRuleReview $review): JsonResponse
+    {
+        $actor = $this->abortUnlessTenantAdmin($request);
+        $data = $request->validate(['approved' => ['required', 'boolean'], 'note' => ['nullable', 'string', 'max:2000']]);
+        $this->ruleEngine->review($review, $actor, (bool) $data['approved'], $data['note'] ?? null);
+
+        return response()->json(['success' => true, 'data' => true]);
+    }
+
     public function me(Request $request): JsonResponse
     {
         $user = $request->user('tenant_web');
@@ -297,5 +370,31 @@ class CustomerClubController extends Controller
             'ends_at' => ['nullable', 'date', 'after_or_equal:starts_at'],
             'description' => ['nullable', 'string', 'max:5000'],
         ];
+    }
+
+    private function ruleRules(): array
+    {
+        return [
+            'title' => ['required', 'string', 'max:255'], 'is_active' => ['required', 'boolean'],
+            'event_type' => ['required', Rule::in([
+                CustomerClubRewardRule::EVENT_APPOINTMENT_PAID, CustomerClubRewardRule::EVENT_STORE_ORDER_PAID,
+                CustomerClubRewardRule::EVENT_NUTRITION_DIET_ACTIVATED, CustomerClubRewardRule::EVENT_NUTRITION_MEAL_LOGGED,
+                CustomerClubRewardRule::EVENT_NUTRITION_WEIGHT_RECORDED, CustomerClubRewardRule::EVENT_NUTRITION_DIET_COMPLETED,
+            ])],
+            'scope_type' => ['required', 'string', 'max:50'], 'scope_ids' => ['nullable', 'array'], 'scope_ids.*' => ['string', 'max:100'],
+            'conditions_json' => ['nullable', 'array'], 'reward_type' => ['required', Rule::in(['wallet_credit', 'points'])],
+            'reward_amount' => ['required', 'integer', 'min:1', 'max:1000000000'], 'award_timing' => ['required', Rule::in(['immediate', 'manual_review'])],
+            'per_user_limit' => ['nullable', 'integer', 'min:1', 'max:100000'], 'limit_period' => ['required', Rule::in(['source', 'day', 'month', 'lifetime'])],
+            'priority' => ['nullable', 'integer', 'min:0', 'max:100000'], 'starts_at' => ['nullable', 'date'], 'ends_at' => ['nullable', 'date', 'after_or_equal:starts_at'],
+        ];
+    }
+
+    private function serializeRule(CustomerClubRewardRule $rule): array
+    {
+        return ['id' => (string) $rule->id, 'title' => $rule->title, 'isActive' => (bool) $rule->is_active, 'eventType' => $rule->event_type,
+            'scopeType' => $rule->scope_type, 'scopeIds' => $rule->scope_ids ?? [], 'conditions' => $rule->conditions_json ?? [],
+            'rewardType' => $rule->reward_type, 'rewardAmount' => (int) $rule->reward_amount, 'awardTiming' => $rule->award_timing,
+            'perUserLimit' => $rule->per_user_limit, 'limitPeriod' => $rule->limit_period, 'priority' => (int) $rule->priority,
+            'startsAt' => $rule->starts_at?->toISOString(), 'endsAt' => $rule->ends_at?->toISOString(), 'awardsCount' => (int) ($rule->awards_count ?? 0)];
     }
 }

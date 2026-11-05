@@ -514,6 +514,9 @@ class NutritionAdminUserController extends Controller
             'medical_conditions_items.*.ongoing' => ['nullable', 'boolean'],
             'medical_conditions_items.*.notes' => ['nullable', 'string', 'max:1000'],
             'medications_and_supplements' => ['nullable', 'string'],
+            'uses_weight_loss_injections' => ['nullable', 'boolean'],
+            'weight_loss_injection_name' => ['nullable', 'string', 'max:255'],
+            'weight_loss_injection_dose_count' => ['nullable', 'integer', 'min:1', 'max:1000'],
             'food_allergies' => ['nullable', 'string'],
             'disliked_foods' => ['nullable', 'string'],
             'mindset_answers' => ['nullable', 'array'],
@@ -573,6 +576,13 @@ class NutritionAdminUserController extends Controller
                     'weekly_weight_change_kg' => $validated['weekly_weight_change_kg'] ?? null,
                     'medical_conditions' => NutritionMedicalConditionSupport::encodeEntries($medicalConditionEntries),
                     'medications_and_supplements' => trim((string) ($validated['medications_and_supplements'] ?? '')) ?: null,
+                    'uses_weight_loss_injections' => $validated['uses_weight_loss_injections'] ?? null,
+                    'weight_loss_injection_name' => ($validated['uses_weight_loss_injections'] ?? false)
+                        ? (trim((string) ($validated['weight_loss_injection_name'] ?? '')) ?: null)
+                        : null,
+                    'weight_loss_injection_dose_count' => ($validated['uses_weight_loss_injections'] ?? false)
+                        ? ($validated['weight_loss_injection_dose_count'] ?? null)
+                        : null,
                     'food_allergies' => trim((string) ($validated['food_allergies'] ?? '')) ?: null,
                     'disliked_foods' => trim((string) ($validated['disliked_foods'] ?? '')) ?: null,
                     'mindset_answers' => $normalizedMindsetAnswers !== [] ? $normalizedMindsetAnswers : null,
@@ -756,6 +766,9 @@ class NutritionAdminUserController extends Controller
                 'medicalConditions' => NutritionMedicalConditionSupport::summarizeEntries(NutritionMedicalConditionSupport::parseEntries($profile->medical_conditions)),
                 'medicalConditionsItems' => NutritionMedicalConditionSupport::parseEntries($profile->medical_conditions),
                 'medicationsAndSupplements' => $profile->medications_and_supplements,
+                'usesWeightLossInjections' => $profile->uses_weight_loss_injections,
+                'weightLossInjectionName' => $profile->weight_loss_injection_name,
+                'weightLossInjectionDoseCount' => $profile->weight_loss_injection_dose_count,
                 'idealWeightKg' => $profile->ideal_weight_kg !== null ? (float) $profile->ideal_weight_kg : null,
                 'recommendedTargetWeightKg' => $profile->recommended_target_weight_kg !== null ? (float) $profile->recommended_target_weight_kg : null,
                 'dislikedFoods' => $profile->disliked_foods,
@@ -801,6 +814,9 @@ class NutritionAdminUserController extends Controller
                 'weekly_weight_change_kg' => $profile->weekly_weight_change_kg,
                 'medical_conditions' => $profile->medical_conditions,
                 'medications_and_supplements' => $profile->medications_and_supplements,
+                'uses_weight_loss_injections' => $profile->uses_weight_loss_injections,
+                'weight_loss_injection_name' => $profile->weight_loss_injection_name,
+                'weight_loss_injection_dose_count' => $profile->weight_loss_injection_dose_count,
                 'disliked_foods' => $profile->disliked_foods,
                 'food_allergies' => $profile->food_allergies,
                 'mindset_answers' => $profile->mindset_answers !== null ? json_encode($profile->mindset_answers, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) : null,

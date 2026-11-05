@@ -53,6 +53,9 @@ export interface NutritionProfile {
   medicalConditions?: string | null;
   medicalConditionsItems?: NutritionMedicalConditionItem[] | null;
   medicationsAndSupplements?: string | null;
+  usesWeightLossInjections?: boolean | null;
+  weightLossInjectionName?: string | null;
+  weightLossInjectionDoseCount?: number | null;
   mindsetAnswers?: Record<string, string> | null;
   selectedNutritionPackageId?: string | null;
   selectedNutritionPackageName?: string | null;
@@ -251,6 +254,7 @@ export interface NutritionPackageCheckoutPreview {
   amount: number;
   discountAmount: number;
   payableAmount: number;
+  walletAvailable?: number;
   discountCode?: {
     id: string;
     code: string;
@@ -322,6 +326,9 @@ export interface NutritionAdminUserProfilePayload {
     medicalConditions?: string | null;
     medicalConditionsItems?: NutritionMedicalConditionItem[] | null;
     medicationsAndSupplements?: string | null;
+    usesWeightLossInjections?: boolean | null;
+    weightLossInjectionName?: string | null;
+    weightLossInjectionDoseCount?: number | null;
     mindsetAnswers?: Record<string, string> | null;
   } | null;
   subscription?: NutritionPackageSubscription | null;
@@ -2972,6 +2979,43 @@ export interface CustomerClubMePayload {
   recentRedemptions: CustomerClubRedemption[];
 }
 
+export interface CustomerClubRewardRule {
+  id: string;
+  title: string;
+  isActive: boolean;
+  eventType: string;
+  scopeType: string;
+  scopeIds: string[];
+  conditions: Record<string, unknown>;
+  rewardType: "wallet_credit" | "points";
+  rewardAmount: number;
+  awardTiming: "immediate" | "manual_review";
+  perUserLimit?: number | null;
+  limitPeriod: string;
+  priority: number;
+  awardsCount: number;
+  startsAt?: string | null;
+  endsAt?: string | null;
+}
+
+export interface CustomerClubRuleAward {
+  id: string;
+  status: string;
+  amount: number;
+  awardedAt?: string | null;
+  ruleTitle?: string | null;
+  userName?: string | null;
+  userMobile?: string | null;
+  reviewStatus?: string | null;
+}
+
+export interface CustomerClubRuleReview {
+  id: string;
+  status: "pending" | "approved" | "rejected";
+  note?: string | null;
+  award: { ruleTitle?: string | null; userName?: string | null; amount?: number | null };
+}
+
 export interface PanelFinanceWindowStats {
   transactionsCount: number;
   grossAmount: number;
@@ -3467,7 +3511,7 @@ export interface StoreCheckoutPayment {
 }
 
 export interface StoreCheckoutResponse {
-  mode: "free" | "sandbox" | "gateway" | "card" | "cod";
+  mode: "free" | "sandbox" | "gateway" | "card" | "cod" | "wallet";
   order: StoreCheckoutOrder;
   payment: StoreCheckoutPayment;
   cardNote?: string | null;

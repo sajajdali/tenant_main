@@ -399,6 +399,8 @@ return [
             'appointment_benefits_restored_description' => 'تم تصحيح حالة موعدك وأصبحت نقاطه ورصيده فعالين مرة أخرى.',
             'store_order_earn' => 'هدية شراء المتجر',
             'store_order_earn_description' => 'تم تسجيل نقاط ورصيد لك بسبب عملية شراء ناجحة من المتجر.',
+            'store_order_reversal' => 'عكس مكافأة طلب المتجر',
+            'store_order_reversal_description' => 'تم عكس مكافأة هذا الطلب بسبب إلغاء الطلب أو إرجاعه.',
             'appointment_wallet_reserved' => 'حجز رصيد لدفع الموعد',
             'appointment_wallet_reserved_description' => 'تم حجز جزء من مبلغ الموعد من محفظة نادي العملاء.',
             'appointment_wallet_released' => 'إرجاع رصيد دفع الموعد',

@@ -7,8 +7,8 @@ namespace App\Services;
 use App\Domain\Tenant\Models\GeneralSetting;
 use App\Domain\Tenant\Models\NutritionPackage;
 use App\Domain\Tenant\Models\NutritionPackageOrder;
-use App\Domain\Tenant\Models\NutritionProfile;
 use App\Domain\Tenant\Models\NutritionPackageSubscription;
+use App\Domain\Tenant\Models\NutritionProfile;
 use App\Domain\Tenant\Models\PaymentSetting;
 use App\Domain\Tenant\Models\TenantUser;
 use App\Services\Payments\TenantMaliartGateway;
@@ -16,8 +16,8 @@ use App\Support\TenantPaymentGateways;
 use App\Support\TenantSandboxMode;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Shetabit\Multipay\Exceptions\InvalidPaymentException;
 use Shetabit\Multipay\Invoice;
@@ -30,8 +30,9 @@ class NutritionPackagePaymentService
         private readonly TenantMaliartGateway $maliart,
         private readonly TenantFeatureModuleManager $featureModules,
         private readonly CustomLandingService $customLanding,
-    ) {
-    }
+        private readonly CustomerClubRewardRuleEngine $ruleEngine,
+        private readonly CustomerClubService $customerClub,
+    ) {}
 
     public function settings(): array
     {
@@ -63,7 +64,7 @@ class NutritionPackagePaymentService
         ];
     }
 
-    public function preview(NutritionPackage $package, ?string $discountCode = null): array
+    public function preview(NutritionPackage $package, ?string $discountCode = null, ?TenantUser $user = null): array
     {
         $package = $this->ensurePurchasablePackage($package);
         $settings = $this->settings();
@@ -76,6 +77,7 @@ class NutritionPackagePaymentService
             'discountAmount' => (int) $discount['discountAmount'],
             'payableAmount' => (int) $discount['payableAmount'],
             'discountCode' => $discount['code'],
+            'walletAvailable' => $user ? $this->customerClub->availableWalletBalance($user) : 0,
             'settings' => [
                 'enabled' => (bool) $settings['enabled'],
                 'sandboxEnabled' => (bool) $settings['sandbox_enabled'],
@@ -109,12 +111,13 @@ class NutritionPackagePaymentService
             ]);
         }
 
-        $preview = $this->preview($package, $discountCode);
+        $preview = $this->preview($package, $discountCode, $user);
         $settings = $this->settings();
 
         $isFreeCheckout = (int) $preview['payableAmount'] <= 0;
 
-        if (! $isFreeCheckout && ! $settings['enabled'] && ! $settings['sandbox_enabled']) {
+        $isWalletCheckout = $gateway === 'wallet';
+        if (! $isFreeCheckout && ! $isWalletCheckout && ! $settings['enabled'] && ! $settings['sandbox_enabled']) {
             throw ValidationException::withMessages([
                 'payment' => 'پرداخت آنلاین برای این سامانه فعال نیست.',
             ]);
@@ -153,6 +156,13 @@ class NutritionPackagePaymentService
         });
 
         $order = $created['order'];
+
+        if ($isWalletCheckout) {
+            $this->customerClub->spendWalletForPurchase($user, (int) $preview['payableAmount'], 'nutrition_package_order', (string) $order->id, 'پرداخت پکیج رژیم با اعتبار');
+            $paid = $this->markSuccessful($order, 'WALLET-'.$order->invoice_number);
+
+            return ['mode' => 'wallet', 'order' => $this->serializeOrder($paid->fresh(['package', 'subscription', 'discountCode'])), 'subscription' => $this->serializeSubscription($paid->subscription)];
+        }
 
         if ($isFreeCheckout) {
             $paid = $this->markSuccessful($order, 'FREE-'.$order->invoice_number);
@@ -200,7 +210,7 @@ class NutritionPackagePaymentService
                 'redirectForm' => null,
             ];
         }
-        $invoice = (new Invoice())
+        $invoice = (new Invoice)
             ->amount((int) $order->payable_amount)
             ->detail('description', 'خرید پکیج رژیم '.$package->name)
             ->detail('mobile', (string) $user->mobile);
@@ -574,6 +584,12 @@ class NutritionPackagePaymentService
 
             $locked->subscription()->save($subscription);
 
+            $this->ruleEngine->handle('nutrition.diet.activated', TenantUser::query()->findOrFail($locked->user_id), 'nutrition_package_order', (string) $locked->id, [
+                'nutrition_package_id' => $package->id,
+                'nutrition_package_subscription_id' => $subscription->id,
+                'amount' => $locked->payable_amount,
+            ]);
+
             return $locked->fresh(['package', 'subscription', 'discountCode']);
         });
     }
@@ -668,7 +684,7 @@ class NutritionPackagePaymentService
 
     private function makeInvoiceNumber(): string
     {
-        return 'NPK-' . now()->format('Ymd') . '-' . Str::upper(Str::random(6));
+        return 'NPK-'.now()->format('Ymd').'-'.Str::upper(Str::random(6));
     }
 
     private function gatewayLabel(?string $gateway): string

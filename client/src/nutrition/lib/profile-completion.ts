@@ -67,6 +67,9 @@ export function syncNutritionProfileFormState(profile: NutritionProfile | null) 
     medicalConditions: profile.preferencesCompletedAt || profile.medicalConditions != null ? profile.medicalConditions ?? summarizeMedicalConditionItems(profile.medicalConditionsItems) : undefined,
     medicalConditionsItems: profile.preferencesCompletedAt || profile.medicalConditionsItems != null ? normalizeMedicalConditionItems(profile.medicalConditionsItems) : undefined,
     medicationsAndSupplements: profile.preferencesCompletedAt || profile.medicationsAndSupplements != null ? profile.medicationsAndSupplements ?? "" : undefined,
+    usesWeightLossInjections: profile.usesWeightLossInjections ?? undefined,
+    weightLossInjectionName: profile.weightLossInjectionName ?? undefined,
+    weightLossInjectionDoseCount: profile.weightLossInjectionDoseCount ?? undefined,
     mindsetAnswers: profile.mindsetAnswers ?? undefined,
     mindsetCompleted: Boolean(profile.mindsetCompletedAt),
   });

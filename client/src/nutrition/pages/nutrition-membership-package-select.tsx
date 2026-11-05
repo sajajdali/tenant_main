@@ -65,6 +65,7 @@ export default function NutritionMembershipPackageSelectPage() {
   const [discountLoading, setDiscountLoading] = useState(false);
   const [preview, setPreview] = useState<NutritionPackageCheckoutPreview | null>(null);
   const [selectedGateway, setSelectedGateway] = useState("");
+  const [useWallet, setUseWallet] = useState(false);
 
   const packageId = params?.packageId ?? "";
   const packagesHref = `/nutrition/membership/packages${directBuy ? "?direct_buy=1" : ""}`;
@@ -159,7 +160,7 @@ export default function NutritionMembershipPackageSelectPage() {
       setPaying(true);
       const result = await api.nutritionPackageCheckout.pay(
         preview.package.id,
-        preview.settings.sandboxEnabled ? undefined : selectedGateway || undefined,
+        useWallet ? "wallet" : (preview.settings.sandboxEnabled ? undefined : selectedGateway || undefined),
         discountCode || undefined,
         replaceActiveSubscription,
       );
@@ -180,7 +181,7 @@ export default function NutritionMembershipPackageSelectPage() {
         selectedNutritionPackageName: payload.order.package?.name ?? preview.package.name,
       });
 
-      if (payload.mode === "sandbox" || payload.mode === "free") {
+      if (payload.mode === "sandbox" || payload.mode === "free" || payload.mode === "wallet") {
         const query = new URLSearchParams({
           status: "success",
           order: payload.order.id,
@@ -366,6 +367,20 @@ export default function NutritionMembershipPackageSelectPage() {
             {t("payment.directGateway")}
           </div>
         ) : null}
+        {preview.walletAvailable !== undefined ? (
+          <button
+            type="button"
+            onClick={() => setUseWallet((value) => !value)}
+            disabled={preview.walletAvailable < preview.payableAmount}
+            className={`w-full rounded-[18px] border px-4 py-3 text-start text-[12px] font-black transition ${useWallet ? "border-emerald-300 bg-emerald-400/15 text-emerald-100" : "border-white/10 bg-white/[0.04] text-slate-300"}`}
+          >
+            <div className="flex items-center justify-between gap-3">
+              <span>{t("booking.modal.payment.walletCredit")}</span>
+              <span>{format.number(preview.walletAvailable)} {t("nutritionMembershipPackages.tomanUnit")}</span>
+            </div>
+            {preview.walletAvailable < preview.payableAmount ? <div className="mt-1 text-[10px] text-rose-300">{t("booking.modal.payment.walletPartialDescription")}</div> : null}
+          </button>
+        ) : null}
       </div>
 
       <div className="fixed inset-x-0 bottom-0 z-20 border-t border-white/10 bg-[#0a1224]/92 px-5 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] pt-3 backdrop-blur-xl">
@@ -373,7 +388,7 @@ export default function NutritionMembershipPackageSelectPage() {
           <Button
             type="button"
             onClick={() => void handlePay()}
-            disabled={paying || (!isFreeCheckout && !preview.settings.sandboxEnabled && !maliartEnabled && !selectedGateway)}
+            disabled={paying || (!isFreeCheckout && !useWallet && !preview.settings.sandboxEnabled && !maliartEnabled && !selectedGateway)}
             className="h-12 w-full rounded-[17px] border border-rose-300/20 bg-[linear-gradient(135deg,#e11d48,#be123c)] text-[14px] font-black text-white shadow-[0_25px_55px_-28px_rgba(225,29,72,0.92)] hover:opacity-95"
           >
             {paying ? (

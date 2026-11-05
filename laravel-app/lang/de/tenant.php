@@ -399,6 +399,8 @@ return [
             'appointment_benefits_restored_description' => 'Ihr Terminstatus wurde korrigiert und seine Punkte und sein Guthaben sind wieder aktiv.',
             'store_order_earn' => 'Geschenk für Shop-Kauf',
             'store_order_earn_description' => 'Für Ihren erfolgreichen Shop-Kauf wurden Punkte und Guthaben hinzugefügt.',
+            'store_order_reversal' => 'Stornierung der Shop-Bestellprämie',
+            'store_order_reversal_description' => 'Die Prämie für diese Shop-Bestellung wurde wegen Stornierung oder Rückgabe zurückgebucht.',
             'appointment_wallet_reserved' => 'Guthaben für Terminzahlung reserviert',
             'appointment_wallet_reserved_description' => 'Ein Teil des Terminbetrags wurde aus Ihrer Kundenclub-Wallet reserviert.',
             'appointment_wallet_released' => 'Terminzahlungs-Guthaben zurückgegeben',

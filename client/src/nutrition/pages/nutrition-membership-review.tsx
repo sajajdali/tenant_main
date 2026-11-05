@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, Ban, BriefcaseMedical, CalendarDays, ClipboardPlus, Dumbbell, Flag, Pencil, Pill, Ruler, Scale, ShieldAlert, Target, UserRound } from "lucide-react";
+import { ArrowLeft, Ban, BriefcaseMedical, CalendarDays, ClipboardPlus, Dumbbell, Flag, Pencil, Pill, Ruler, Scale, ShieldAlert, Syringe, Target, UserRound } from "lucide-react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -277,6 +277,22 @@ export default function NutritionMembershipReviewPage() {
               href={buildEditHref("/nutrition/membership/medical-conditions")}
             />
             <InfoRow icon={<Pill className="h-5 w-5" />} label={t("nutritionMembershipReview.label.medications")} value={compactText(profile.medicationsAndSupplements, emptyText)} href={buildEditHref("/nutrition/membership/medications-and-supplements")} />
+            <InfoRow
+              icon={<Syringe className="h-5 w-5" />}
+              label={t("nutritionMembershipReview.label.weightLossInjection")}
+              value={profile.usesWeightLossInjections === true
+                ? [
+                    t("nutritionMembershipMedications.injection.yes"),
+                    profile.weightLossInjectionName?.trim(),
+                    profile.weightLossInjectionDoseCount != null
+                      ? t("nutritionMembershipReview.injection.doseValue", { count: format.number(profile.weightLossInjectionDoseCount) })
+                      : null,
+                  ].filter(Boolean).join(" · ")
+                : profile.usesWeightLossInjections === false
+                  ? t("nutritionMembershipMedications.injection.no")
+                  : emptyText}
+              href={buildEditHref("/nutrition/membership/weight-loss-injections")}
+            />
             <InfoRow icon={<Ban className="h-5 w-5" />} label={t("nutritionMembershipReview.label.dislikedFoods")} value={compactText(profile.dislikedFoods, emptyText)} href={buildEditHref("/nutrition/membership/disliked-foods")} />
             <InfoRow icon={<ShieldAlert className="h-5 w-5" />} label={t("nutritionMembershipReview.label.allergies")} value={compactText(profile.foodAllergies, emptyText)} href={buildEditHref("/nutrition/membership/allergies")} />
             </div>

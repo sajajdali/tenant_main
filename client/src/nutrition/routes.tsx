@@ -9,6 +9,7 @@ import NutritionMembershipHeightPage from "@/nutrition/pages/nutrition-membershi
 import NutritionMembershipAllergiesPage from "@/nutrition/pages/nutrition-membership-allergies";
 import NutritionMembershipMedicalConditionsPage from "@/nutrition/pages/nutrition-membership-medical-conditions";
 import NutritionMembershipMedicationsAndSupplementsPage from "@/nutrition/pages/nutrition-membership-medications-and-supplements";
+import NutritionMembershipWeightLossInjectionsPage from "@/nutrition/pages/nutrition-membership-weight-loss-injections";
 import NutritionMembershipMindsetPage from "@/nutrition/pages/nutrition-membership-mindset";
 import NutritionMembershipPackagesPage from "@/nutrition/pages/nutrition-membership-packages";
 import NutritionMembershipPackageSelectPage from "@/nutrition/pages/nutrition-membership-package-select";
@@ -135,6 +136,7 @@ export function getNutritionRouteDefs(enabled: boolean) {
     <Route key="nutrition-membership-mindset" path="/nutrition/membership/mindset/:step" component={NutritionMembershipMindsetPage} />,
     <Route key="nutrition-membership-review" path="/nutrition/membership/review" component={NutritionMembershipReviewPage} />,
     <Route key="nutrition-membership-medical-conditions" path="/nutrition/membership/medical-conditions" component={NutritionMembershipMedicalConditionsPage} />,
+    <Route key="nutrition-membership-weight-loss-injections" path="/nutrition/membership/weight-loss-injections" component={NutritionMembershipWeightLossInjectionsPage} />,
     <Route key="nutrition-membership-medications-and-supplements" path="/nutrition/membership/medications-and-supplements" component={NutritionMembershipMedicationsAndSupplementsPage} />,
     <Route key="nutrition-membership-disliked-foods" path="/nutrition/membership/disliked-foods" component={NutritionMembershipDislikedFoodsPage} />,
     <Route key="nutrition-membership-allergies" path="/nutrition/membership/allergies" component={NutritionMembershipAllergiesPage} />,

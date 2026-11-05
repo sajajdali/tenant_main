@@ -16,6 +16,12 @@ type MembershipEditPatch =
   | { step: "target-weight"; targetWeightKg: string }
   | { step: "weekly-rate"; weeklyWeightChangeKg: number }
   | { step: "medical-conditions"; medicalConditions: string; medicalConditionsItems: NonNullable<NutritionProfile["medicalConditionsItems"]> }
+  | {
+      step: "weight-loss-injections";
+      usesWeightLossInjections: boolean;
+      weightLossInjectionName: string;
+      weightLossInjectionDoseCount?: number;
+    }
   | { step: "medications-and-supplements"; medicationsAndSupplements: string }
   | { step: "allergies"; foodAllergies: string }
   | { step: "disliked-foods"; dislikedFoods: string }
@@ -142,6 +148,7 @@ export async function saveMembershipProfileEdit(patch: MembershipEditPatch): Pro
 
   if (
     patch.step === "medical-conditions"
+    || patch.step === "weight-loss-injections"
     || patch.step === "medications-and-supplements"
     || patch.step === "allergies"
     || patch.step === "disliked-foods"
@@ -155,6 +162,15 @@ export async function saveMembershipProfileEdit(patch: MembershipEditPatch): Pro
     const medicationsAndSupplements = patch.step === "medications-and-supplements"
       ? patch.medicationsAndSupplements
       : formState.medicationsAndSupplements ?? profile.medicationsAndSupplements ?? "";
+    const usesWeightLossInjections = patch.step === "weight-loss-injections"
+      ? patch.usesWeightLossInjections
+      : formState.usesWeightLossInjections ?? profile.usesWeightLossInjections ?? false;
+    const weightLossInjectionName = patch.step === "weight-loss-injections"
+      ? patch.weightLossInjectionName
+      : formState.weightLossInjectionName ?? profile.weightLossInjectionName ?? "";
+    const weightLossInjectionDoseCount = patch.step === "weight-loss-injections"
+      ? patch.weightLossInjectionDoseCount
+      : formState.weightLossInjectionDoseCount ?? profile.weightLossInjectionDoseCount ?? undefined;
     const foodAllergies = patch.step === "allergies"
       ? patch.foodAllergies
       : formState.foodAllergies ?? profile.foodAllergies ?? "";
@@ -166,6 +182,9 @@ export async function saveMembershipProfileEdit(patch: MembershipEditPatch): Pro
       medicalConditions,
       medicalConditionsItems,
       medicationsAndSupplements,
+      usesWeightLossInjections,
+      weightLossInjectionName,
+      weightLossInjectionDoseCount,
       foodAllergies,
       dislikedFoods,
     });
@@ -177,6 +196,9 @@ export async function saveMembershipProfileEdit(patch: MembershipEditPatch): Pro
       medicalConditions,
       medicalConditionsItems,
       medicationsAndSupplements,
+      usesWeightLossInjections,
+      weightLossInjectionName,
+      weightLossInjectionDoseCount,
       foodAllergies,
       dislikedFoods,
     });

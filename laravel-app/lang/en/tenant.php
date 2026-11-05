@@ -399,6 +399,8 @@ return [
             'appointment_benefits_restored_description' => 'Your appointment status was corrected and its points and credit are active again.',
             'store_order_earn' => 'Store purchase gift',
             'store_order_earn_description' => 'Points and credit were added for your successful store purchase.',
+            'store_order_reversal' => 'Store order reward reversal',
+            'store_order_reversal_description' => 'The reward for this store order was reversed because the order was cancelled or returned.',
             'appointment_wallet_reserved' => 'Credit reserved for appointment payment',
             'appointment_wallet_reserved_description' => 'Part of the appointment amount was reserved from your customer club wallet.',
             'appointment_wallet_released' => 'Appointment payment credit returned',

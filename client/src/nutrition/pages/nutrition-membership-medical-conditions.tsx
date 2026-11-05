@@ -28,7 +28,7 @@ export default function NutritionMembershipMedicalConditionsPage() {
   const [items, setItems] = useState(ensureMedicalConditionDraft(formState.medicalConditionsItems, formState.medicalConditions));
   const shouldPersistEdit = isReturningToProfileHomeReview(searchParams);
   const backHref = resolveProfileHomeReviewAwareHref("/nutrition/membership/result", searchParams);
-  const nextHref = resolveProfileHomeReviewAwareHref("/nutrition/membership/medications-and-supplements", searchParams);
+  const nextHref = resolveProfileHomeReviewAwareHref("/nutrition/membership/weight-loss-injections", searchParams);
 
   useEffect(() => {
     if (!isLoading && !user) {

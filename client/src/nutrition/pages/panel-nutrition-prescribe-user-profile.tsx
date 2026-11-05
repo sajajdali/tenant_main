@@ -21,6 +21,7 @@ import {
   Scale,
   ShieldAlert,
   Sparkles,
+  Syringe,
   Trash2,
   UserRound,
 } from "lucide-react";
@@ -199,6 +200,9 @@ export default function PanelNutritionPrescribeUserProfilePage() {
         medicalConditions: profileResult.data.profile?.medicalConditions ?? undefined,
         medicalConditionsItems: profileResult.data.profile?.medicalConditionsItems ?? undefined,
         medicationsAndSupplements: profileResult.data.profile?.medicationsAndSupplements ?? undefined,
+        usesWeightLossInjections: profileResult.data.profile?.usesWeightLossInjections ?? undefined,
+        weightLossInjectionName: profileResult.data.profile?.weightLossInjectionName ?? undefined,
+        weightLossInjectionDoseCount: profileResult.data.profile?.weightLossInjectionDoseCount ?? undefined,
         foodAllergies: profileResult.data.profile?.foodAllergies ?? undefined,
         dislikedFoods: profileResult.data.profile?.dislikedFoods ?? undefined,
         mindsetAnswers: profileResult.data.profile?.mindsetAnswers ?? undefined,
@@ -519,6 +523,9 @@ export default function PanelNutritionPrescribeUserProfilePage() {
       medicalConditions: profileData.profile.medicalConditions ?? undefined,
       medicalConditionsItems: profileData.profile.medicalConditionsItems ?? undefined,
       medicationsAndSupplements: profileData.profile.medicationsAndSupplements ?? undefined,
+      usesWeightLossInjections: profileData.profile.usesWeightLossInjections ?? undefined,
+      weightLossInjectionName: profileData.profile.weightLossInjectionName ?? undefined,
+      weightLossInjectionDoseCount: profileData.profile.weightLossInjectionDoseCount ?? undefined,
       foodAllergies: profileData.profile.foodAllergies ?? undefined,
       dislikedFoods: profileData.profile.dislikedFoods ?? undefined,
       mindsetAnswers: profileData.profile.mindsetAnswers ?? {},
@@ -587,6 +594,13 @@ export default function PanelNutritionPrescribeUserProfilePage() {
     { label: t("panelNutritionPrescribeUserProfile.info.targetPace"), value: profileData.profile?.weeklyWeightChangeKg ? t("panelNutritionPrescribeUserProfile.units.kgPerWeek", { value: formatNumber(profileData.profile.weeklyWeightChangeKg, 1) }) : "—", icon: CalendarDays },
     { label: t("panelNutritionPrescribeUserProfile.info.medicalConditions"), value: <MedicalConditionsSummary items={profileData.profile?.medicalConditionsItems} emptyText="—" />, icon: AlertTriangle },
     { label: t("panelNutritionPrescribeUserProfile.info.medications"), value: profileData.profile?.medicationsAndSupplements?.trim() || "—", icon: Gift },
+    {
+      label: t("nutritionMembershipReview.label.weightLossInjection"),
+      value: profileData.profile?.usesWeightLossInjections === true
+        ? [profileData.profile.weightLossInjectionName?.trim(), profileData.profile.weightLossInjectionDoseCount ? t("nutritionMembershipReview.injection.doseValue", { count: formatNumber(profileData.profile.weightLossInjectionDoseCount) }) : ""].filter(Boolean).join(" • ") || t("nutritionMembershipMedications.injection.yes")
+        : profileData.profile?.usesWeightLossInjections === false ? t("nutritionMembershipMedications.injection.no") : "—",
+      icon: Syringe,
+    },
   ];
   const weightChartData = profileData.prescriptions
     .filter((item) => item.currentWeightKg != null)

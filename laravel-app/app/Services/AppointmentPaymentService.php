@@ -9,8 +9,8 @@ use App\Domain\Booking\Models\Barber;
 use App\Domain\Tenant\Models\PaymentSetting;
 use App\Domain\Tenant\Models\TenantUser;
 use App\Services\Payments\TenantMaliartGateway;
-use App\Support\TenantSandboxMode;
 use App\Support\TenantPaymentGateways;
+use App\Support\TenantSandboxMode;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -23,10 +23,9 @@ class AppointmentPaymentService
     public function __construct(
         private readonly TenantAppointmentBookingService $bookingService,
         private readonly CustomerClubService $customerClubService,
+        private readonly CustomerClubRewardRuleEngine $ruleEngine,
         private readonly TenantMaliartGateway $maliart,
-    )
-    {
-    }
+    ) {}
 
     public function settings(): array
     {
@@ -176,7 +175,7 @@ class AppointmentPaymentService
             return ['mode' => 'gateway', 'payment' => $payment->fresh(), 'paymentUrl' => $remote['paymentUrl'], 'redirectForm' => null];
         }
 
-        $invoice = (new Invoice())
+        $invoice = (new Invoice)
             ->amount($payableAmount)
             ->detail('description', __('payment.appointment.invoice_description'))
             ->detail('mobile', $validated['userPhone']);
@@ -312,6 +311,12 @@ class AppointmentPaymentService
                 'paid_at' => now(),
                 'appointment_id' => $appointment->id,
                 'failure_reason' => null,
+            ]);
+
+            $this->ruleEngine->handle('appointment.paid', $actor, 'appointment_payment', (string) $locked->id, [
+                'appointment_id' => $appointment->id,
+                'service_id' => $appointment->service_id,
+                'amount' => $appointment->price_amount,
             ]);
 
             return $appointment;

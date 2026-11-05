@@ -399,6 +399,8 @@ return [
             'appointment_benefits_restored_description' => 'وضعیت نوبت شما اصلاح شد و امتیاز و اعتبار آن دوباره فعال شد.',
             'store_order_earn' => 'هدیه خرید فروشگاه',
             'store_order_earn_description' => 'به خاطر خرید موفق از فروشگاه، امتیاز و اعتبار برای شما ثبت شد.',
+            'store_order_reversal' => 'بازگشت پاداش سفارش فروشگاه',
+            'store_order_reversal_description' => 'به علت لغو یا مرجوعی سفارش فروشگاه، پاداش این خرید از حساب باشگاه مشتریان برگشت داده شد.',
             'appointment_wallet_reserved' => 'رزرو اعتبار برای پرداخت نوبت',
             'appointment_wallet_reserved_description' => 'بخشی از مبلغ نوبت از کیف پول باشگاه مشتریان کنار گذاشته شد.',
             'appointment_wallet_released' => 'بازگشت اعتبار پرداخت نوبت',

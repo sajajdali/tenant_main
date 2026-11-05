@@ -99,13 +99,15 @@ export default function NutritionMembershipPackagesPage() {
     if (!directBuy) {
       const firstIncompletePreferencesHref = formState.medicalConditions === undefined && formState.medicalConditionsItems === undefined
         ? "/nutrition/membership/medical-conditions"
-        : formState.medicationsAndSupplements === undefined
-          ? "/nutrition/membership/medications-and-supplements"
-          : formState.foodAllergies === undefined
-            ? "/nutrition/membership/allergies"
-            : formState.dislikedFoods === undefined
-              ? "/nutrition/membership/disliked-foods"
-              : null;
+        : formState.usesWeightLossInjections === undefined
+          ? "/nutrition/membership/weight-loss-injections"
+          : formState.medicationsAndSupplements === undefined
+            ? "/nutrition/membership/medications-and-supplements"
+            : formState.foodAllergies === undefined
+              ? "/nutrition/membership/allergies"
+              : formState.dislikedFoods === undefined
+                ? "/nutrition/membership/disliked-foods"
+                : null;
 
       if (firstIncompletePreferencesHref) {
         setLocation(firstIncompletePreferencesHref);
@@ -153,6 +155,7 @@ export default function NutritionMembershipPackagesPage() {
     formState.medicalConditions,
     formState.medicalConditionsItems,
     formState.medicationsAndSupplements,
+    formState.usesWeightLossInjections,
     formState.dislikedFoods,
     formState.foodAllergies,
     formState.targetWeightKg,

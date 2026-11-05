@@ -226,6 +226,17 @@ class NutritionAiDietPromptBuilder
         $medicationsAndSupplements = $this->compactText(
             $requestPayload['medicationsAndSupplements'] ?? $profile['medicationsAndSupplements'] ?? $profile['medications_and_supplements'] ?? null
         );
+        $usesWeightLossInjections = filter_var(
+            $requestPayload['usesWeightLossInjections'] ?? $profile['usesWeightLossInjections'] ?? $profile['uses_weight_loss_injections'] ?? false,
+            FILTER_VALIDATE_BOOL
+        );
+        $weightLossInjectionName = $this->compactText(
+            $requestPayload['weightLossInjectionName'] ?? $profile['weightLossInjectionName'] ?? $profile['weight_loss_injection_name'] ?? null
+        );
+        $weightLossInjectionDoseCount = $requestPayload['weightLossInjectionDoseCount']
+            ?? $profile['weightLossInjectionDoseCount']
+            ?? $profile['weight_loss_injection_dose_count']
+            ?? null;
         $foodAllergies = $this->compactText($profile['foodAllergies'] ?? $profile['food_allergies'] ?? null);
         $dislikedFoods = $this->compactText($profile['dislikedFoods'] ?? $profile['disliked_foods'] ?? null);
         $mustAvoid = $this->compactText($expertContext['mustAvoid'] ?? null);
@@ -240,6 +251,14 @@ class NutritionAiDietPromptBuilder
 
         if ($medicationsAndSupplements !== null) {
             $summaryParts[] = 'دارو/مکمل فعلی: ' . $medicationsAndSupplements;
+        }
+
+        if ($usesWeightLossInjections) {
+            $injectionDetails = array_filter([
+                $weightLossInjectionName,
+                is_numeric($weightLossInjectionDoseCount) ? ((int) $weightLossInjectionDoseCount).' دوز' : null,
+            ]);
+            $summaryParts[] = 'سابقه مصرف آمپول لاغری'.($injectionDetails !== [] ? ': '.implode('، ', $injectionDetails) : '');
         }
 
         if ($foodAllergies !== null) {
@@ -264,6 +283,7 @@ class NutritionAiDietPromptBuilder
         return [
             'enabled' => $medicalConditions !== null
                 || $medicationsAndSupplements !== null
+                || $usesWeightLossInjections
                 || $foodAllergies !== null
                 || $mustAvoid !== null
                 || $clinicalNotes !== null
@@ -271,6 +291,9 @@ class NutritionAiDietPromptBuilder
             'medicalConditions' => $medicalConditions,
             'medicalConditionsItems' => $medicalConditionItems,
             'medicationsAndSupplements' => $medicationsAndSupplements,
+            'usesWeightLossInjections' => $usesWeightLossInjections,
+            'weightLossInjectionName' => $weightLossInjectionName,
+            'weightLossInjectionDoseCount' => is_numeric($weightLossInjectionDoseCount) ? (int) $weightLossInjectionDoseCount : null,
             'foodAllergies' => $foodAllergies,
             'dislikedFoods' => $dislikedFoods,
             'mustAvoid' => $mustAvoid,

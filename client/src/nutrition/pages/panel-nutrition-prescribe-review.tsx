@@ -1,4 +1,4 @@
-import { ArrowLeft, Ban, CalendarDays, ClipboardPlus, Dumbbell, Flag, Pencil, Pill, Ruler, Scale, ShieldAlert, Target, UserRound } from "lucide-react";
+import { ArrowLeft, Ban, CalendarDays, ClipboardPlus, Dumbbell, Flag, Pencil, Pill, Ruler, Scale, ShieldAlert, Syringe, Target, UserRound } from "lucide-react";
 import { useMemo } from "react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
@@ -135,6 +135,14 @@ export default function PanelNutritionPrescribeReviewPage() {
               label={t("panelNutritionPrescribeReview.label.medicalConditions")}
               value={<MedicalConditionsSummary items={state.medicalConditionsItems} />}
               href="/panel/nutrition/prescribe/medical-conditions?edit=1"
+            />
+            <InfoRow
+              icon={<Syringe className="h-5 w-5" />}
+              label={t("nutritionMembershipReview.label.weightLossInjection")}
+              value={state.usesWeightLossInjections === true
+                ? [state.weightLossInjectionName?.trim(), state.weightLossInjectionDoseCount ? t("nutritionMembershipReview.injection.doseValue", { count: format.number(state.weightLossInjectionDoseCount) }) : ""].filter(Boolean).join(" • ") || t("nutritionMembershipMedications.injection.yes")
+                : state.usesWeightLossInjections === false ? t("nutritionMembershipMedications.injection.no") : missingText}
+              href="/panel/nutrition/prescribe/weight-loss-injections?edit=1"
             />
             <InfoRow icon={<Pill className="h-5 w-5" />} label={t("panelNutritionPrescribeReview.label.medications")} value={state.medicationsAndSupplements?.trim() || missingText} href="/panel/nutrition/prescribe/medications-and-supplements?edit=1" />
             <InfoRow icon={<ShieldAlert className="h-5 w-5" />} label={t("panelNutritionPrescribeReview.label.allergies")} value={state.foodAllergies?.trim() || missingText} href="/panel/nutrition/prescribe/allergies?edit=1" />

@@ -239,6 +239,9 @@ class NutritionProfileController extends Controller
             'medicalConditionsItems.*.ongoing' => ['nullable', 'boolean'],
             'medicalConditionsItems.*.notes' => ['nullable', 'string', 'max:1000'],
             'medicationsAndSupplements' => ['nullable', 'string'],
+            'usesWeightLossInjections' => ['nullable', 'boolean'],
+            'weightLossInjectionName' => ['nullable', 'string', 'max:255'],
+            'weightLossInjectionDoseCount' => ['nullable', 'integer', 'min:1', 'max:1000'],
         ]);
 
         $profile = NutritionProfile::query()->where('user_id', $user->id)->first();
@@ -257,6 +260,13 @@ class NutritionProfileController extends Controller
         $profile->forceFill([
             'medical_conditions' => NutritionMedicalConditionSupport::encodeEntries($medicalConditionEntries),
             'medications_and_supplements' => trim((string) ($validated['medicationsAndSupplements'] ?? '')) ?: null,
+            'uses_weight_loss_injections' => $validated['usesWeightLossInjections'] ?? null,
+            'weight_loss_injection_name' => ($validated['usesWeightLossInjections'] ?? false)
+                ? (trim((string) ($validated['weightLossInjectionName'] ?? '')) ?: null)
+                : null,
+            'weight_loss_injection_dose_count' => ($validated['usesWeightLossInjections'] ?? false)
+                ? ($validated['weightLossInjectionDoseCount'] ?? null)
+                : null,
             'disliked_foods' => trim((string) ($validated['dislikedFoods'] ?? '')) ?: null,
             'food_allergies' => trim((string) ($validated['foodAllergies'] ?? '')) ?: null,
             'preferences_completed_at' => now(),
@@ -372,6 +382,9 @@ class NutritionProfileController extends Controller
             'medicalConditions' => NutritionMedicalConditionSupport::summarizeEntries($medicalConditionItems),
             'medicalConditionsItems' => $medicalConditionItems,
             'medicationsAndSupplements' => $profile->medications_and_supplements,
+            'usesWeightLossInjections' => $profile->uses_weight_loss_injections,
+            'weightLossInjectionName' => $profile->weight_loss_injection_name,
+            'weightLossInjectionDoseCount' => $profile->weight_loss_injection_dose_count,
             'dislikedFoods' => $profile->disliked_foods,
             'foodAllergies' => $profile->food_allergies,
             'mindsetAnswers' => $profile->mindset_answers,

@@ -18,6 +18,7 @@ export type PanelNutritionPrescribeStepKey =
   | "target-weight"
   | "weekly-rate"
   | "medical-conditions"
+  | "weight-loss-injections"
   | "medications-and-supplements"
   | "allergies"
   | "disliked-foods";
@@ -48,6 +49,9 @@ export interface PanelNutritionPrescribeState {
   medicalConditions?: string;
   medicalConditionsItems?: NutritionMedicalConditionItem[];
   medicationsAndSupplements?: string;
+  usesWeightLossInjections?: boolean;
+  weightLossInjectionName?: string;
+  weightLossInjectionDoseCount?: number;
   foodAllergies?: string;
   dislikedFoods?: string;
   mindsetAnswers?: Record<string, string>;
@@ -70,6 +74,7 @@ export const PANEL_PRESCRIBE_CORE_STEPS: PanelNutritionPrescribeStepKey[] = [
   "target-weight",
   "weekly-rate",
   "medical-conditions",
+  "weight-loss-injections",
   "medications-and-supplements",
   "allergies",
   "disliked-foods",

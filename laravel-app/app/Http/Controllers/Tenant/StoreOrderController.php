@@ -8,7 +8,10 @@ use App\Domain\Store\Models\StoreOrder;
 use App\Domain\Store\Models\StoreOrderPayment;
 use App\Domain\Tenant\Models\GeneralSetting;
 use App\Domain\Tenant\Models\SmsSetting;
+use App\Domain\Tenant\Models\TenantUser;
 use App\Http\Controllers\Controller;
+use App\Services\CustomerClubService;
+use App\Services\CustomerClubRewardRuleEngine;
 use App\Services\SmsCampaignSenderService;
 use App\Services\StoreOrderCheckoutService;
 use App\Support\InputNormalizer;
@@ -23,6 +26,8 @@ class StoreOrderController extends Controller
 {
     public function __construct(
         private readonly StoreOrderCheckoutService $service,
+        private readonly CustomerClubService $customerClub,
+        private readonly CustomerClubRewardRuleEngine $ruleEngine,
         private readonly SmsCampaignSenderService $smsSender,
     ) {}
 
@@ -39,7 +44,7 @@ class StoreOrderController extends Controller
             'customerName' => ['required', 'string', 'max:255'],
             'customerPhone' => ['required', InputNormalizer::mobileRule()],
             'shippingMethod' => ['required', 'in:courier,express,pickup'],
-            'paymentMethod' => ['required', 'in:online,card,cod'],
+            'paymentMethod' => ['required', 'in:online,card,cod,wallet'],
             'gateway' => ['nullable', 'string'],
             'notes' => ['nullable', 'string'],
             'items' => ['required', 'array', 'min:1'],
@@ -368,6 +373,21 @@ class StoreOrderController extends Controller
 
         $storeOrder->refresh();
         $storeOrder->load(['items', 'payments' => fn ($query) => $query->latest('id')]);
+
+        if ($storeOrder->payment_method === 'wallet' && in_array($nextStatus, ['cancelled', 'returned', 'rejected'], true) && $storeOrder->created_by_user_id) {
+            $this->customerClub->refundWalletPurchase(
+                TenantUser::query()->findOrFail($storeOrder->created_by_user_id),
+                (int) $storeOrder->total_amount,
+                'store_order',
+                (string) $storeOrder->id,
+                'بازگشت اعتبار سفارش فروشگاه',
+            );
+        }
+
+        if (in_array($nextStatus, ['cancelled', 'returned', 'rejected'], true)) {
+            $this->customerClub->reverseStoreOrderEarning($storeOrder);
+            $this->ruleEngine->reverseForSource('store_order.paid', 'store_order', (string) $storeOrder->id);
+        }
 
         $smsInfo = [
             'attempted' => false,

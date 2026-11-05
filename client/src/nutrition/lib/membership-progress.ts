@@ -1,4 +1,4 @@
-export const MEMBERSHIP_TOTAL_STEPS = 12;
+export const MEMBERSHIP_TOTAL_STEPS = 13;
 
 export const MEMBERSHIP_STEPS = {
   goal: 1,
@@ -10,7 +10,8 @@ export const MEMBERSHIP_STEPS = {
   targetWeight: 7,
   result: 8,
   medicalConditions: 9,
-  medicationsAndSupplements: 10,
-  allergies: 11,
-  dislikedFoods: 12,
+  weightLossInjections: 10,
+  medicationsAndSupplements: 11,
+  allergies: 12,
+  dislikedFoods: 13,
 } as const;

@@ -27,7 +27,7 @@ export default function NutritionMembershipMedicationsAndSupplementsPage() {
   const searchParams = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : new URLSearchParams();
   const [medicationsAndSupplements, setMedicationsAndSupplements] = useState(formState.medicationsAndSupplements ?? "");
   const shouldPersistEdit = isReturningToProfileHomeReview(searchParams);
-  const backHref = resolveProfileHomeReviewAwareHref("/nutrition/membership/medical-conditions", searchParams);
+  const backHref = resolveProfileHomeReviewAwareHref("/nutrition/membership/weight-loss-injections", searchParams);
   const nextHref = resolveProfileHomeReviewAwareHref("/nutrition/membership/allergies", searchParams);
 
   useEffect(() => {
@@ -41,10 +41,10 @@ export default function NutritionMembershipMedicationsAndSupplementsPage() {
       return;
     }
 
-    if (!shouldPersistEdit && formState.medicalConditions === undefined && formState.medicalConditionsItems === undefined) {
-      setLocation("/nutrition/membership/medical-conditions");
+    if (!shouldPersistEdit && formState.usesWeightLossInjections === undefined) {
+      setLocation("/nutrition/membership/weight-loss-injections");
     }
-  }, [formState.medicalConditions, formState.medicalConditionsItems, formState.targetWeightKg, isLoading, setLocation, shouldPersistEdit, user]);
+  }, [formState.targetWeightKg, formState.usesWeightLossInjections, isLoading, setLocation, shouldPersistEdit, user]);
 
   const handleContinue = async (value = medicationsAndSupplements) => {
     const latestFormState = getNutritionFormState();

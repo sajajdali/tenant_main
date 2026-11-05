@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "wouter";
-import { ArrowLeft, ArrowRight, CheckCircle2, ChevronLeft, ChevronRight, CreditCard, Landmark, ShieldCheck, ShoppingBag } from "lucide-react";
+import { ArrowLeft, ArrowRight, CheckCircle2, ChevronLeft, ChevronRight, CreditCard, Landmark, ShieldCheck, ShoppingBag, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -16,7 +16,7 @@ import { clearStoreCheckoutDraft, getStoreCheckoutDraft } from "@/lib/store-chec
 import { clearStoreCart } from "@/lib/store-cart";
 import { useToast } from "@/hooks/use-toast";
 
-type PaymentMethod = "online" | "card";
+type PaymentMethod = "online" | "card" | "wallet";
 
 const GATEWAY_LABEL_KEYS: Partial<Record<PaymentProvider, MessageKey>> = {
   asanpardakht: "storeCheckoutPayment.gateway.asanpardakht",
@@ -44,6 +44,7 @@ export default function StoreCheckoutPaymentPage() {
   const [draftReady, setDraftReady] = useState(false);
   const [draft, setDraft] = useState<StoreCheckoutDraft | null>(null);
   const [paymentSettings, setPaymentSettings] = useState<PaymentSettings | null>(null);
+  const [walletBalance, setWalletBalance] = useState(0);
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod | null>(null);
   const [selectedGateway, setSelectedGateway] = useState<PaymentProvider | "">("");
   const [transferTime, setTransferTime] = useState("");
@@ -60,6 +61,7 @@ export default function StoreCheckoutPaymentPage() {
   const cardNote = paymentSettings?.managementPanelNote?.trim() || "";
   const canSubmitOnline = selectedMethod === "online" && (tenantMaliartEnabled || !!selectedGateway);
   const canSubmitCard = selectedMethod === "card" && !!transferTime.trim() && !!trackingNumber.trim();
+  const canSubmitWallet = selectedMethod === "wallet" && walletBalance >= (draft?.summary.total ?? 0);
   const BackIcon = isRtl ? ArrowRight : ArrowLeft;
   const ContinueIcon = isRtl ? ChevronLeft : ChevronRight;
 
@@ -98,6 +100,12 @@ export default function StoreCheckoutPaymentPage() {
         const nextGateways = res.data.enabledGateways?.length ? res.data.enabledGateways : previewGateways;
         setSelectedGateway((res.data.provider as PaymentProvider | null) || (nextGateways[0] as PaymentProvider | undefined) || "");
       }
+    });
+  }, []);
+
+  useEffect(() => {
+    api.customerClub.me().then((result) => {
+      if (result.success) setWalletBalance(result.data.account.walletBalance || 0);
     });
   }, []);
 
@@ -223,6 +231,11 @@ export default function StoreCheckoutPaymentPage() {
           ? t("storeCheckoutPayment.free.successMessage")
           : t("storeCheckoutPayment.sandboxSuccessMessage"),
       });
+      return;
+    }
+
+    if (result.mode === "wallet") {
+      redirectToResult({ status: "success", method: "wallet", order: orderNumber, oid: orderId, tracking });
       return;
     }
 
@@ -477,6 +490,19 @@ export default function StoreCheckoutPaymentPage() {
                         ) : null}
                       </div>
                     ) : null}
+
+                    <div className={`rounded-[28px] border p-5 transition-all ${selectedMethod === "wallet" ? "border-emerald-400/60 bg-emerald-400/10" : "border-border/70 bg-background/35 hover:border-emerald-400/30"}`}>
+                      <button type="button" onClick={() => setSelectedMethod("wallet")} className="w-full text-start">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-3"><div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-emerald-400/20 bg-emerald-400/10 text-emerald-400"><Wallet className="h-6 w-6" /></div><div className="text-lg font-black">{t("booking.modal.payment.walletCredit")}</div></div>
+                            <div className="text-sm leading-7 text-muted-foreground">{t("booking.modal.payment.walletFullDescription")}</div>
+                          </div>
+                          {selectedMethod === "wallet" ? <CheckCircle2 className="h-5 w-5 flex-shrink-0 text-emerald-400" /> : null}
+                        </div>
+                      </button>
+                      {selectedMethod === "wallet" ? <div className="mt-5 border-t border-border/60 pt-5"><div className="rounded-[18px] border border-border/70 bg-background/45 p-4 text-sm text-muted-foreground">{t("customerClub.summary.wallet")}: {format.currency(walletBalance)}</div><div className="mt-4 flex justify-end"><Button className="rounded-[18px] px-6" onClick={handleContinue} disabled={!canSubmitWallet || submitting}>{t("booking.modal.payment.walletCredit")}<ContinueIcon className="ms-2 h-4 w-4" /></Button></div></div> : null}
+                    </div>
                   </div>
                 )}
 

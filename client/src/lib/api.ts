@@ -1,5 +1,6 @@
 import { Appointment, Section, User, Barber, ApiResponse, PaymentSettings, TenantMeta, PaginatedAppointments, PaginatedTenantUsers, PaginatedSmsCampaigns, SmsCampaign, SmsCampaignDetails, SmsCampaignFilters, SmsCampaignPreview, PaginatedSupportTickets, SupportTicket, SupportTicketDetails, GalleryAdminPayload, GalleryImage, GalleryPublicPayload, AppearanceSettings, HelpTopic, HelpTopicListPayload, SupportRenewalPackage, SupportRenewalPreview, SupportRenewalPayment, PaginatedSupportRenewalPayments, SupportRenewalSettings, SupportRenewalPublicPackagesPayload, StorageAddonPreview, AppointmentPaymentCheckout, PaymentProvider, PaginatedReferralLeads, ReferralLead, AboutSettings, ContactSettings, FeatureModuleSummary, FeatureModuleActivationPreview, CookingRecipeItem, StoreCheckoutResponse, StoreDashboardPayload, StoreGeneralSettings, StoreHomeSettings, StoreFaqSettings, StoreShippingSettings, StoreCategoryListPayload, StoreCategoryItem, StoreProductItem, StoreProductListPayload, StoreProductReviewItem, StoreProductReviewListPayload, PaginatedStoreAdminOrders, PaginatedStoreOrders, StoreOrderSummary, PaginatedUserNotifications, UserNotificationItem, NotificationCampaignFilters, NotificationCampaignPreview, NotificationCampaign, PaginatedNotificationCampaigns, NotificationCampaignDetails, UserLookupResult, TenantPanelUser, LandingContactSubmissionPayload, LandingCustomer, LandingCheckoutQuote, LandingOrderSummary, PaginatedLandingOrders, LandingOrderPaymentSummary, PaginatedSmsOutbounds, SmsOutboundItem, SmsBulkRecipientInput, PublicAppointmentDetails, SmsTopUpCheckoutResponse, CustomerClubAdminOverview, CustomerClubMePayload, PaginatedCustomerClubMembers, CustomerClubSettings, CustomerClubTier, CustomerClubReward, CustomerClubAccountSummary, CustomerClubRedemption, PanelFinanceDashboardPayload, ManualFinanceDashboardPayload, ManualFinanceEntry, ManualFinanceCategory, ManualFinanceCustomerSummary, ManualFinanceDebtorsPayload, ManualFinanceCommissionReportPayload, CustomerFeedbackSettings, CustomerFeedbackQuestion, CustomerFeedbackPublicPayload, CustomerFeedbackPublicAnswerInput, CustomerFeedbackReportPayload, CustomerFeedbackReportResponseDetail, SpecializedCourseHomePayload, DomainRenewalOverview, PaginatedDomainRenewalPayments, DomainRenewalPayment, TenantFileManagerPayload, TenantFileCategory, NutritionDietTemplateItem, NutritionDietTemplateListPayload, NutritionPackageItem, NutritionPackageListPayload, NutritionProfile, NutritionProfileDashboardPayload, NutritionWeightRecommendation, NutritionDiscountCodeItem, NutritionPackageCheckoutPreview, NutritionPackageOrder, NutritionPackageCheckoutSummaryPayload, NutritionDietRequest, NutritionDietRequestAdminSettings, NutritionDietRequestAdminStats, NutritionTokenDashboardPayload, NutritionTokenHistoryPayload, NutritionLandingSettings, NutritionLandingVariant, NutritionDietPrescription, NutritionAudioGuidanceAsset, NutritionAiPromptPreset, NutritionAdminUserProfilePayload, OnlineChatConversationDetails, OnlineChatAdminDashboardPayload, OnlineChatConversationSummary, NutritionDietFileGroup, NutritionDietFileItem, NutritionSettingsPayload, NutritionExerciseGroup, NutritionExerciseItem, ArticleSectionSettings, ArticleTagItem, ArticleTagListPayload, ArticleCategoryItem, ArticleCategoryListPayload, ArticlePostAdminPayload, ArticlePostItem, ArticlePostPublicListPayload, ArticlePostPublicDetailPayload, NutritionMealPhotoAnalysis, MessagingBotSettings, TelegramWebhookInfo, AppointmentBookingClosurePayload } from "./types";
 import type { CookingRecipeDetailPayload, CookingRecipeListPayload, CookingRecipeUpdatePayload } from "./types";
+import type { CustomerClubRewardRule, CustomerClubRuleAward, CustomerClubRuleReview } from "./types";
 import type { CustomLandingOverview, CustomLandingPartner, CustomLandingPartnerDashboard, CustomLandingSettings } from "./types";
 import { getDefaultRegistrationRequirements, UserProfilePayload } from "./membership";
 import { normalizeDigits } from "./normalize";
@@ -1258,7 +1259,7 @@ export const api = {
       customerName: string;
       customerPhone: string;
       shippingMethod: "courier" | "express" | "pickup";
-      paymentMethod: "online" | "card" | "cod";
+      paymentMethod: "online" | "card" | "cod" | "wallet";
       gateway?: PaymentProvider;
       notes?: string;
       items: Array<{
@@ -1520,6 +1521,9 @@ export const api = {
       medicalConditions?: string;
       medicalConditionsItems?: import("./types").NutritionMedicalConditionItem[];
       medicationsAndSupplements?: string;
+      usesWeightLossInjections?: boolean;
+      weightLossInjectionName?: string;
+      weightLossInjectionDoseCount?: number;
     }): Promise<ApiResponse<{ profile: NutritionProfile }>> => {
       return postJson<{ profile: NutritionProfile }>("/api/v1/nutrition/profile/preferences", payload);
     },
@@ -1875,8 +1879,8 @@ export const api = {
       gateway?: string,
       discountCode?: string,
       replaceActiveSubscription?: boolean,
-    ): Promise<ApiResponse<{ mode: "free" | "sandbox" | "gateway"; order: NutritionPackageOrder; subscription?: NutritionPackageCheckoutSummaryPayload["subscription"]; redirectForm?: { action: string; method: string; inputs: Record<string, string> }; paymentUrl?: string | null }>> => {
-      return postJson<{ mode: "free" | "sandbox" | "gateway"; order: NutritionPackageOrder; subscription?: NutritionPackageCheckoutSummaryPayload["subscription"]; redirectForm?: { action: string; method: string; inputs: Record<string, string> }; paymentUrl?: string | null }>("/api/v1/nutrition/package-checkout/pay", {
+    ): Promise<ApiResponse<{ mode: "free" | "sandbox" | "gateway" | "wallet"; order: NutritionPackageOrder; subscription?: NutritionPackageCheckoutSummaryPayload["subscription"]; redirectForm?: { action: string; method: string; inputs: Record<string, string> }; paymentUrl?: string | null }>> => {
+      return postJson<{ mode: "free" | "sandbox" | "gateway" | "wallet"; order: NutritionPackageOrder; subscription?: NutritionPackageCheckoutSummaryPayload["subscription"]; redirectForm?: { action: string; method: string; inputs: Record<string, string> }; paymentUrl?: string | null }>("/api/v1/nutrition/package-checkout/pay", {
         nutrition_package_id: nutritionPackageId,
         gateway: gateway || undefined,
         discount_code: discountCode || undefined,
@@ -2233,6 +2237,9 @@ export const api = {
       medicalConditions?: string;
       medicalConditionsItems?: import("./types").NutritionMedicalConditionItem[];
       medicationsAndSupplements?: string;
+      usesWeightLossInjections?: boolean;
+      weightLossInjectionName?: string;
+      weightLossInjectionDoseCount?: number;
       foodAllergies?: string;
       dislikedFoods?: string;
       mindsetAnswers: Record<string, string>;
@@ -2255,6 +2262,9 @@ export const api = {
         medical_conditions: payload.medicalConditions,
         medical_conditions_items: payload.medicalConditionsItems,
         medications_and_supplements: payload.medicationsAndSupplements,
+        uses_weight_loss_injections: payload.usesWeightLossInjections,
+        weight_loss_injection_name: payload.weightLossInjectionName,
+        weight_loss_injection_dose_count: payload.weightLossInjectionDoseCount,
         food_allergies: payload.foodAllergies,
         disliked_foods: payload.dislikedFoods,
         mindset_answers: payload.mindsetAnswers,
@@ -3889,6 +3899,19 @@ export const api = {
     deleteReward: async (rewardId: string): Promise<ApiResponse<boolean>> => {
       return requestJson<boolean>(`/api/v1/customer-club/rewards/${encodeURIComponent(rewardId)}`, "DELETE");
     },
+
+    rules: async (): Promise<ApiResponse<CustomerClubRewardRule[]>> => getJson<CustomerClubRewardRule[]>("/api/v1/customer-club/rules"),
+    createRule: async (payload: Record<string, unknown>): Promise<ApiResponse<CustomerClubRewardRule>> => postJson<CustomerClubRewardRule>("/api/v1/customer-club/rules", payload),
+    updateRule: async (ruleId: string, payload: Record<string, unknown>): Promise<ApiResponse<CustomerClubRewardRule>> => requestJson<CustomerClubRewardRule>(`/api/v1/customer-club/rules/${encodeURIComponent(ruleId)}`, "PUT", payload),
+    deleteRule: async (ruleId: string): Promise<ApiResponse<boolean>> => requestJson<boolean>(`/api/v1/customer-club/rules/${encodeURIComponent(ruleId)}`, "DELETE"),
+    ruleAwards: async (ruleId?: string, status?: string): Promise<ApiResponse<CustomerClubRuleAward[]>> => {
+      const query = new URLSearchParams();
+      if (ruleId) query.set("rule_id", ruleId);
+      if (status) query.set("status", status);
+      return getJson<CustomerClubRuleAward[]>(`/api/v1/customer-club/rule-awards${query.size ? `?${query.toString()}` : ""}`);
+    },
+    ruleReviews: async (): Promise<ApiResponse<CustomerClubRuleReview[]>> => getJson<CustomerClubRuleReview[]>("/api/v1/customer-club/rule-reviews"),
+    reviewRuleAward: async (reviewId: string, approved: boolean, note?: string): Promise<ApiResponse<boolean>> => postJson<boolean>(`/api/v1/customer-club/rule-reviews/${encodeURIComponent(reviewId)}`, { approved, note }),
 
     me: async (): Promise<ApiResponse<CustomerClubMePayload>> => {
       return getJson<CustomerClubMePayload>("/api/v1/customer-club/me");

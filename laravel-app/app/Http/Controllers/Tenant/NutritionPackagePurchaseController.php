@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Tenant;
 
+use App\Domain\Tenant\Models\GeneralSetting;
 use App\Domain\Tenant\Models\NutritionPackage;
 use App\Domain\Tenant\Models\NutritionPackageOrder;
 use App\Domain\Tenant\Models\TenantUser;
 use App\Http\Controllers\Controller;
 use App\Services\NutritionPackagePaymentService;
 use App\Support\TenantAudienceScope;
+use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -21,8 +23,7 @@ class NutritionPackagePurchaseController extends Controller
 {
     public function __construct(
         private readonly NutritionPackagePaymentService $service,
-    ) {
-    }
+    ) {}
 
     public function preview(Request $request): JsonResponse
     {
@@ -38,7 +39,7 @@ class NutritionPackagePurchaseController extends Controller
 
         return response()->json([
             'success' => true,
-            'data' => $this->service->preview($package, $validated['discount_code'] ?? null),
+            'data' => $this->service->preview($package, $validated['discount_code'] ?? null, $user),
         ]);
     }
 
@@ -98,7 +99,7 @@ class NutritionPackagePurchaseController extends Controller
      * Opens a signed, server-hosted payment form so API clients only need to
      * open paymentUrl and never handle gateway-specific POST fields.
      */
-    public function gatewayRedirect(NutritionPackageOrder $order): \Illuminate\Contracts\View\View
+    public function gatewayRedirect(NutritionPackageOrder $order): View
     {
         abort_unless($order->status === 'pending' && (! $order->expires_at || $order->expires_at->isFuture()), 404);
 
@@ -125,13 +126,13 @@ class NutritionPackagePurchaseController extends Controller
         return redirect(route('tenant.nutrition.package-payments.result').'?'.$query);
     }
 
-    public function resultPage(Request $request): \Illuminate\Contracts\View\View
+    public function resultPage(Request $request): View
     {
         $orderId = (int) $request->integer('order');
         $status = $request->string('status')->toString();
         $status = in_array($status, ['success', 'failed', 'cancelled'], true) ? $status : 'pending';
         $tracking = trim($request->string('tracking')->toString());
-        $rules = \App\Domain\Tenant\Models\GeneralSetting::query()->value('booking_rules') ?? [];
+        $rules = GeneralSetting::query()->value('booking_rules') ?? [];
         $androidApp = is_array($rules['android_app'] ?? null) ? $rules['android_app'] : [];
         $webAppUrl = trim((string) ($androidApp['web_app_url'] ?? ''));
         $returnUrl = ($androidApp['enabled'] ?? false) && filter_var($webAppUrl, FILTER_VALIDATE_URL)

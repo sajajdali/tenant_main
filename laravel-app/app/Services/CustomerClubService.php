@@ -17,7 +17,6 @@ use App\Domain\Tenant\Models\TenantFeatureModule;
 use App\Domain\Tenant\Models\TenantUser;
 use App\Domain\Tenant\Models\UserNotification;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -28,8 +27,7 @@ class CustomerClubService
 
     public function __construct(
         private readonly UserNotificationRealtimeService $notificationRealtime,
-    ) {
-    }
+    ) {}
 
     public function isActiveForTenant(?Tenant $tenant = null): bool
     {
@@ -223,7 +221,7 @@ class CustomerClubService
     {
         $this->ensureBootstrapped();
 
-        $record = $tier ?? new CustomerClubTier();
+        $record = $tier ?? new CustomerClubTier;
         $record->fill([
             'title' => $validated['title'],
             'slug' => $this->makeUniqueSlug($validated['slug'] ?? null, $validated['title'], CustomerClubTier::class, $tier?->id),
@@ -257,7 +255,7 @@ class CustomerClubService
     {
         $this->ensureBootstrapped();
 
-        $record = $reward ?? new CustomerClubReward();
+        $record = $reward ?? new CustomerClubReward;
         $record->fill([
             'title' => $validated['title'],
             'slug' => $this->makeUniqueSlug($validated['slug'] ?? null, $validated['title'], CustomerClubReward::class, $reward?->id),
@@ -857,6 +855,81 @@ class CustomerClubService
         );
     }
 
+    /**
+     * Reverses the fixed store-order earning when an already-paid order is
+     * cancelled, rejected, or returned. The original ledger id makes this
+     * idempotent across repeated admin status updates.
+     */
+    public function reverseStoreOrderEarning(StoreOrder $order, ?string $reason = null): void
+    {
+        $earnLedger = CustomerClubLedgerEntry::query()
+            ->where('entry_type', 'store_order_earn')
+            ->where('source_type', 'store_order')
+            ->where('source_id', (string) $order->id)
+            ->first();
+
+        if (! $earnLedger || CustomerClubLedgerEntry::query()
+            ->where('entry_type', 'store_order_earn_reversal')
+            ->where('source_type', 'store_order')
+            ->where('source_id', (string) $order->id)
+            ->exists()) {
+            return;
+        }
+
+        $user = $this->resolveStoreOrderUser($order);
+        if (! $user || $user->role !== 'customer') {
+            return;
+        }
+
+        DB::transaction(function () use ($earnLedger, $order, $user, $reason): void {
+            $account = $this->ensureMemberAccount($user, true);
+            $account = CustomerClubMemberAccount::query()->lockForUpdate()->findOrFail($account->id);
+            $points = max(0, (int) $earnLedger->points_delta);
+            $wallet = max(0, (int) $earnLedger->wallet_delta);
+
+            $account->points_balance = max(0, (int) $account->points_balance - $points);
+            $account->wallet_balance = max(0, (int) $account->wallet_balance - $wallet);
+            $account->last_activity_at = now();
+            $account->save();
+
+            CustomerClubLedgerEntry::query()->create([
+                'member_account_id' => $account->id,
+                'user_id' => $user->id,
+                'entry_type' => 'store_order_earn_reversal',
+                'source_type' => 'store_order',
+                'source_id' => (string) $order->id,
+                'points_delta' => -$points,
+                'wallet_delta' => -$wallet,
+                'points_balance_after' => $account->points_balance,
+                'wallet_balance_after' => $account->wallet_balance,
+                'title' => __('tenant.customer_club.ledger.store_order_reversal'),
+                'description' => $reason ?: __('tenant.customer_club.ledger.store_order_reversal_description'),
+                'meta_json' => ['reversed_from_entry_id' => $earnLedger->id],
+                'occurred_at' => now(),
+            ]);
+
+            $this->refreshTier($account);
+        });
+    }
+
+    public function reverseRuleAward(\App\Domain\Tenant\Models\CustomerClubRewardRuleAward $award): void
+    {
+        if (! $award->ledger_entry_id || ! $award->user) {
+            return;
+        }
+
+        DB::transaction(function () use ($award): void {
+            $ledger = CustomerClubLedgerEntry::query()->find($award->ledger_entry_id);
+            if (! $ledger || CustomerClubLedgerEntry::query()->where('entry_type', 'reward_rule_reversal')->where('source_type', 'reward_rule_award')->where('source_id', (string) $award->id)->exists()) return;
+            $account = $this->ensureMemberAccount($award->user, true);
+            $account->points_balance = max(0, (int) $account->points_balance - max(0, (int) $ledger->points_delta));
+            $account->wallet_balance = max(0, (int) $account->wallet_balance - max(0, (int) $ledger->wallet_delta));
+            $account->last_activity_at = now(); $account->save();
+            CustomerClubLedgerEntry::query()->create(['member_account_id' => $account->id, 'user_id' => $award->user_id, 'entry_type' => 'reward_rule_reversal', 'source_type' => 'reward_rule_award', 'source_id' => (string) $award->id, 'points_delta' => 0 - max(0, (int) $ledger->points_delta), 'wallet_delta' => 0 - max(0, (int) $ledger->wallet_delta), 'points_balance_after' => $account->points_balance, 'wallet_balance_after' => $account->wallet_balance, 'title' => 'بازگشت پاداش قانون', 'occurred_at' => now()]);
+            $this->refreshTier($account);
+        });
+    }
+
     public function awardCustomEarning(
         TenantUser $user,
         string $entryType,
@@ -866,13 +939,14 @@ class CustomerClubService
         int $walletDelta,
         string $title,
         ?string $description = null,
-    ): void {
+    ): ?CustomerClubLedgerEntry {
         if ($user->role !== 'customer' || ! $this->isActiveForTenant()) {
-            return;
+            return null;
         }
 
         $this->ensureBootstrapped();
-        $this->applyBalanceDelta($user, $entryType, $sourceType, $sourceId, $pointsDelta, $walletDelta, $title, $description);
+
+        return $this->applyBalanceDelta($user, $entryType, $sourceType, $sourceId, $pointsDelta, $walletDelta, $title, $description);
     }
 
     public function availableWalletBalance(TenantUser $user): int
@@ -989,6 +1063,58 @@ class CustomerClubService
         return $reservedAmount;
     }
 
+    public function spendWalletForPurchase(TenantUser $user, int $amount, string $sourceType, string $sourceId, string $title): int
+    {
+        if ($amount <= 0 || ! $this->isActiveForTenant() || ! $this->settingsModel()->wallet_enabled) {
+            return 0;
+        }
+
+        return DB::transaction(function () use ($user, $amount, $sourceType, $sourceId, $title): int {
+            if (CustomerClubLedgerEntry::query()->where('entry_type', 'purchase_wallet_spent')->where('source_type', $sourceType)->where('source_id', $sourceId)->exists()) {
+                return $amount;
+            }
+
+            $account = $this->ensureMemberAccount($user, true);
+            if ((int) $account->wallet_balance < $amount) {
+                throw ValidationException::withMessages(['paymentMethod' => 'اعتبار کیف پول برای این پرداخت کافی نیست.']);
+            }
+
+            $account->decrement('wallet_balance', $amount);
+            $account->increment('lifetime_wallet_spent', $amount);
+            $account->update(['last_activity_at' => now()]);
+            $ledger = CustomerClubLedgerEntry::query()->create([
+                'member_account_id' => $account->id, 'user_id' => $user->id, 'entry_type' => 'purchase_wallet_spent',
+                'source_type' => $sourceType, 'source_id' => $sourceId, 'wallet_delta' => -$amount,
+                'points_delta' => 0, 'points_balance_after' => $account->points_balance, 'wallet_balance_after' => $account->wallet_balance,
+                'title' => $title, 'occurred_at' => now(),
+            ]);
+            $this->refreshTier($account);
+
+            return abs((int) $ledger->wallet_delta);
+        });
+    }
+
+    public function refundWalletPurchase(TenantUser $user, int $amount, string $sourceType, string $sourceId, string $title): int
+    {
+        if ($amount <= 0 || CustomerClubLedgerEntry::query()->where('entry_type', 'purchase_wallet_refunded')->where('source_type', $sourceType)->where('source_id', $sourceId)->exists()) {
+            return 0;
+        }
+
+        return DB::transaction(function () use ($user, $amount, $sourceType, $sourceId, $title): int {
+            $account = $this->ensureMemberAccount($user, true);
+            $account->increment('wallet_balance', $amount);
+            $account->update(['last_activity_at' => now()]);
+            CustomerClubLedgerEntry::query()->create([
+                'member_account_id' => $account->id, 'user_id' => $user->id, 'entry_type' => 'purchase_wallet_refunded',
+                'source_type' => $sourceType, 'source_id' => $sourceId, 'wallet_delta' => $amount, 'points_delta' => 0,
+                'points_balance_after' => $account->points_balance, 'wallet_balance_after' => $account->wallet_balance,
+                'title' => $title, 'occurred_at' => now(),
+            ]);
+
+            return $amount;
+        });
+    }
+
     private function applyBalanceDelta(
         TenantUser $user,
         string $entryType,
@@ -998,12 +1124,12 @@ class CustomerClubService
         int $walletDelta,
         string $title,
         ?string $description = null,
-    ): void {
+    ): ?CustomerClubLedgerEntry {
         if ($pointsDelta === 0 && $walletDelta === 0) {
-            return;
+            return null;
         }
 
-        DB::transaction(function () use ($user, $entryType, $sourceType, $sourceId, $pointsDelta, $walletDelta, $title, $description): void {
+        return DB::transaction(function () use ($user, $entryType, $sourceType, $sourceId, $pointsDelta, $walletDelta, $title, $description): ?CustomerClubLedgerEntry {
             $existing = CustomerClubLedgerEntry::query()
                 ->where('entry_type', $entryType)
                 ->where('source_type', $sourceType)
@@ -1011,7 +1137,7 @@ class CustomerClubService
                 ->exists();
 
             if ($existing) {
-                return;
+                return null;
             }
 
             $account = $this->ensureMemberAccount($user, true);
@@ -1024,7 +1150,7 @@ class CustomerClubService
             $account->last_activity_at = now();
             $account->save();
 
-            CustomerClubLedgerEntry::query()->create([
+            $ledger = CustomerClubLedgerEntry::query()->create([
                 'member_account_id' => $account->id,
                 'user_id' => $user->id,
                 'entry_type' => $entryType,
@@ -1041,6 +1167,8 @@ class CustomerClubService
 
             $this->createEarningNotification($user, $pointsDelta, $walletDelta, $title, $description);
             $this->refreshTier($account);
+
+            return $ledger;
         });
     }
 

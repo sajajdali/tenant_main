@@ -15,11 +15,23 @@ class NutritionCustomerClubRewardService
 {
     public function __construct(
         private readonly CustomerClubService $customerClub,
-    ) {
-    }
+        private readonly CustomerClubRewardRuleEngine $ruleEngine,
+    ) {}
 
     public function awardForScheduledMealLog(TenantUser $user, NutritionDietPrescription $prescription, string $consumedDate, string $slotKey): void
     {
+        $this->ruleEngine->handle(
+            'nutrition.meal.logged',
+            $user,
+            'nutrition_meal_log_day',
+            $prescription->id.':'.$consumedDate,
+            [
+                'nutrition_diet_prescription_id' => $prescription->id,
+                'consumed_date' => $consumedDate,
+                'meal_slot_key' => $slotKey,
+            ],
+        );
+
         $settings = $this->settings();
 
         if (! $settings) {
@@ -143,6 +155,16 @@ class NutritionCustomerClubRewardService
             'امتیاز نتیجه کاهش وزن',
             'به خاطر کاهش وزن در مقایسه با رژیم قبلی، '.$lostWeightKg.' کیلوگرم پیشرفت برای شما ثبت شد.',
         );
+    }
+
+    public function evaluateWeightRecord(TenantUser $user, NutritionDietRequest $request, ?float $startWeightKg, ?float $currentWeightKg): void
+    {
+        $this->ruleEngine->handle('nutrition.weight.recorded', $user, 'nutrition_diet_request', (string) $request->id, [
+            'nutrition_diet_request_id' => $request->id,
+            'nutrition_diet_prescription_id' => $request->nutrition_diet_prescription_id,
+            'start_weight_kg' => $startWeightKg,
+            'current_weight_kg' => $currentWeightKg,
+        ]);
     }
 
     private function settings(): ?CustomerClubSetting

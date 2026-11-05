@@ -24,6 +24,9 @@ import type {
   CustomerClubRewardType,
   CustomerClubSettings,
   CustomerClubTier,
+  CustomerClubRuleReview,
+  CustomerClubRewardRule,
+  CustomerClubRuleAward,
 } from "@/lib/types";
 
 const tierBadgeClass = (color?: string) => {
@@ -90,6 +93,14 @@ export default function PanelCustomerClubPage() {
   const [overview, setOverview] = useState<CustomerClubAdminOverview | null>(null);
   const [settings, setSettings] = useState<CustomerClubSettings | null>(null);
   const [members, setMembers] = useState<CustomerClubAdminMember[]>([]);
+  const [ruleReviews, setRuleReviews] = useState<CustomerClubRuleReview[]>([]);
+  const [rules, setRules] = useState<CustomerClubRewardRule[]>([]);
+  const [ruleAwards, setRuleAwards] = useState<CustomerClubRuleAward[]>([]);
+  const [awardStatusFilter, setAwardStatusFilter] = useState("all");
+  const [awardRuleFilter, setAwardRuleFilter] = useState("all");
+  const [ruleForm, setRuleForm] = useState({ title: "", eventType: "appointment.paid", rewardType: "points" as "points" | "wallet_credit", rewardAmount: 0, awardTiming: "immediate" as "immediate" | "manual_review", perUserLimit: "", limitPeriod: "source", minimumMealLogs: "", minimumWeightLossKg: "", startsAt: "", endsAt: "", scopeType: "all", scopeIds: "", priority: 0, isActive: true });
+  const [savingRule, setSavingRule] = useState(false);
+  const [editingRuleId, setEditingRuleId] = useState<string | null>(null);
   const [membersLoading, setMembersLoading] = useState(false);
   const [search, setSearch] = useState("");
   const [savingSettings, setSavingSettings] = useState(false);
@@ -143,6 +154,19 @@ export default function PanelCustomerClubPage() {
     setMembers(res.data.items);
   };
 
+  const loadRuleReviews = async () => {
+    const result = await api.customerClub.ruleReviews();
+    if (result.success) setRuleReviews(result.data);
+  };
+
+  const loadRules = async () => {
+    const [rulesResult, awardsResult] = await Promise.all([api.customerClub.rules(), api.customerClub.ruleAwards(awardRuleFilter === "all" ? undefined : awardRuleFilter, awardStatusFilter === "all" ? undefined : awardStatusFilter)]);
+    if (rulesResult.success) setRules(rulesResult.data);
+    if (awardsResult.success) setRuleAwards(awardsResult.data);
+  };
+
+  useEffect(() => { if (isAdmin) void loadRules(); }, [awardRuleFilter, awardStatusFilter, isAdmin]);
+
   useEffect(() => {
     if (!isAdmin) {
       return;
@@ -150,7 +174,60 @@ export default function PanelCustomerClubPage() {
 
     void loadOverview();
     void loadMembers("");
+    void loadRuleReviews();
+    void loadRules();
   }, [isAdmin]);
+
+  const decideRuleReview = async (review: CustomerClubRuleReview, approved: boolean) => {
+    const result = await api.customerClub.reviewRuleAward(review.id, approved);
+    if (!result.success) {
+      toast({ variant: "destructive", title: t("common.error"), description: result.message });
+      return;
+    }
+    void loadRuleReviews();
+    void loadOverview();
+  };
+
+  const saveRule = async () => {
+    setSavingRule(true);
+    const payload = {
+      title: ruleForm.title,
+      event_type: ruleForm.eventType,
+      scope_type: ruleForm.scopeType,
+      scope_ids: ruleForm.scopeIds.split(",").map((item) => item.trim()).filter(Boolean),
+      conditions_json: {
+        ...(ruleForm.minimumMealLogs === "" ? {} : { minimum_meal_logs: Number(ruleForm.minimumMealLogs), only_scheduled_meals: true }),
+        ...(ruleForm.minimumWeightLossKg === "" ? {} : { minimum_weight_loss_kg: Number(ruleForm.minimumWeightLossKg) }),
+      },
+      reward_type: ruleForm.rewardType,
+      reward_amount: Number(ruleForm.rewardAmount),
+      award_timing: ruleForm.awardTiming,
+      per_user_limit: ruleForm.perUserLimit === "" ? null : Number(ruleForm.perUserLimit),
+      limit_period: ruleForm.limitPeriod,
+      priority: Number(ruleForm.priority),
+      is_active: ruleForm.isActive,
+      starts_at: ruleForm.startsAt || null,
+      ends_at: ruleForm.endsAt || null,
+    };
+    const result = editingRuleId ? await api.customerClub.updateRule(editingRuleId, payload) : await api.customerClub.createRule(payload);
+    setSavingRule(false);
+    if (!result.success) { toast({ variant: "destructive", title: t("common.error"), description: result.message }); return; }
+    setRuleForm({ title: "", eventType: "appointment.paid", rewardType: "points", rewardAmount: 0, awardTiming: "immediate", perUserLimit: "", limitPeriod: "source", minimumMealLogs: "", minimumWeightLossKg: "", startsAt: "", endsAt: "", scopeType: "all", scopeIds: "", priority: 0, isActive: true });
+    setEditingRuleId(null);
+    void loadRules();
+  };
+
+  const editRule = (rule: CustomerClubRewardRule) => {
+    setEditingRuleId(rule.id);
+    setRuleForm({ title: rule.title, eventType: rule.eventType, rewardType: rule.rewardType, rewardAmount: rule.rewardAmount, awardTiming: rule.awardTiming, perUserLimit: rule.perUserLimit ? String(rule.perUserLimit) : "", limitPeriod: rule.limitPeriod, minimumMealLogs: rule.conditions.minimum_meal_logs ? String(rule.conditions.minimum_meal_logs) : "", minimumWeightLossKg: rule.conditions.minimum_weight_loss_kg ? String(rule.conditions.minimum_weight_loss_kg) : "", startsAt: rule.startsAt?.slice(0, 10) || "", endsAt: rule.endsAt?.slice(0, 10) || "", scopeType: rule.scopeType, scopeIds: rule.scopeIds.join(", "), priority: rule.priority, isActive: rule.isActive });
+  };
+
+  const removeRule = async (rule: CustomerClubRewardRule) => {
+    const result = await api.customerClub.deleteRule(rule.id);
+    if (!result.success) { toast({ variant: "destructive", title: t("common.error"), description: result.message }); return; }
+    if (editingRuleId === rule.id) setEditingRuleId(null);
+    void loadRules();
+  };
 
   const moduleActive = overview?.moduleActive ?? false;
 
@@ -459,12 +536,14 @@ export default function PanelCustomerClubPage() {
               </Card>
             )}
 
-            <Tabs defaultValue="settings" className="customer-club-tabs space-y-4">
-              <TabsList className="customer-club-tabs-list grid w-full grid-cols-4">
+              <Tabs defaultValue="settings" className="customer-club-tabs space-y-4">
+              <TabsList className="customer-club-tabs-list grid w-full grid-cols-6">
                 <TabsTrigger className="customer-club-tabs-trigger" value="settings">{t("panelCustomerClub.tabs.settings")}</TabsTrigger>
                 <TabsTrigger className="customer-club-tabs-trigger" value="tiers">{t("panelCustomerClub.tabs.tiers")}</TabsTrigger>
                 <TabsTrigger className="customer-club-tabs-trigger" value="rewards">{t("panelCustomerClub.tabs.rewards")}</TabsTrigger>
                 <TabsTrigger className="customer-club-tabs-trigger" value="members">{t("panelCustomerClub.tabs.members")}</TabsTrigger>
+                <TabsTrigger className="customer-club-tabs-trigger" value="reviews">{t("panelCustomerClub.reviews.tab")}</TabsTrigger>
+                <TabsTrigger className="customer-club-tabs-trigger" value="rules">{t("panelCustomerClub.rules.tab")}</TabsTrigger>
               </TabsList>
 
               <TabsContent value="settings" className="space-y-4">
@@ -789,6 +868,16 @@ export default function PanelCustomerClubPage() {
                     ))}
                   </CardContent>
                 </Card>
+              </TabsContent>
+
+              <TabsContent value="reviews" className="space-y-4">
+                <Card className="customer-club-panel-card border-border/70 bg-card/60"><CardHeader><CardTitle className="text-start">{t("panelCustomerClub.reviews.title")}</CardTitle></CardHeader><CardContent className="space-y-3">{ruleReviews.length === 0 ? <div className="rounded-2xl border border-dashed p-6 text-center text-sm text-muted-foreground">{t("panelCustomerClub.reviews.empty")}</div> : ruleReviews.filter((review) => review.status === "pending").map((review) => <div key={review.id} className="flex flex-col gap-3 rounded-2xl border border-border/70 p-4 sm:flex-row sm:items-center sm:justify-between"><div className="text-start"><div className="font-bold">{review.award.ruleTitle}</div><div className="text-sm text-muted-foreground">{review.award.userName} · {format.number(review.award.amount || 0)}</div></div><div className="flex gap-2"><Button size="sm" onClick={() => void decideRuleReview(review, true)}>{t("panelCustomerClub.reviews.approve")}</Button><Button size="sm" variant="destructive" onClick={() => void decideRuleReview(review, false)}>{t("panelCustomerClub.reviews.reject")}</Button></div></div>)}</CardContent></Card>
+              </TabsContent>
+              <TabsContent value="rules" className="space-y-4">
+                <Card className="customer-club-panel-card border-border/70 bg-card/60"><CardHeader><CardTitle className="text-start">{t("panelCustomerClub.rules.title")}</CardTitle></CardHeader><CardContent className="grid gap-3 md:grid-cols-2"><div><Label>{t("panelCustomerClub.rules.name")}</Label><Input value={ruleForm.title} onChange={(event) => setRuleForm({ ...ruleForm, title: event.target.value })} /></div><div><Label>{t("panelCustomerClub.rules.amount")}</Label><Input type="number" value={ruleForm.rewardAmount} onChange={(event) => setRuleForm({ ...ruleForm, rewardAmount: Number(event.target.value) })} /></div><select value={ruleForm.eventType} onChange={(event) => setRuleForm({ ...ruleForm, eventType: event.target.value })} className="h-10 rounded-md border bg-background px-3"><option value="appointment.paid">appointment.paid</option><option value="store_order.paid">store_order.paid</option><option value="nutrition.diet.activated">nutrition.diet.activated</option><option value="nutrition.meal.logged">nutrition.meal.logged</option><option value="nutrition.weight.recorded">nutrition.weight.recorded</option><option value="nutrition.diet.completed">nutrition.diet.completed</option></select><select value={ruleForm.rewardType} onChange={(event) => setRuleForm({ ...ruleForm, rewardType: event.target.value as "points" | "wallet_credit" })} className="h-10 rounded-md border bg-background px-3"><option value="points">points</option><option value="wallet_credit">wallet credit</option></select><Input type="number" placeholder={t("panelCustomerClub.rules.perUserLimit")} value={ruleForm.perUserLimit} onChange={(event) => setRuleForm({ ...ruleForm, perUserLimit: event.target.value })} /><select value={ruleForm.awardTiming} onChange={(event) => setRuleForm({ ...ruleForm, awardTiming: event.target.value as "immediate" | "manual_review" })} className="h-10 rounded-md border bg-background px-3"><option value="immediate">{t("panelCustomerClub.rules.immediate")}</option><option value="manual_review">{t("panelCustomerClub.rules.manualReview")}</option></select><Input type="number" placeholder={t("panelCustomerClub.rules.minimumMealLogs")} value={ruleForm.minimumMealLogs} onChange={(event) => setRuleForm({ ...ruleForm, minimumMealLogs: event.target.value })} /><Input type="number" step="0.1" placeholder={t("panelCustomerClub.rules.minimumWeightLoss")} value={ruleForm.minimumWeightLossKg} onChange={(event) => setRuleForm({ ...ruleForm, minimumWeightLossKg: event.target.value })} /><Button onClick={() => void saveRule()} disabled={savingRule || !ruleForm.title || ruleForm.rewardAmount < 1}>{t("panelCustomerClub.rules.create")}</Button></CardContent></Card>
+                <Card className="customer-club-panel-card border-border/70 bg-card/60"><CardContent className="grid gap-3 p-4 md:grid-cols-3"><Input type="date" value={ruleForm.startsAt} onChange={(event) => setRuleForm({ ...ruleForm, startsAt: event.target.value })} /><Input type="date" value={ruleForm.endsAt} onChange={(event) => setRuleForm({ ...ruleForm, endsAt: event.target.value })} /><select value={ruleForm.limitPeriod} onChange={(event) => setRuleForm({ ...ruleForm, limitPeriod: event.target.value })} className="h-10 rounded-md border bg-background px-3"><option value="source">Per source</option><option value="day">Per day</option><option value="month">Per month</option><option value="lifetime">Lifetime</option></select><Input placeholder="Scope type" value={ruleForm.scopeType} onChange={(event) => setRuleForm({ ...ruleForm, scopeType: event.target.value })} /><Input placeholder="Scope IDs" value={ruleForm.scopeIds} onChange={(event) => setRuleForm({ ...ruleForm, scopeIds: event.target.value })} /><Input type="number" placeholder="Priority" value={ruleForm.priority} onChange={(event) => setRuleForm({ ...ruleForm, priority: Number(event.target.value) })} /><label className="flex items-center gap-2 text-sm"><Switch checked={ruleForm.isActive} onCheckedChange={(isActive) => setRuleForm({ ...ruleForm, isActive })} />Active</label></CardContent></Card>
+                <Card className="customer-club-panel-card border-border/70 bg-card/60"><CardHeader><CardTitle className="text-start">{t("panelCustomerClub.rules.tab")}</CardTitle></CardHeader><CardContent className="space-y-2">{rules.map((rule) => <div key={rule.id} className="flex flex-col gap-2 rounded-xl border p-3 text-sm sm:flex-row sm:items-center sm:justify-between"><span>{rule.title} · {rule.eventType} · {rule.rewardAmount}</span><div className="flex gap-2"><Button size="sm" variant="outline" onClick={() => editRule(rule)}>{t("panelCustomerClub.actions.edit")}</Button><Button size="sm" variant="destructive" onClick={() => void removeRule(rule)}>{t("panelCustomerClub.actions.delete")}</Button></div></div>)}</CardContent></Card>
+                <Card className="customer-club-panel-card border-border/70 bg-card/60"><CardHeader><CardTitle className="text-start">{t("panelCustomerClub.rules.history")}</CardTitle></CardHeader><CardContent className="space-y-3"><div className="grid gap-2 sm:grid-cols-2"><select value={awardRuleFilter} onChange={(event) => setAwardRuleFilter(event.target.value)} className="h-10 rounded-md border bg-background px-3"><option value="all">All rules</option>{rules.map((rule) => <option key={rule.id} value={rule.id}>{rule.title}</option>)}</select><select value={awardStatusFilter} onChange={(event) => setAwardStatusFilter(event.target.value)} className="h-10 rounded-md border bg-background px-3"><option value="all">All statuses</option><option value="awarded">Awarded</option><option value="pending_review">Pending review</option><option value="rejected">Rejected</option></select></div>{ruleAwards.map((award) => <div key={award.id} className="flex justify-between rounded-xl border p-3 text-sm"><span>{award.ruleTitle} · {award.userName}</span><span>{award.amount} · {award.status}</span></div>)}</CardContent></Card>
               </TabsContent>
             </Tabs>
 

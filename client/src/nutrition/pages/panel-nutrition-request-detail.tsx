@@ -1150,6 +1150,13 @@ export default function PanelNutritionRequestDetailPage() {
       ? item.profileSnapshot as Record<string, unknown>
       : {};
     const medicationsAndSupplements = typeof profileSnapshot["medicationsAndSupplements"] === "string" ? profileSnapshot["medicationsAndSupplements"].trim() : "";
+    const usesWeightLossInjections = profileSnapshot["usesWeightLossInjections"] === true;
+    const hasWeightLossInjectionAnswer = typeof profileSnapshot["usesWeightLossInjections"] === "boolean";
+    const weightLossInjectionName = typeof profileSnapshot["weightLossInjectionName"] === "string" ? profileSnapshot["weightLossInjectionName"].trim() : "";
+    const weightLossInjectionDoseCount = Number(profileSnapshot["weightLossInjectionDoseCount"] ?? 0);
+    const weightLossInjectionValue = usesWeightLossInjections
+      ? [weightLossInjectionName, weightLossInjectionDoseCount > 0 ? t("nutritionMembershipReview.injection.doseValue", { count: formatNumber(weightLossInjectionDoseCount) }) : ""].filter(Boolean).join(" • ") || t("nutritionMembershipMedications.injection.yes")
+      : hasWeightLossInjectionAnswer ? t("nutritionMembershipMedications.injection.no") : "—";
     const foodAllergies = typeof profileSnapshot["foodAllergies"] === "string" ? profileSnapshot["foodAllergies"].trim() : "";
     const dislikedFoods = typeof profileSnapshot["dislikedFoods"] === "string" ? profileSnapshot["dislikedFoods"].trim() : "";
 
@@ -1172,6 +1179,7 @@ export default function PanelNutritionRequestDetailPage() {
       [t("panelNutritionRequestDetail.summary.weightGap"), weightGap > 0 ? formatWeight(weightGap, 1) : "—"],
       [t("panelNutritionRequestDetail.summary.weeklyWeightChange"), item.weeklyWeightChangeKg !== null && item.weeklyWeightChangeKg !== undefined ? formatWeeklyWeight(item.weeklyWeightChangeKg) : "—"],
       [t("panelNutritionRequestDetail.summary.medications"), medicationsAndSupplements || "—"],
+      [t("nutritionMembershipReview.label.weightLossInjection"), weightLossInjectionValue],
       [t("panelNutritionRequestDetail.summary.foodAllergies"), foodAllergies || "—"],
       [t("panelNutritionRequestDetail.summary.dislikedFoods"), dislikedFoods || "—"],
       [t("panelNutritionRequestDetail.summary.baseCalories"), baseCalories > 0 ? formatCalories(baseCalories) : "—"],

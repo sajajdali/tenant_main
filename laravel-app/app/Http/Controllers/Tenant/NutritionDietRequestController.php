@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Tenant;
 
-use App\Domain\Tenant\Models\NutritionDietRequest;
 use App\Domain\Tenant\Models\NutritionDietPrescription;
+use App\Domain\Tenant\Models\NutritionDietRequest;
 use App\Domain\Tenant\Models\NutritionDietTemplate;
 use App\Domain\Tenant\Models\NutritionMealReplacementSuggestion;
 use App\Domain\Tenant\Models\NutritionPackage;
 use App\Domain\Tenant\Models\NutritionPackageSubscription;
 use App\Domain\Tenant\Models\NutritionProfile;
+use App\Domain\Tenant\Models\NutritionTokenLedger;
 use App\Domain\Tenant\Models\TenantUser;
 use App\Events\NutritionDietRequestUpdated;
 use App\Http\Controllers\Controller;
@@ -20,8 +21,8 @@ use App\Services\NutritionAiMealReplacementGenerationService;
 use App\Services\NutritionCustomerClubRewardService;
 use App\Services\NutritionDietNotificationService;
 use App\Services\NutritionDietRequestSettingsService;
-use App\Services\NutritionPrescriptionCompletenessService;
 use App\Services\NutritionPrescriptionActivationService;
+use App\Services\NutritionPrescriptionCompletenessService;
 use App\Services\NutritionTokenService;
 use App\Support\NutritionMedicalConditionSupport;
 use App\Support\TenantAudienceScope;
@@ -62,8 +63,7 @@ class NutritionDietRequestController extends Controller
         private readonly NutritionPrescriptionActivationService $prescriptionActivation,
         private readonly NutritionDietNotificationService $notifications,
         private readonly NutritionTokenService $tokens,
-    ) {
-    }
+    ) {}
 
     public function store(Request $request): JsonResponse
     {
@@ -234,6 +234,9 @@ class NutritionDietRequestController extends Controller
                 'medicalConditions' => NutritionMedicalConditionSupport::summarizeEntries(NutritionMedicalConditionSupport::parseEntries($profile->medical_conditions)),
                 'medicalConditionsItems' => NutritionMedicalConditionSupport::parseEntries($profile->medical_conditions),
                 'medicationsAndSupplements' => $profile->medications_and_supplements,
+                'usesWeightLossInjections' => $profile->uses_weight_loss_injections,
+                'weightLossInjectionName' => $profile->weight_loss_injection_name,
+                'weightLossInjectionDoseCount' => $profile->weight_loss_injection_dose_count,
                 'idealWeightKg' => $profile->ideal_weight_kg !== null ? (float) $profile->ideal_weight_kg : null,
                 'recommendedTargetWeightKg' => $profile->recommended_target_weight_kg !== null ? (float) $profile->recommended_target_weight_kg : null,
                 'dislikedFoods' => $profile->disliked_foods,
@@ -265,7 +268,7 @@ class NutritionDietRequestController extends Controller
                 'description' => $template->description,
                 'supplementsEnabled' => (bool) $template->supplements_enabled,
                 'supplementNotes' => $template->supplement_notes,
-                'imageUrl' => $template->image_path ? asset('/storage/' . ltrim((string) $template->image_path, '/')) : null,
+                'imageUrl' => $template->image_path ? asset('/storage/'.ltrim((string) $template->image_path, '/')) : null,
             ] : null;
 
             /** @var NutritionPackageSubscription|null $subscription */
@@ -317,6 +320,9 @@ class NutritionDietRequestController extends Controller
                 'weekly_weight_change_kg' => $profile->weekly_weight_change_kg,
                 'medical_conditions' => $profile->medical_conditions,
                 'medications_and_supplements' => $profile->medications_and_supplements,
+                'uses_weight_loss_injections' => $profile->uses_weight_loss_injections,
+                'weight_loss_injection_name' => $profile->weight_loss_injection_name,
+                'weight_loss_injection_dose_count' => $profile->weight_loss_injection_dose_count,
                 'disliked_foods' => $profile->disliked_foods,
                 'food_allergies' => $profile->food_allergies,
                 'mindset_answers' => $profile->mindset_answers !== null
@@ -478,6 +484,13 @@ class NutritionDietRequestController extends Controller
             }
 
             $this->customerClubRewards->awardForWeightLossFollowup(
+                $user,
+                $rewardRequest,
+                isset($rewardContext['previousWeightKg']) ? (is_numeric($rewardContext['previousWeightKg']) ? (float) $rewardContext['previousWeightKg'] : null) : null,
+                isset($rewardContext['currentWeightKg']) ? (is_numeric($rewardContext['currentWeightKg']) ? (float) $rewardContext['currentWeightKg'] : null) : null,
+            );
+
+            $this->customerClubRewards->evaluateWeightRecord(
                 $user,
                 $rewardRequest,
                 isset($rewardContext['previousWeightKg']) ? (is_numeric($rewardContext['previousWeightKg']) ? (float) $rewardContext['previousWeightKg'] : null) : null,
@@ -1584,7 +1597,7 @@ class NutritionDietRequestController extends Controller
      */
     private function tokenBreakdownPayload(NutritionDietRequest $item): array
     {
-        $entries = \App\Domain\Tenant\Models\NutritionTokenLedger::query()
+        $entries = NutritionTokenLedger::query()
             ->with(['subject', 'actor', 'dietRequest'])
             ->where('nutrition_diet_request_id', $item->id)
             ->where('direction', 'debit')
@@ -1612,24 +1625,28 @@ class NutritionDietRequestController extends Controller
 
             if ($operationType === 'diet_revision') {
                 $dietRevisionTokens += $amount;
+
                 continue;
             }
 
             if ($operationType === 'meal_photo_analysis') {
                 $mealPhotoAnalysisTokens += $amount;
                 $operationUsageCounts['meal_photo_analysis']++;
+
                 continue;
             }
 
             if ($operationType === 'meal_replacement' || (string) $entry->reason_code === 'meal_replacement_ai') {
                 $mealReplacementTokens += $amount;
                 $operationUsageCounts['meal_replacement']++;
+
                 continue;
             }
 
             if ($operationType === 'manual_meal_nutrition' || (string) $entry->reason_code === 'manual_meal_nutrition_ai') {
                 $manualMealNutritionTokens += $amount;
                 $operationUsageCounts['manual_meal_nutrition']++;
+
                 continue;
             }
 
@@ -1648,14 +1665,14 @@ class NutritionDietRequestController extends Controller
             'aiUsageLimits' => $this->aiUsageLimitsPayload($item, $operationUsageCounts),
             'entriesCount' => $entries->count(),
             'entries' => $entries
-                ->map(fn (\App\Domain\Tenant\Models\NutritionTokenLedger $entry): array => $this->tokens->serializeLedger($entry))
+                ->map(fn (NutritionTokenLedger $entry): array => $this->tokens->serializeLedger($entry))
                 ->values()
                 ->all(),
         ];
     }
 
     /**
-     * @param array<string, int> $operationUsageCounts
+     * @param  array<string, int>  $operationUsageCounts
      * @return array<string, array<string, mixed>>
      */
     private function aiUsageLimitsPayload(NutritionDietRequest $item, array $operationUsageCounts): array
@@ -1797,7 +1814,7 @@ class NutritionDietRequestController extends Controller
     }
 
     /**
-     * @param array<string, mixed> $content
+     * @param  array<string, mixed>  $content
      * @return array<string, mixed>
      */
     private function filterDisabledTemplateMealSlots(NutritionDietPrescription $prescription, array $content): array
@@ -1948,8 +1965,8 @@ class NutritionDietRequestController extends Controller
                     'id' => (string) $log->id,
                     'consumedDate' => $log->consumed_date,
                     'exerciseId' => property_exists($log, 'tenant_nutrition_exercise_id') && $log->tenant_nutrition_exercise_id
-                        ? ('tenant-' . $log->tenant_nutrition_exercise_id)
-                        : ($log->nutrition_exercise_id ? ('central-' . $log->nutrition_exercise_id) : null),
+                        ? ('tenant-'.$log->tenant_nutrition_exercise_id)
+                        : ($log->nutrition_exercise_id ? ('central-'.$log->nutrition_exercise_id) : null),
                     'title' => $log->exercise_title,
                     'groupTitle' => $log->exercise_group_title,
                     'iconKey' => $log->exercise_icon_key,
@@ -2026,7 +2043,7 @@ class NutritionDietRequestController extends Controller
                     $data = is_array($item) ? $item : [];
 
                     return [
-                        'id' => (string) ($data['id'] ?? ('suggestion_' . ($index + 1))),
+                        'id' => (string) ($data['id'] ?? ('suggestion_'.($index + 1))),
                         'title' => trim((string) ($data['title'] ?? '')),
                         'description' => trim((string) ($data['description'] ?? '')),
                         'preparationText' => trim((string) ($data['preparation_text'] ?? '')),
@@ -2042,9 +2059,9 @@ class NutritionDietRequestController extends Controller
     }
 
     /**
-     * @param array<string, mixed> $contentSnapshot
-     * @param array<int, array<string, mixed>> $mealLogs
-     * @param array<int, array<string, mixed>> $waterLogs
+     * @param  array<string, mixed>  $contentSnapshot
+     * @param  array<int, array<string, mixed>>  $mealLogs
+     * @param  array<int, array<string, mixed>>  $waterLogs
      * @return array<string, mixed>
      */
     private function progressSummary(array $contentSnapshot, array $mealLogs, array $waterLogs): array
@@ -2137,7 +2154,7 @@ class NutritionDietRequestController extends Controller
 
     private function extractLoggedMacro(string $notes, string $key): float
     {
-        if (preg_match('/(?:^|\|)\s*' . preg_quote($key, '/') . ':(\d+(?:\.\d+)?)/', $notes, $matches) === 1) {
+        if (preg_match('/(?:^|\|)\s*'.preg_quote($key, '/').':(\d+(?:\.\d+)?)/', $notes, $matches) === 1) {
             return (float) $matches[1];
         }
 
@@ -2165,8 +2182,8 @@ class NutritionDietRequestController extends Controller
     }
 
     /**
-     * @param array<string, mixed> $content
-     * @param array<string, mixed> $validated
+     * @param  array<string, mixed>  $content
+     * @param  array<string, mixed>  $validated
      */
     private function applyUserChoiceOptionEdit(array &$content, array $validated): bool
     {
@@ -2199,8 +2216,8 @@ class NutritionDietRequestController extends Controller
     }
 
     /**
-     * @param array<string, mixed> $content
-     * @param array<string, mixed> $validated
+     * @param  array<string, mixed>  $content
+     * @param  array<string, mixed>  $validated
      */
     private function applyDailyMealEdit(array &$content, array $validated): bool
     {
@@ -2233,8 +2250,8 @@ class NutritionDietRequestController extends Controller
     }
 
     /**
-     * @param array<string, mixed> $content
-     * @param array<string, mixed> $validated
+     * @param  array<string, mixed>  $content
+     * @param  array<string, mixed>  $validated
      */
     private function applyDailyReplacementEdit(array &$content, array $validated): bool
     {
@@ -2269,8 +2286,8 @@ class NutritionDietRequestController extends Controller
     }
 
     /**
-     * @param array<string, mixed> $content
-     * @param array<string, mixed> $validated
+     * @param  array<string, mixed>  $content
+     * @param  array<string, mixed>  $validated
      */
     private function applyFixedTextSectionEdit(array &$content, array $validated): bool
     {
@@ -2313,12 +2330,12 @@ class NutritionDietRequestController extends Controller
         if ($search !== '') {
             $query->where(function (Builder $builder) use ($search): void {
                 $builder->where('id', $search)
-                    ->orWhere('diet_template_name', 'like', '%' . $search . '%')
-                    ->orWhere('status', 'like', '%' . $search . '%')
-                    ->orWhere('request_type', 'like', '%' . $search . '%')
+                    ->orWhere('diet_template_name', 'like', '%'.$search.'%')
+                    ->orWhere('status', 'like', '%'.$search.'%')
+                    ->orWhere('request_type', 'like', '%'.$search.'%')
                     ->orWhereHas('user', function (Builder $userQuery) use ($search): void {
-                        $userQuery->where('name', 'like', '%' . $search . '%')
-                            ->orWhere('mobile', 'like', '%' . $search . '%');
+                        $userQuery->where('name', 'like', '%'.$search.'%')
+                            ->orWhere('mobile', 'like', '%'.$search.'%');
                     });
             });
         }
@@ -2467,7 +2484,6 @@ class NutritionDietRequestController extends Controller
     }
 
     /**
-     * @param  mixed  $value
      * @return array<string, string>
      */
     private function normalizeRepeatDietFeedback(mixed $value): array

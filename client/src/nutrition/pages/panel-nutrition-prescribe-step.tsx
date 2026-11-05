@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Activity, ArrowLeft, ArrowRight, CalendarDays, Equal, Mars, Pill, Ruler, ShieldAlert, Target, Venus, Weight, ArrowDownCircle, ArrowUpCircle, Ban } from "lucide-react";
+import { Activity, ArrowLeft, ArrowRight, CalendarDays, Equal, Hash, Mars, Pill, Ruler, ShieldAlert, Syringe, Target, Venus, Weight, ArrowDownCircle, ArrowUpCircle, Ban } from "lucide-react";
 import { useLocation, useRoute } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,8 +28,9 @@ const STEP_META: Record<string, { titleKey: MessageKey; descriptionKey: MessageK
   weight: { titleKey: "panelNutritionPrescribeStep.step.weight.title", descriptionKey: "panelNutritionPrescribeStep.step.weight.description", backHref: "/panel/nutrition/prescribe/height", nextHref: "/panel/nutrition/prescribe/target-weight" },
   "target-weight": { titleKey: "panelNutritionPrescribeStep.step.targetWeight.title", descriptionKey: "panelNutritionPrescribeStep.step.targetWeight.description", backHref: "/panel/nutrition/prescribe/weight", nextHref: "/panel/nutrition/prescribe/weekly-rate" },
   "weekly-rate": { titleKey: "panelNutritionPrescribeStep.step.weeklyRate.title", descriptionKey: "panelNutritionPrescribeStep.step.weeklyRate.description", backHref: "/panel/nutrition/prescribe/target-weight", nextHref: "/panel/nutrition/prescribe/medical-conditions" },
-  "medical-conditions": { titleKey: "panelNutritionPrescribeStep.step.medicalConditions.title", descriptionKey: "panelNutritionPrescribeStep.step.medicalConditions.description", backHref: "/panel/nutrition/prescribe/weekly-rate", nextHref: "/panel/nutrition/prescribe/medications-and-supplements" },
-  "medications-and-supplements": { titleKey: "panelNutritionPrescribeStep.step.medications.title", descriptionKey: "panelNutritionPrescribeStep.step.medications.description", backHref: "/panel/nutrition/prescribe/medical-conditions", nextHref: "/panel/nutrition/prescribe/allergies" },
+  "medical-conditions": { titleKey: "panelNutritionPrescribeStep.step.medicalConditions.title", descriptionKey: "panelNutritionPrescribeStep.step.medicalConditions.description", backHref: "/panel/nutrition/prescribe/weekly-rate", nextHref: "/panel/nutrition/prescribe/weight-loss-injections" },
+  "weight-loss-injections": { titleKey: "nutritionMembershipMedications.injection.question", descriptionKey: "nutritionMembershipWeightLossInjection.topbarDescription", backHref: "/panel/nutrition/prescribe/medical-conditions", nextHref: "/panel/nutrition/prescribe/medications-and-supplements" },
+  "medications-and-supplements": { titleKey: "panelNutritionPrescribeStep.step.medications.title", descriptionKey: "panelNutritionPrescribeStep.step.medications.description", backHref: "/panel/nutrition/prescribe/weight-loss-injections", nextHref: "/panel/nutrition/prescribe/allergies" },
   allergies: { titleKey: "panelNutritionPrescribeStep.step.allergies.title", descriptionKey: "panelNutritionPrescribeStep.step.allergies.description", backHref: "/panel/nutrition/prescribe/medications-and-supplements", nextHref: "/panel/nutrition/prescribe/disliked-foods" },
   "disliked-foods": { titleKey: "panelNutritionPrescribeStep.step.dislikedFoods.title", descriptionKey: "panelNutritionPrescribeStep.step.dislikedFoods.description", backHref: "/panel/nutrition/prescribe/allergies", nextHref: "/panel/nutrition/prescribe/mindset/1" },
 };
@@ -126,6 +127,9 @@ export default function PanelNutritionPrescribeStepPage() {
   );
   const [weeklyRate, setWeeklyRate] = useState(state.weeklyWeightChangeKg ?? 1);
   const [medicalConditionItems, setMedicalConditionItems] = useState(ensureMedicalConditionDraft(state.medicalConditionsItems, state.medicalConditions));
+  const [usesWeightLossInjections, setUsesWeightLossInjections] = useState<boolean | undefined>(state.usesWeightLossInjections);
+  const [weightLossInjectionName, setWeightLossInjectionName] = useState(state.weightLossInjectionName ?? "");
+  const [weightLossInjectionDoseCount, setWeightLossInjectionDoseCount] = useState(state.weightLossInjectionDoseCount != null ? String(state.weightLossInjectionDoseCount) : "");
   const [medicationsAndSupplements, setMedicationsAndSupplements] = useState(state.medicationsAndSupplements ?? "");
   const [allergies, setAllergies] = useState(state.foodAllergies ?? "");
   const [dislikedFoods, setDislikedFoods] = useState(state.dislikedFoods ?? "");
@@ -180,6 +184,8 @@ export default function PanelNutritionPrescribeStepPage() {
         return Number(targetWeight) >= 20 && Number(targetWeight) <= 350;
       case "weekly-rate":
         return Boolean(weeklyRate);
+      case "weight-loss-injections":
+        return usesWeightLossInjections !== undefined;
       default:
         return true;
     }
@@ -219,6 +225,15 @@ export default function PanelNutritionPrescribeStepPage() {
         updatePanelNutritionPrescribeState({
           medicalConditionsItems: ensureMedicalConditionDraft(medicalConditionItems),
           medicalConditions: summarizeMedicalConditionItems(medicalConditionItems),
+        });
+        break;
+      case "weight-loss-injections":
+        updatePanelNutritionPrescribeState({
+          usesWeightLossInjections,
+          weightLossInjectionName: usesWeightLossInjections ? weightLossInjectionName.trim() : "",
+          weightLossInjectionDoseCount: usesWeightLossInjections && Number(weightLossInjectionDoseCount) > 0
+            ? Number(weightLossInjectionDoseCount)
+            : undefined,
         });
         break;
       case "medications-and-supplements":
@@ -411,6 +426,28 @@ export default function PanelNutritionPrescribeStepPage() {
           {stepKey === "medical-conditions" ? (
             <div className="mt-5">
               <MedicalConditionsEditor items={medicalConditionItems} onChange={setMedicalConditionItems} />
+            </div>
+          ) : null}
+
+          {stepKey === "weight-loss-injections" ? (
+            <div className="mt-5 space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                <button type="button" onClick={() => setUsesWeightLossInjections(true)} className={cn("rounded-[22px] border p-5 text-center font-black transition", usesWeightLossInjections === true ? "border-emerald-300/50 bg-emerald-400/12 text-emerald-200" : "border-white/10 bg-white/[0.04] text-white")}>
+                  <Syringe className="mx-auto mb-3 h-6 w-6" />
+                  {t("nutritionMembershipMedications.injection.yes")}
+                </button>
+                <button type="button" onClick={() => { setUsesWeightLossInjections(false); setWeightLossInjectionName(""); setWeightLossInjectionDoseCount(""); }} className={cn("rounded-[22px] border p-5 text-center font-black transition", usesWeightLossInjections === false ? "border-amber-300/50 bg-amber-400/12 text-amber-200" : "border-white/10 bg-white/[0.04] text-white")}>
+                  {t("nutritionMembershipMedications.injection.no")}
+                </button>
+              </div>
+              {usesWeightLossInjections ? (
+                <div className="rounded-[24px] border border-white/10 bg-white/[0.04] p-4">
+                  <label className="text-sm font-bold text-white" htmlFor="panel-weight-loss-injection-name">{t("nutritionMembershipMedications.injection.nameLabel")} ({t("nutritionMembershipShared.optional")})</label>
+                  <Input id="panel-weight-loss-injection-name" value={weightLossInjectionName} onChange={(event) => setWeightLossInjectionName(event.target.value)} className="mt-3 h-12 rounded-[16px] border-white/10 bg-white/5 text-white" />
+                  <label className="mt-4 flex items-center gap-2 text-sm font-bold text-white" htmlFor="panel-weight-loss-injection-dose"><Hash className="h-4 w-4 text-amber-300" />{t("nutritionMembershipMedications.injection.doseLabel")} ({t("nutritionMembershipShared.optional")})</label>
+                  <Input id="panel-weight-loss-injection-dose" type="number" min={1} max={1000} value={weightLossInjectionDoseCount} onChange={(event) => setWeightLossInjectionDoseCount(event.target.value)} className="mt-3 h-12 rounded-[16px] border-white/10 bg-white/5 text-white" />
+                </div>
+              ) : null}
             </div>
           ) : null}
 
