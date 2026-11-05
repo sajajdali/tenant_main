@@ -254,6 +254,7 @@ return [
         'nutrition_landing_saved' => 'Diät-Landingpage-Einstellungen wurden gespeichert.',
         'nutrition_landing_image_updated' => 'Das Bild der Diät-Landingpage wurde aktualisiert.',
         'nutrition_booking_banner_image_updated' => 'Das Diät-Banner für Buchungen wurde aktualisiert.',
+        'nutrition_landing_image_store_failed' => 'Das Bild konnte nicht gespeichert werden. Bitte versuchen Sie es erneut oder wenden Sie sich an den Support.',
     ],
     'gallery' => [
         'settings_saved' => 'Galerie-Status gespeichert.',

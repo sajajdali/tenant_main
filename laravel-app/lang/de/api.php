@@ -43,6 +43,9 @@ return [
             'current_weight_required' => 'Geben Sie Ihr aktualisiertes Gewicht fur die neue Diat ein.',
             'medical_notes_required' => 'Geben Sie aktuelle Erkrankungen oder Medikamente an. Schreiben Sie keine, falls nichts vorliegt.',
             'feedback_required' => 'Die Ruckmeldung zur vorherigen Diat ist unvollstandig. Beantworten Sie alle Fragen.',
+            'cancel_not_allowed' => 'Nur eine Diatanfrage, die noch auf die Vorbereitung wartet, kann entfernt werden.',
+            'cancelled' => 'Ihre Diatanfrage wurde entfernt.',
+            'cancelled_and_refunded' => 'Ihre Diatanfrage wurde entfernt und das Diatguthaben Ihrem Paket gutgeschrieben.',
         ],
     ],
 ];

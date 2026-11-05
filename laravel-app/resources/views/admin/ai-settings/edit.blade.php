@@ -38,7 +38,24 @@
                                 <div class="form-text">
                                     {{ __('admin.ai_settings.api_key_help') }}
                                     @if(! empty($aiSettings['api_key']))
-                                        <span class="d-block mt-1">{{ __('admin.ai_settings.current_key') }}: <code dir="ltr">{{ $aiSettings['api_key'] }}</code></span>
+                                        <span class="d-block mt-2">
+                                            {{ __('admin.ai_settings.current_key') }}:
+                                            <code id="current-api-key" dir="ltr">{{ $aiSettings['api_key'] }}</code>
+                                        </span>
+                                        <span class="d-flex flex-wrap gap-2 mt-2">
+                                            <button
+                                                type="button"
+                                                id="reveal-api-key"
+                                                class="btn btn-sm btn-outline-secondary"
+                                                data-url="{{ route('admin.ai-settings.api-key') }}"
+                                            >
+                                                {{ __('admin.ai_settings.reveal_api_key') }}
+                                            </button>
+                                            <button type="button" id="copy-api-key" class="btn btn-sm btn-outline-primary">
+                                                {{ __('admin.ai_settings.copy_api_key') }}
+                                            </button>
+                                            <span id="api-key-status" class="align-self-center" role="status" aria-live="polite"></span>
+                                        </span>
                                     @endif
                                 </div>
                             </div>
@@ -212,3 +229,115 @@
         </div>
     </div>
 @endsection
+
+@push('scripts')
+    <script>
+        (() => {
+            const keyElement = document.getElementById('current-api-key');
+            const revealButton = document.getElementById('reveal-api-key');
+            const copyButton = document.getElementById('copy-api-key');
+            const statusElement = document.getElementById('api-key-status');
+
+            if (!keyElement || !revealButton || !copyButton || !statusElement) {
+                return;
+            }
+
+            const maskedKey = keyElement.textContent.trim();
+            let revealedKey = null;
+
+            const copyText = async (value) => {
+                if (navigator.clipboard && window.isSecureContext) {
+                    await navigator.clipboard.writeText(value);
+                    return;
+                }
+
+                const helper = document.createElement('textarea');
+                helper.value = value;
+                helper.setAttribute('readonly', '');
+                helper.style.position = 'fixed';
+                helper.style.opacity = '0';
+                document.body.appendChild(helper);
+                helper.select();
+
+                try {
+                    if (!document.execCommand('copy')) {
+                        throw new Error('Clipboard copy failed');
+                    }
+                } finally {
+                    helper.remove();
+                }
+            };
+
+            const loadKey = async () => {
+                if (revealedKey !== null) {
+                    return revealedKey;
+                }
+
+                revealButton.disabled = true;
+                copyButton.disabled = true;
+                statusElement.textContent = '';
+
+                try {
+                    const response = await fetch(revealButton.dataset.url, {
+                        method: 'POST',
+                        credentials: 'same-origin',
+                        cache: 'no-store',
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': @json(csrf_token()),
+                            'X-Requested-With': 'XMLHttpRequest',
+                        },
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}`);
+                    }
+
+                    const payload = await response.json();
+                    revealedKey = typeof payload.api_key === 'string' ? payload.api_key : '';
+
+                    if (revealedKey === '') {
+                        throw new Error('Empty API key');
+                    }
+
+                    return revealedKey;
+                } catch (error) {
+                    statusElement.className = 'align-self-center text-danger';
+                    statusElement.textContent = @json(__('admin.ai_settings.api_key_load_error'));
+                    throw error;
+                } finally {
+                    revealButton.disabled = false;
+                    copyButton.disabled = false;
+                }
+            };
+
+            revealButton.addEventListener('click', async () => {
+                if (keyElement.textContent.trim() === revealedKey && revealedKey !== null) {
+                    keyElement.textContent = maskedKey;
+                    revealButton.textContent = @json(__('admin.ai_settings.reveal_api_key'));
+                    return;
+                }
+
+                try {
+                    keyElement.textContent = await loadKey();
+                    revealButton.textContent = @json(__('admin.ai_settings.hide_api_key'));
+                } catch (error) {
+                    // The visible status message above explains the failure.
+                }
+            });
+
+            copyButton.addEventListener('click', async () => {
+                try {
+                    await copyText(await loadKey());
+                    statusElement.className = 'align-self-center text-success';
+                    statusElement.textContent = @json(__('admin.ai_settings.api_key_copied'));
+                } catch (error) {
+                    if (!statusElement.textContent) {
+                        statusElement.className = 'align-self-center text-danger';
+                        statusElement.textContent = @json(__('admin.ai_settings.api_key_load_error'));
+                    }
+                }
+            });
+        })();
+    </script>
+@endpush

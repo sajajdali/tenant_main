@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Unit;
 
 use App\Domain\Tenant\Models\TenantUser;
+use App\Domain\Tenant\Models\NutritionDietRequest;
 use App\Http\Controllers\Api\V1\Customer\Nutrition\DietRequestController;
 use App\Http\Controllers\Tenant\NutritionDietRequestController as LegacyNutritionDietRequestController;
 use App\Services\Api\CustomerDietRequestFlowService;
@@ -144,5 +145,35 @@ class CustomerAppFirstDietRequestControllerTest extends TestCase
 
         $this->assertSame($preview, $body['data']);
         $this->assertTrue($body['data']['canConfirm']);
+    }
+
+    public function test_destroy_forwards_the_authenticated_users_request_to_the_tenant_workflow(): void
+    {
+        $user = (new TenantUser)->forceFill([
+            'id' => 15,
+            'can_book' => true,
+        ]);
+        $dietRequest = (new NutritionDietRequest)->forceFill(['id' => 81, 'user_id' => 15]);
+        $request = Request::create('/api/v1/app/nutrition/diet-requests/81', 'DELETE');
+        $request->setUserResolver(fn (): TenantUser => $user);
+
+        $legacy = Mockery::mock(LegacyNutritionDietRequestController::class);
+        $legacy->shouldReceive('destroy')
+            ->once()
+            ->with($request, $dietRequest)
+            ->andReturn(response()->json([
+                'success' => true,
+                'message' => 'درخواست حذف شد.',
+                'data' => ['requestId' => '81', 'status' => 'cancelled', 'refunded' => true],
+            ]));
+        $flow = Mockery::mock(CustomerDietRequestFlowService::class);
+        $flow->shouldNotReceive('preview');
+
+        $response = (new DietRequestController($legacy, $flow))->destroy($request, $dietRequest);
+        $body = $response->getData(true);
+
+        $this->assertTrue($body['success']);
+        $this->assertSame('cancelled', $body['data']['status']);
+        $this->assertTrue($body['data']['refunded']);
     }
 }

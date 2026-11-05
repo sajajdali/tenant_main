@@ -7,20 +7,39 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Support\OpenAiSettings;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class AiSettingsController extends Controller
 {
-    public function edit(): View
+    public function edit(Request $request): View
     {
+        $this->authorizeAdmin($request);
+
         return view('admin.ai-settings.edit', [
             'aiSettings' => OpenAiSettings::public(),
         ]);
     }
 
+    public function showApiKey(Request $request): JsonResponse
+    {
+        $this->authorizeAdmin($request);
+
+        $response = response()->json([
+            'api_key' => (string) (OpenAiSettings::get()['api_key'] ?? ''),
+        ]);
+
+        $response->headers->set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+        $response->headers->set('Pragma', 'no-cache');
+
+        return $response;
+    }
+
     public function update(Request $request): RedirectResponse
     {
+        $this->authorizeAdmin($request);
+
         $validated = $request->validate([
             'enabled' => ['nullable', 'boolean'],
             'api_key' => ['nullable', 'string', 'max:500'],
@@ -58,5 +77,10 @@ class AiSettingsController extends Controller
         return redirect()
             ->route('admin.ai-settings.edit')
             ->with('success', 'تنظیمات AI ذخیره شد.');
+    }
+
+    private function authorizeAdmin(Request $request): void
+    {
+        abort_unless($request->user()?->role === 'admin', 403);
     }
 }

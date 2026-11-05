@@ -1969,6 +1969,10 @@ export const api = {
       return getJson<{ items: NutritionDietRequest[]; page: number; perPage: number; total: number; lastPage: number }>("/api/v1/nutrition/diet-requests");
     },
 
+    deleteMine: async (dietRequestId: string): Promise<ApiResponse<{ requestId: string; status: "cancelled"; refunded: boolean }>> => {
+      return requestJson<{ requestId: string; status: "cancelled"; refunded: boolean }>(`/api/v1/nutrition/diet-requests/${encodeURIComponent(dietRequestId)}`, "DELETE");
+    },
+
     adminList: async (q?: string, page = 1, perPage = 20, quickFilter?: "all" | "ai" | "expert" | "queued_ai" | "processing_ai" | "generated_ai" | "not_generated" | "pending_approval" | "expert_manual_delivery" | "failed_ai"): Promise<ApiResponse<{ stats: NutritionDietRequestAdminStats; filters: { q: string; quickFilter: string }; items: NutritionDietRequest[]; page: number; perPage: number; total: number; lastPage: number }>> => {
       const params = new URLSearchParams();
       if (q?.trim()) {

@@ -14,6 +14,8 @@ class SmsOutbound extends Model
         'type',
         'template_key',
         'provider',
+        'provider_template',
+        'provider_params',
         'sender',
         'recipient_mobile',
         'recipient_name',
@@ -33,6 +35,7 @@ class SmsOutbound extends Model
         'parts_count' => 'integer',
         'unit_price' => 'integer',
         'total_price' => 'integer',
+        'provider_params' => 'array',
         'sent_at' => 'datetime',
     ];
 

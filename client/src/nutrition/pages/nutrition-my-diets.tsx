@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { CalendarDays, CheckCircle2, ChevronLeft, Eye, History, Loader2, Plus, Scale, TimerOff, TrendingDown, TrendingUp } from "lucide-react";
+import { CalendarDays, CheckCircle2, ChevronLeft, Eye, History, Loader2, Plus, Scale, TimerOff, Trash2, TrendingDown, TrendingUp } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useLocation } from "wouter";
 import { api } from "@/lib/api";
@@ -9,6 +9,8 @@ import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { getFirstIncompleteNutritionProfileHref, isNutritionProfileComplete } from "@/nutrition/lib/profile-completion";
 import { useFormat, useLocale, useT } from "@/i18n/locale";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 
 type DietRequestTab = "current" | "archived" | "expired";
 
@@ -36,6 +38,8 @@ export default function NutritionMyDietsPage() {
   const [summary, setSummary] = useState<NutritionPackageCheckoutSummaryPayload | null>(null);
   const [activeDietRequest, setActiveDietRequest] = useState<NutritionDietRequest | null>(null);
   const [activeTab, setActiveTab] = useState<DietRequestTab>("current");
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deletingRequest, setDeletingRequest] = useState(false);
 
   useEffect(() => {
     Promise.all([
@@ -161,6 +165,31 @@ export default function NutritionMyDietsPage() {
   const activeTabMeta = tabs.find((tab) => tab.key === activeTab) ?? tabs[0];
   const showActiveRequestCard = activeTab === "current" && Boolean(activeDietRequest);
   const showEmptyState = activeTabMeta.items.length === 0 && !showActiveRequestCard;
+  const handleDeletePendingRequest = async () => {
+    if (!activeDietRequest || deletingRequest) return;
+
+    setDeletingRequest(true);
+    const result = await api.nutritionDietRequests.deleteMine(activeDietRequest.id);
+    setDeletingRequest(false);
+
+    if (!result.success) {
+      toast({
+        variant: "destructive",
+        title: t("nutritionMyDiets.delete.errorTitle"),
+        description: result.message || t("common.tryAgain"),
+      });
+      return;
+    }
+
+    setDeleteDialogOpen(false);
+    setActiveDietRequest(null);
+    const summaryResult = await api.nutritionPackageCheckout.summary();
+    if (summaryResult.success) setSummary(summaryResult.data);
+    toast({
+      title: t("nutritionMyDiets.delete.successTitle"),
+      description: result.message || t("nutritionMyDiets.delete.successDescription"),
+    });
+  };
 
   return (
     <div className="relative isolate min-h-screen overflow-hidden bg-[#070b12] px-4 py-4 pb-24 text-white" dir={dir}>
@@ -241,6 +270,15 @@ export default function NutritionMyDietsPage() {
                 <div className="mt-2.5 truncate text-[13px] font-black text-white">{activeDietRequest?.dietTemplateName || t("nutritionMyDiets.customDiet")}</div>
               </div>
             </div>
+
+            <button
+              type="button"
+              onClick={() => setDeleteDialogOpen(true)}
+              className="mt-4 flex h-11 w-full items-center justify-center gap-2 rounded-[15px] border border-rose-300/25 bg-rose-400/10 text-[12px] font-black text-rose-200 transition hover:bg-rose-400/15"
+            >
+              <Trash2 className="h-4 w-4" />
+              {t("nutritionMyDiets.delete.action")}
+            </button>
 
           </section>
         ) : null}
@@ -377,6 +415,23 @@ export default function NutritionMyDietsPage() {
           </button>
         </section>
       </div>
+      <Dialog open={deleteDialogOpen} onOpenChange={(open) => !deletingRequest && setDeleteDialogOpen(open)}>
+        <DialogContent dir={dir}>
+          <DialogHeader className="text-start">
+            <DialogTitle>{t("nutritionMyDiets.delete.title")}</DialogTitle>
+            <DialogDescription>{t("nutritionMyDiets.delete.description")}</DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" disabled={deletingRequest} onClick={() => setDeleteDialogOpen(false)}>
+              {t("common.cancel")}
+            </Button>
+            <Button variant="destructive" disabled={deletingRequest} onClick={handleDeletePendingRequest}>
+              {deletingRequest ? <Loader2 className="me-2 h-4 w-4 animate-spin" /> : <Trash2 className="me-2 h-4 w-4" />}
+              {t("nutritionMyDiets.delete.confirm")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -43,6 +43,8 @@ class SmsDispatchService
             'type' => (string) ($payload['type'] ?? 'manual'),
             'template_key' => Arr::get($payload, 'template_key'),
             'provider' => Arr::get($payload, 'provider'),
+            'provider_template' => Arr::get($payload, 'provider_template'),
+            'provider_params' => Arr::get($payload, 'provider_params'),
             'sender' => Arr::get($payload, 'sender'),
             'recipient_mobile' => $mobile,
             'recipient_name' => Arr::get($payload, 'recipient_name'),
@@ -135,12 +137,16 @@ class SmsDispatchService
             'sender' => $resolvedSender,
         ]);
 
-        SendSmsOutboundJob::dispatch(
+        $dispatch = SendSmsOutboundJob::dispatch(
             (string) tenant('id'),
             (int) $outbound->id,
             (bool) ($payload['allow_negative_balance'] ?? false),
             (string) ($payload['queue'] ?? SmsQueue::TRANSACTIONAL),
         );
+
+        if ((bool) ($payload['after_commit'] ?? false)) {
+            $dispatch->afterCommit();
+        }
 
         return $outbound;
     }
@@ -230,7 +236,7 @@ class SmsDispatchService
 
         try {
             $driver = $this->providers->driver($resolvedProvider);
-            $result = $driver->sendMany($setting, $mobiles, $message, (string) ($resolvedSender ?? ''));
+            $result = $driver->sendMany($setting, $mobiles, $message, (string) ($resolvedSender ?? ''), $context);
         } catch (Throwable $exception) {
             $result = [
                 'ok' => false,
@@ -311,7 +317,12 @@ class SmsDispatchService
 
         try {
             $driver = $this->providers->driver($resolvedProvider);
-            $result = $driver->send($setting, $outbound->recipient_mobile, $outbound->message);
+            $result = $driver->send($setting, $outbound->recipient_mobile, $outbound->message, [
+                ...$context,
+                'provider_template' => $outbound->provider_template,
+                'provider_params' => $outbound->provider_params ?? [],
+                'template_key' => $outbound->template_key,
+            ]);
         } catch (Throwable $exception) {
             $result = [
                 'ok' => false,

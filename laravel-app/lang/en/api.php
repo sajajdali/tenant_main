@@ -43,6 +43,9 @@ return [
             'current_weight_required' => 'Enter your updated current weight for the new diet.',
             'medical_notes_required' => 'Enter your current medical conditions or medications. Enter none if there are no changes.',
             'feedback_required' => 'The previous-diet feedback is incomplete. Answer every question.',
+            'cancel_not_allowed' => 'Only a diet request that is still awaiting preparation can be removed.',
+            'cancelled' => 'Your diet request was removed.',
+            'cancelled_and_refunded' => 'Your diet request was removed and its diet credit was returned to your package.',
         ],
     ],
 ];

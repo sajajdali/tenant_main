@@ -10,6 +10,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 
 class NutritionLandingSettingsController extends Controller
 {
@@ -124,17 +125,18 @@ class NutritionLandingSettingsController extends Controller
         $variants = is_array($nutritionLanding['variants'] ?? null) ? $nutritionLanding['variants'] : [];
         $current = is_array($variants[$variant] ?? null) ? $variants[$variant] : [];
 
-        if ((bool) ($validated['removeImage'] ?? false)) {
-            $this->deletePhysicalFile(isset($current['image_path']) ? (string) $current['image_path'] : null);
-            $current['image_path'] = null;
-        }
-
         /** @var UploadedFile|null $image */
         $image = $request->file('image');
         if ($image instanceof UploadedFile) {
+            $previousPath = isset($current['image_path']) ? (string) $current['image_path'] : null;
+            $nextPath = $this->storeLandingImage($image);
+
+            $this->deletePhysicalFile($previousPath);
+            $current['image_path'] = $nextPath;
+            $this->recordTenantMediaFile($nextPath, (int) $image->getSize());
+        } elseif ((bool) ($validated['removeImage'] ?? false)) {
             $this->deletePhysicalFile(isset($current['image_path']) ? (string) $current['image_path'] : null);
-            $current['image_path'] = $image->store('nutrition/landings', 'media_public');
-            $this->recordTenantMediaFile($current['image_path'], (int) $image->getSize());
+            $current['image_path'] = null;
         }
 
         $variants[$variant] = [
@@ -176,17 +178,18 @@ class NutritionLandingSettingsController extends Controller
         $nutritionLanding = is_array($rules['nutrition_landing'] ?? null) ? $rules['nutrition_landing'] : [];
         $bookingBanner = is_array($nutritionLanding['booking_banner'] ?? null) ? $nutritionLanding['booking_banner'] : [];
 
-        if ((bool) ($validated['removeImage'] ?? false)) {
-            $this->deletePhysicalFile(isset($bookingBanner['image_path']) ? (string) $bookingBanner['image_path'] : null);
-            $bookingBanner['image_path'] = null;
-        }
-
         /** @var UploadedFile|null $image */
         $image = $request->file('image');
         if ($image instanceof UploadedFile) {
+            $previousPath = isset($bookingBanner['image_path']) ? (string) $bookingBanner['image_path'] : null;
+            $nextPath = $this->storeLandingImage($image);
+
+            $this->deletePhysicalFile($previousPath);
+            $bookingBanner['image_path'] = $nextPath;
+            $this->recordTenantMediaFile($nextPath, (int) $image->getSize());
+        } elseif ((bool) ($validated['removeImage'] ?? false)) {
             $this->deletePhysicalFile(isset($bookingBanner['image_path']) ? (string) $bookingBanner['image_path'] : null);
-            $bookingBanner['image_path'] = $image->store('nutrition/landings', 'media_public');
-            $this->recordTenantMediaFile($bookingBanner['image_path'], (int) $image->getSize());
+            $bookingBanner['image_path'] = null;
         }
 
         $bookingBanner['enabled'] = (bool) ($bookingBanner['enabled'] ?? false);
@@ -252,6 +255,22 @@ class NutritionLandingSettingsController extends Controller
         $rules = $general?->booking_rules ?? [];
 
         return self::dataFromRules($rules);
+    }
+
+    /**
+     * @throws ValidationException
+     */
+    private function storeLandingImage(UploadedFile $image): string
+    {
+        $path = $image->store('nutrition/landings', 'media_public');
+
+        if (! is_string($path) || trim($path) === '') {
+            throw ValidationException::withMessages([
+                'image' => __('tenant.settings.nutrition_landing_image_store_failed'),
+            ]);
+        }
+
+        return $path;
     }
 
     private function isNutritionAudience(): bool

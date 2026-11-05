@@ -232,6 +232,9 @@ foreach (config('tenancy.central_domains') as $domain) {
             Route::get('/admin/system-settings', [SystemSettingsController::class, 'edit'])->name('admin.system-settings.edit');
             Route::put('/admin/system-settings', [SystemSettingsController::class, 'update'])->name('admin.system-settings.update');
             Route::get('/admin/ai-settings', [AiSettingsController::class, 'edit'])->name('admin.ai-settings.edit');
+            Route::post('/admin/ai-settings/api-key', [AiSettingsController::class, 'showApiKey'])
+                ->middleware('throttle:10,1')
+                ->name('admin.ai-settings.api-key');
             Route::put('/admin/ai-settings', [AiSettingsController::class, 'update'])->name('admin.ai-settings.update');
             Route::get('/admin/finance', [FinanceReportController::class, 'index'])->name('admin.finance.index');
             Route::get('/admin/sms-settings', [SmsSettingsController::class, 'edit'])->name('admin.sms-settings.edit');

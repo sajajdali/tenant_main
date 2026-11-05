@@ -254,6 +254,7 @@ return [
         'nutrition_landing_saved' => 'تم حفظ إعدادات صفحة هبوط النظام الغذائي.',
         'nutrition_landing_image_updated' => 'تم تحديث صورة صفحة هبوط النظام الغذائي.',
         'nutrition_booking_banner_image_updated' => 'تم تحديث صورة بانر النظام الغذائي في الحجز.',
+        'nutrition_landing_image_store_failed' => 'تعذر حفظ الصورة. يرجى المحاولة مرة أخرى أو التواصل مع الدعم.',
     ],
     'gallery' => [
         'settings_saved' => 'تم حفظ حالة المعرض.',

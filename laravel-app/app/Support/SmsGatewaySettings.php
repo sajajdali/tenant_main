@@ -14,6 +14,8 @@ class SmsGatewaySettings
     {
         return [
             'kavenegar_api_key' => '',
+            'shsms_api_key' => '',
+            'shsms_base_url' => 'https://nwe.shsms.ir/api/v1',
             'sandbox_enabled' => false,
             'credit_alert_templates' => [
                 'threshold_50000' => __('tenant.sms_gateway_defaults.credit_alert_templates.threshold_50000'),
@@ -81,6 +83,16 @@ class SmsGatewaySettings
     public static function sandboxEnabled(): bool
     {
         return (bool) (static::get()['sandbox_enabled'] ?? false);
+    }
+
+    public static function shSmsApiKey(): string
+    {
+        return (string) (static::get()['shsms_api_key'] ?? '');
+    }
+
+    public static function shSmsBaseUrl(): string
+    {
+        return rtrim((string) (static::get()['shsms_base_url'] ?? static::defaults()['shsms_base_url']), '/');
     }
 
     /**
@@ -174,6 +186,8 @@ class SmsGatewaySettings
 
         return [
             'kavenegar_api_key' => trim((string) ($value['kavenegar_api_key'] ?? $defaults['kavenegar_api_key'])),
+            'shsms_api_key' => trim((string) ($value['shsms_api_key'] ?? $defaults['shsms_api_key'])),
+            'shsms_base_url' => rtrim(trim((string) ($value['shsms_base_url'] ?? $defaults['shsms_base_url'])), '/'),
             'sandbox_enabled' => (bool) ($value['sandbox_enabled'] ?? $defaults['sandbox_enabled']),
             'credit_alert_templates' => $creditAlertTemplates,
             'support_reminder_templates' => $supportReminderTemplates,

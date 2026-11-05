@@ -27,6 +27,8 @@ class SmsSettingsController extends Controller
     {
         $validated = $request->validate([
             'kavenegar_api_key' => ['nullable', 'string', 'max:255'],
+            'shsms_api_key' => ['nullable', 'string', 'max:255'],
+            'shsms_base_url' => ['nullable', 'url', 'max:255'],
             'sandbox_enabled' => ['nullable', 'boolean'],
             'persian_price' => ['nullable', 'integer', 'min:0'],
             'english_price' => ['nullable', 'integer', 'min:0'],
@@ -67,6 +69,8 @@ class SmsSettingsController extends Controller
 
         SmsGatewaySettings::put([
             'kavenegar_api_key' => $validated['kavenegar_api_key'] ?? '',
+            'shsms_api_key' => $validated['shsms_api_key'] ?? '',
+            'shsms_base_url' => $validated['shsms_base_url'] ?? SmsGatewaySettings::defaults()['shsms_base_url'],
             'sandbox_enabled' => (bool) ($validated['sandbox_enabled'] ?? false),
             'credit_alert_templates' => $validated['credit_alert_templates'] ?? [],
             'support_reminder_templates' => $validated['support_reminder_templates'] ?? [],

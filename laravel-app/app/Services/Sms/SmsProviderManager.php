@@ -6,6 +6,7 @@ namespace App\Services\Sms;
 
 use App\Contracts\SmsProvider;
 use App\Services\Sms\Providers\KavenegarSmsProvider;
+use App\Services\Sms\Providers\ShSmsProvider;
 use InvalidArgumentException;
 
 class SmsProviderManager
@@ -17,6 +18,7 @@ class SmsProviderManager
     {
         $this->providers = [
             new KavenegarSmsProvider(),
+            new ShSmsProvider(),
         ];
     }
 

@@ -467,6 +467,8 @@ class NutritionDietRequestController extends Controller
             /** @var NutritionDietRequest $rewardRequest */
             $rewardRequest = $rewardContext['request'];
 
+            $this->notifications->notifyArmanivaManagerDietRequestCreated($rewardRequest);
+
             if ((bool) $rewardRequest->requires_manual_delivery_approval) {
                 $this->notifications->notifyExpertsDietRequestNeedsManualApproval($rewardRequest);
             }
@@ -510,6 +512,64 @@ class NutritionDietRequestController extends Controller
                 'total' => $items->total(),
                 'lastPage' => $items->lastPage(),
             ],
+        ]);
+    }
+
+    public function destroy(Request $request, NutritionDietRequest $nutritionDietRequest): JsonResponse
+    {
+        $user = $this->user();
+        abort_unless($user, 401);
+
+        $result = DB::transaction(function () use ($nutritionDietRequest, $user): array {
+            /** @var NutritionDietRequest $requestModel */
+            $requestModel = NutritionDietRequest::query()
+                ->with('subscription')
+                ->lockForUpdate()
+                ->findOrFail($nutritionDietRequest->id);
+
+            abort_unless((int) $requestModel->user_id === (int) $user->id, 404);
+
+            if (! in_array($requestModel->status, self::ACTIVE_REQUEST_STATUSES, true)) {
+                throw ValidationException::withMessages([
+                    'request' => __('api.nutrition.diet_request.cancel_not_allowed'),
+                ]);
+            }
+
+            if ($requestModel->prescriptions()->whereNotNull('published_at')->exists()) {
+                throw ValidationException::withMessages([
+                    'request' => __('api.nutrition.diet_request.cancel_not_allowed'),
+                ]);
+            }
+
+            $refunded = $this->refundDietRequestBalance($requestModel, 'customer_cancelled');
+            $snapshot = is_array($requestModel->request_payload_snapshot) ? $requestModel->request_payload_snapshot : [];
+
+            $requestModel->forceFill([
+                'status' => 'cancelled',
+                'ai_generation_status' => $requestModel->request_type === 'ai' ? 'cancelled' : $requestModel->ai_generation_status,
+                'ai_generation_error' => null,
+                'request_payload_snapshot' => array_merge($snapshot, [
+                    'cancelledByCustomerAt' => now()->toIso8601String(),
+                    'dietCreditRefundedAt' => $refunded ? now()->toIso8601String() : ($snapshot['dietCreditRefundedAt'] ?? null),
+                    'dietCreditRefundReason' => $refunded ? 'customer_cancelled' : ($snapshot['dietCreditRefundReason'] ?? null),
+                ]),
+            ])->save();
+
+            return [
+                'requestId' => (string) $requestModel->id,
+                'status' => 'cancelled',
+                'refunded' => $refunded,
+            ];
+        });
+
+        event(NutritionDietRequestUpdated::fromRequest((string) tenant('id'), $nutritionDietRequest->fresh()));
+
+        return response()->json([
+            'success' => true,
+            'message' => $result['refunded']
+                ? __('api.nutrition.diet_request.cancelled_and_refunded')
+                : __('api.nutrition.diet_request.cancelled'),
+            'data' => $result,
         ]);
     }
 
@@ -722,22 +782,8 @@ class NutritionDietRequestController extends Controller
 
             $refunded = false;
 
-            if ($refundBalance && $requestModel->nutrition_package_subscription_id) {
-                /** @var NutritionPackageSubscription|null $subscription */
-                $subscription = NutritionPackageSubscription::query()
-                    ->lockForUpdate()
-                    ->find($requestModel->nutrition_package_subscription_id);
-
-                if ($subscription) {
-                    if ($requestModel->request_type === 'ai') {
-                        $subscription->online_diet_used = max(0, (int) $subscription->online_diet_used - 1);
-                    } else {
-                        $subscription->offline_diet_used = max(0, (int) $subscription->offline_diet_used - 1);
-                    }
-
-                    $subscription->save();
-                    $refunded = true;
-                }
+            if ($refundBalance) {
+                $refunded = $this->refundDietRequestBalance($requestModel, 'admin_deleted');
             }
 
             NutritionDietPrescription::query()
@@ -768,6 +814,48 @@ class NutritionDietRequestController extends Controller
                 : 'درخواست رژیم حذف شد.',
             'data' => $result,
         ]);
+    }
+
+    private function refundDietRequestBalance(NutritionDietRequest $dietRequest, string $reason): bool
+    {
+        $snapshot = is_array($dietRequest->request_payload_snapshot) ? $dietRequest->request_payload_snapshot : [];
+
+        if (! empty($snapshot['dietCreditRefundedAt']) || ! $dietRequest->nutrition_package_subscription_id) {
+            return false;
+        }
+
+        /** @var NutritionPackageSubscription|null $subscription */
+        $subscription = NutritionPackageSubscription::query()
+            ->lockForUpdate()
+            ->find($dietRequest->nutrition_package_subscription_id);
+
+        if (! $subscription) {
+            return false;
+        }
+
+        if ($dietRequest->request_type === 'ai') {
+            if ((int) $subscription->online_diet_used <= 0) {
+                return false;
+            }
+
+            $subscription->online_diet_used = (int) $subscription->online_diet_used - 1;
+        } else {
+            if ((int) $subscription->offline_diet_used <= 0) {
+                return false;
+            }
+
+            $subscription->offline_diet_used = (int) $subscription->offline_diet_used - 1;
+        }
+
+        $subscription->save();
+        $dietRequest->forceFill([
+            'request_payload_snapshot' => array_merge($snapshot, [
+                'dietCreditRefundedAt' => now()->toIso8601String(),
+                'dietCreditRefundReason' => $reason,
+            ]),
+        ])->save();
+
+        return true;
     }
 
     public function adminManualEditPrescriptionItem(Request $request, NutritionDietRequest $nutritionDietRequest): JsonResponse

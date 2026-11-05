@@ -254,6 +254,7 @@ return [
         'nutrition_landing_saved' => 'تنظیمات صفحه ورود رژیم ذخیره شد.',
         'nutrition_landing_image_updated' => 'تصویر صفحه ورود به‌روزرسانی شد.',
         'nutrition_booking_banner_image_updated' => 'تصویر بنر رژیم در نوبت‌دهی به‌روزرسانی شد.',
+        'nutrition_landing_image_store_failed' => 'ذخیره تصویر انجام نشد. لطفاً دوباره تلاش کنید یا با پشتیبانی تماس بگیرید.',
     ],
     'gallery' => [
         'settings_saved' => 'وضعیت گالری ذخیره شد.',

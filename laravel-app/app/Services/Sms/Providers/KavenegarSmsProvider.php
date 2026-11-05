@@ -19,7 +19,7 @@ class KavenegarSmsProvider implements SmsProvider
         return $provider === 'kavenegar';
     }
 
-    public function send(SmsSetting $setting, string $mobile, string $message): array
+    public function send(SmsSetting $setting, string $mobile, string $message, array $context = []): array
     {
         $result = $this->sendMany($setting, [$mobile], $message);
         $firstEntry = $result['entries'][0] ?? null;
@@ -32,7 +32,7 @@ class KavenegarSmsProvider implements SmsProvider
         ];
     }
 
-    public function sendMany(SmsSetting $setting, array $mobiles, string $message, ?string $sender = null): array
+    public function sendMany(SmsSetting $setting, array $mobiles, string $message, ?string $sender = null, array $context = []): array
     {
         $apiKey = $this->apiKey();
         $resolvedSender = trim((string) ($sender ?? ($setting->credentials['sender'] ?? '')));

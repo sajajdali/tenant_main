@@ -336,6 +336,7 @@ class NutritionAiDietPersister
 
         $content = $this->normalizeDailyPlans($request, $content);
         $content = $this->filterDisabledTemplateMealSlots($request, $content);
+        $content = $this->normalizeUniqueMealSlotKeys($content);
         $content = $this->normalizeMacroTargets($content);
         $content['water_plan'] = $this->waterPlan($content['water_plan'] ?? null, $profile);
         $content['supplement_plan'] = $this->supplementPlan($content['supplement_plan'] ?? null, $template, $request);
@@ -346,6 +347,81 @@ class NutritionAiDietPersister
         $content['intro_banner'] = $this->asString($content['intro_banner'] ?? null) !== ''
             ? $this->asString($content['intro_banner'] ?? null)
             : sprintf('این رژیم را باید %d روز با دقت رعایت کنید.', max(1, optional($request->ends_at)->diffInDays($request->started_at) + 1));
+
+        return $content;
+    }
+
+    /**
+     * Keep generated slot keys compatible with the database unique constraints.
+     *
+     * AI responses can occasionally repeat a slot (or vary only by case or
+     * surrounding whitespace). Persisting such a response would otherwise fail
+     * the whole prescription transaction.
+     *
+     * @param array<string, mixed> $content
+     * @return array<string, mixed>
+     */
+    private function normalizeUniqueMealSlotKeys(array $content): array
+    {
+        if (is_array($content['meal_slots'] ?? null)) {
+            $seenSlotKeys = [];
+            $content['meal_slots'] = collect($content['meal_slots'])
+                ->filter(function ($slot) use (&$seenSlotKeys): bool {
+                    if (! is_array($slot)) {
+                        return false;
+                    }
+
+                    $slotKey = mb_strtolower(trim((string) ($slot['slot_key'] ?? '')));
+                    if ($slotKey === '' || isset($seenSlotKeys[$slotKey])) {
+                        return false;
+                    }
+
+                    $seenSlotKeys[$slotKey] = true;
+
+                    return true;
+                })
+                ->map(function (array $slot): array {
+                    $slot['slot_key'] = mb_strtolower(trim((string) $slot['slot_key']));
+
+                    return $slot;
+                })
+                ->values()
+                ->all();
+        }
+
+        if (is_array($content['day_plans'] ?? null)) {
+            $content['day_plans'] = collect($content['day_plans'])
+                ->filter(fn ($plan): bool => is_array($plan))
+                ->map(function (array $plan): array {
+                    $seenSlotKeys = [];
+                    $plan['meals'] = collect(is_array($plan['meals'] ?? null) ? $plan['meals'] : [])
+                        ->filter(function ($meal) use (&$seenSlotKeys): bool {
+                            if (! is_array($meal)) {
+                                return false;
+                            }
+
+                            $slotKey = mb_strtolower(trim((string) ($meal['slot_key'] ?? '')));
+                            if ($slotKey === '' || isset($seenSlotKeys[$slotKey])) {
+                                return false;
+                            }
+
+                            $seenSlotKeys[$slotKey] = true;
+
+                            return true;
+                        })
+                        ->map(function (array $meal): array {
+                            $meal['slot_key'] = mb_strtolower(trim((string) $meal['slot_key']));
+
+                            return $meal;
+                        })
+                        ->values()
+                        ->all();
+
+                    return $plan;
+                })
+                ->values()
+                ->all();
+        }
 
         return $content;
     }

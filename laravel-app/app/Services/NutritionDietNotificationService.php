@@ -18,7 +18,13 @@ class NutritionDietNotificationService
     public function __construct(
         private readonly UserNotificationRealtimeService $notificationRealtime,
         private readonly SmsDispatchService $smsDispatch,
+        private readonly ArmanivaDietRequestSmsService $armanivaManagerSms,
     ) {
+    }
+
+    public function notifyArmanivaManagerDietRequestCreated(NutritionDietRequest $request): void
+    {
+        $this->armanivaManagerSms->notify($request);
     }
 
     public function notifyUserPrescriptionReady(NutritionDietRequest $request, NutritionDietPrescription $prescription, bool $afterManualApproval = false): void

@@ -61,3 +61,9 @@ Schedule::command('nutrition:queue-meal-log-reminders')
     ->timezone('Asia/Tehran')
     ->dailyAt('10:20')
     ->withoutOverlapping();
+
+Schedule::command('customer-club:queue-birthday-sms')
+    ->timezone('Asia/Tehran')
+    ->dailyAt('09:00')
+    ->withoutOverlapping()
+    ->onOneServer();

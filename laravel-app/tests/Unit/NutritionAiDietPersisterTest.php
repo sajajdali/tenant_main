@@ -12,6 +12,73 @@ use Tests\TestCase;
 
 class NutritionAiDietPersisterTest extends TestCase
 {
+    public function test_enrich_content_normalizes_and_removes_duplicate_meal_slot_keys(): void
+    {
+        $request = (new NutritionDietRequest)->forceFill([
+            'prescription_mode' => 'user_choice',
+            'allow_food_replacement' => false,
+            'suggest_daily_replacements' => false,
+            'started_at' => now(),
+            'ends_at' => now()->addDays(1),
+            'profile_snapshot' => [],
+            'template_snapshot' => [],
+        ]);
+
+        $content = [
+            'mode' => 'user_choice',
+            'meal_slots' => [
+                ['slot_key' => ' breakfast ', 'title' => 'صبحانه اول', 'options' => []],
+                ['slot_key' => 'BREAKFAST', 'title' => 'صبحانه تکراری', 'options' => []],
+                ['slot_key' => 'lunch', 'title' => 'ناهار', 'options' => []],
+                ['slot_key' => ' ', 'title' => 'بدون کلید', 'options' => []],
+            ],
+        ];
+
+        $persister = new NutritionAiDietPersister($this->createMock(NutritionPrescriptionActivationService::class));
+        $method = new ReflectionMethod($persister, 'enrichContent');
+        $method->setAccessible(true);
+
+        $enriched = $method->invoke($persister, $request, $content);
+
+        $this->assertSame(['breakfast', 'lunch'], array_column($enriched['meal_slots'], 'slot_key'));
+        $this->assertSame('صبحانه اول', $enriched['meal_slots'][0]['title']);
+    }
+
+    public function test_enrich_content_removes_duplicate_meal_keys_within_each_day(): void
+    {
+        $request = (new NutritionDietRequest)->forceFill([
+            'prescription_mode' => 'daily_prescription',
+            'allow_food_replacement' => false,
+            'suggest_daily_replacements' => false,
+            'started_at' => now(),
+            'ends_at' => now(),
+            'profile_snapshot' => [],
+            'template_snapshot' => ['durationDays' => 1],
+        ]);
+
+        $content = [
+            'mode' => 'daily_prescription',
+            'duration_days' => 1,
+            'day_plans' => [[
+                'day_number' => 1,
+                'meals' => [
+                    ['slot_key' => ' Breakfast ', 'title' => 'صبحانه اول'],
+                    ['slot_key' => 'breakfast', 'title' => 'صبحانه تکراری'],
+                    ['slot_key' => 'dinner', 'title' => 'شام'],
+                ],
+            ]],
+        ];
+
+        $persister = new NutritionAiDietPersister($this->createMock(NutritionPrescriptionActivationService::class));
+        $method = new ReflectionMethod($persister, 'enrichContent');
+        $method->setAccessible(true);
+
+        $enriched = $method->invoke($persister, $request, $content);
+
+        $this->assertSame(['breakfast', 'dinner'], array_column($enriched['day_plans'][0]['meals'], 'slot_key'));
+        $this->assertSame('صبحانه اول', $enriched['day_plans'][0]['meals'][0]['title']);
+    }
+
     public function test_enrich_content_removes_disabled_template_meal_slots_from_ai_daily_prescription(): void
     {
         $request = (new NutritionDietRequest)->forceFill([
@@ -74,4 +141,3 @@ class NutritionAiDietPersisterTest extends TestCase
         $this->assertSame(['breakfast', 'lunch', 'dinner'], array_column($enriched['day_plans'][1]['meals'], 'slot_key'));
     }
 }
-

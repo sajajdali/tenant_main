@@ -233,6 +233,8 @@ class CustomerClubController extends Controller
             'birthday_bonus_enabled' => ['required', 'boolean'],
             'birthday_bonus_points' => ['required', 'integer', 'min:0', 'max:1000000'],
             'birthday_bonus_wallet' => ['required', 'integer', 'min:0', 'max:1000000000'],
+            'birthday_sms_enabled' => ['required', 'boolean'],
+            'birthday_sms_template_name' => ['nullable', 'required_if:birthday_sms_enabled,true', 'string', 'max:100'],
             'manual_adjustments_enabled' => ['required', 'boolean'],
             'show_wallet_to_customer' => ['required', 'boolean'],
             'show_points_to_customer' => ['required', 'boolean'],

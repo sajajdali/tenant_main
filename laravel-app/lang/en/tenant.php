@@ -254,6 +254,7 @@ return [
         'nutrition_landing_saved' => 'Diet landing page settings saved.',
         'nutrition_landing_image_updated' => 'Diet landing page image updated.',
         'nutrition_booking_banner_image_updated' => 'Diet booking banner image updated.',
+        'nutrition_landing_image_store_failed' => 'The image could not be saved. Please try again or contact support.',
     ],
     'gallery' => [
         'settings_saved' => 'Gallery status saved.',

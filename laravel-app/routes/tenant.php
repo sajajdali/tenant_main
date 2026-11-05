@@ -208,6 +208,7 @@ Route::middleware([
             Route::post('/diet-requests/preview', [CustomerAppDietRequestController::class, 'preview'])->name('tenant.api.app.nutrition.diet-requests.preview');
             Route::get('/diet-requests', [CustomerAppDietRequestController::class, 'index'])->name('tenant.api.app.nutrition.diet-requests.index');
             Route::post('/diet-requests', [CustomerAppDietRequestController::class, 'store'])->name('tenant.api.app.nutrition.diet-requests.store');
+            Route::delete('/diet-requests/{nutritionDietRequest}', [CustomerAppDietRequestController::class, 'destroy'])->name('tenant.api.app.nutrition.diet-requests.destroy');
             Route::get('/exercises', [NutritionExerciseCatalogController::class, 'index'])->name('tenant.api.app.nutrition.exercises.index');
             Route::get('/prescriptions', [NutritionDietPrescriptionController::class, 'index'])->name('tenant.api.app.nutrition.prescriptions.index');
             Route::get('/prescriptions/current', [NutritionDietPrescriptionController::class, 'current'])->name('tenant.api.app.nutrition.prescriptions.current');
@@ -269,6 +270,7 @@ Route::middleware([
         Route::post('/profile/package-selection', [NutritionProfileController::class, 'updatePackageSelection'])->name('tenant.api.nutrition.profile.package-selection');
         Route::get('/diet-requests', [NutritionDietRequestController::class, 'index'])->name('tenant.api.nutrition.diet-requests.index');
         Route::post('/diet-requests', [NutritionDietRequestController::class, 'store'])->name('tenant.api.nutrition.diet-requests.store');
+        Route::delete('/diet-requests/{nutritionDietRequest}', [NutritionDietRequestController::class, 'destroy'])->name('tenant.api.nutrition.diet-requests.destroy');
         Route::get('/tokens/dashboard', [NutritionTokenController::class, 'dashboard'])->name('tenant.api.nutrition.tokens.dashboard');
         Route::get('/tokens/history', [NutritionTokenController::class, 'history'])->name('tenant.api.nutrition.tokens.history');
         Route::post('/tokens/pay', [NutritionTokenController::class, 'pay'])->name('tenant.api.nutrition.tokens.pay');

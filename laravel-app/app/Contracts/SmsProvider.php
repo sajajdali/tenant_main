@@ -10,7 +10,7 @@ interface SmsProvider
 {
     public function supports(string $provider): bool;
 
-    public function send(SmsSetting $setting, string $mobile, string $message): array;
+    public function send(SmsSetting $setting, string $mobile, string $message, array $context = []): array;
 
-    public function sendMany(SmsSetting $setting, array $mobiles, string $message, ?string $sender = null): array;
+    public function sendMany(SmsSetting $setting, array $mobiles, string $message, ?string $sender = null, array $context = []): array;
 }

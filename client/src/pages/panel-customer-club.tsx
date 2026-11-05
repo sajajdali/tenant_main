@@ -218,6 +218,8 @@ export default function PanelCustomerClubPage() {
       birthday_bonus_enabled: settings.birthdayBonusEnabled,
       birthday_bonus_points: settings.birthdayBonusPoints,
       birthday_bonus_wallet: settings.birthdayBonusWallet,
+      birthday_sms_enabled: settings.birthdaySmsEnabled,
+      birthday_sms_template_name: settings.birthdaySmsTemplateName,
       manual_adjustments_enabled: settings.manualAdjustmentsEnabled,
       show_wallet_to_customer: settings.showWalletToCustomer,
       show_points_to_customer: settings.showPointsToCustomer,
@@ -554,6 +556,36 @@ export default function PanelCustomerClubPage() {
                           </CardContent>
                         </Card>
                       </div>
+
+                      <Card className="customer-club-inner-card border-border/70 bg-background/30">
+                        <CardHeader className="text-start">
+                          <CardTitle className="text-base text-start">{t("panelCustomerClub.settings.birthdaySmsTitle")}</CardTitle>
+                          <CardDescription className="text-start">
+                            {t("panelCustomerClub.settings.birthdaySmsDescription")}
+                          </CardDescription>
+                        </CardHeader>
+                        <CardContent className="grid gap-4 md:grid-cols-2">
+                          <div className="flex items-center justify-between rounded-xl border border-border/70 px-3 py-2 text-start">
+                            <Label>{t("panelCustomerClub.settings.birthdaySmsEnable")}</Label>
+                            <Switch checked={settings.birthdaySmsEnabled} onCheckedChange={(checked) => setSettings({ ...settings, birthdaySmsEnabled: checked })} />
+                          </div>
+                          <div className="space-y-2 text-start">
+                            <Label htmlFor="birthday-sms-template">{t("panelCustomerClub.settings.birthdaySmsTemplate")}</Label>
+                            <Input
+                              id="birthday-sms-template"
+                              className="text-start"
+                              dir="ltr"
+                              disabled={!settings.birthdaySmsEnabled}
+                              value={settings.birthdaySmsTemplateName}
+                              onChange={(event) => setSettings({ ...settings, birthdaySmsTemplateName: event.target.value })}
+                              placeholder={t("panelCustomerClub.settings.birthdaySmsTemplatePlaceholder")}
+                            />
+                            <p className="text-xs leading-6 text-muted-foreground">
+                              {t("panelCustomerClub.settings.birthdaySmsTemplateHint")}
+                            </p>
+                          </div>
+                        </CardContent>
+                      </Card>
 
                       {isNutritionAudience ? (
                         <Card className="customer-club-inner-card border-border/70 bg-background/30">

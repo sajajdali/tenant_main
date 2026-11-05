@@ -2825,6 +2825,8 @@ export interface CustomerClubSettings {
   birthdayBonusEnabled: boolean;
   birthdayBonusPoints: number;
   birthdayBonusWallet: number;
+  birthdaySmsEnabled: boolean;
+  birthdaySmsTemplateName: string;
   manualAdjustmentsEnabled: boolean;
   showWalletToCustomer: boolean;
   showPointsToCustomer: boolean;

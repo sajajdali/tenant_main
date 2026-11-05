@@ -93,6 +93,23 @@
 
                                     <div class="col-12">
                                         <div class="border rounded-3 p-3">
+                                            <h6 class="mb-1">اتصال SHSMS</h6>
+                                            <p class="text-muted mb-3">ارسال قالب‌های خدماتی مانند تبریک تولد از API قالب‌محور SHSMS انجام می‌شود.</p>
+                                            <div class="row g-3">
+                                                <div class="col-md-6">
+                                                    <label class="form-label" for="shsms_api_key">API Key</label>
+                                                    <input type="password" id="shsms_api_key" name="shsms_api_key" class="form-control" dir="ltr" value="{{ old('shsms_api_key', $smsGatewaySettings['shsms_api_key'] ?? '') }}" autocomplete="new-password">
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label class="form-label" for="shsms_base_url">آدرس API</label>
+                                                    <input type="url" id="shsms_base_url" name="shsms_base_url" class="form-control" dir="ltr" value="{{ old('shsms_base_url', $smsGatewaySettings['shsms_base_url'] ?? 'https://nwe.shsms.ir/api/v1') }}">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-12">
+                                        <div class="border rounded-3 p-3">
                                             <h6 class="mb-1">تعرفه پیامک</h6>
                                             <p class="text-muted mb-3">هزینه هر پیامک فارسی و انگلیسی از اینجا تعیین می‌شود.</p>
                                             <div class="row g-3">

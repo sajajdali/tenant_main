@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api\V1\Customer\Nutrition;
 
 use App\Domain\Tenant\Models\TenantUser;
+use App\Domain\Tenant\Models\NutritionDietRequest;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Tenant\NutritionDietRequestController as LegacyNutritionDietRequestController;
 use App\Services\Api\CustomerDietRequestFlowService;
@@ -99,6 +100,15 @@ class DietRequestController extends Controller
         }
 
         return $this->appResponse($body, $legacyResponse->getStatusCode());
+    }
+
+    public function destroy(Request $request, NutritionDietRequest $nutritionDietRequest): JsonResponse
+    {
+        $this->ensureNutritionAccess($request);
+
+        $legacyResponse = $this->dietRequests->destroy($request, $nutritionDietRequest);
+
+        return $this->appResponse($legacyResponse->getData(true), $legacyResponse->getStatusCode());
     }
 
     /**
